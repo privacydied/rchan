@@ -262,9 +262,36 @@
       a.setAttribute("data-tip", "1");
       var t = ICON_TITLES[a.id] || (a.id ? humanizeId(a.id) : "");
       if (!t) { continue; }
-      if (!a.title) { a.title = t; }
+      a.setAttribute("data-tooltip", t);           // styled tooltip source (no native title)
       if (!a.getAttribute("aria-label")) { a.setAttribute("aria-label", t); }
     }
+  }
+
+  /* ---------- Instant styled tooltip (any element with data-tooltip) ---------- */
+  var tip = null;
+  function tipTarget(el) {
+    while (el && el.getAttribute) {
+      if (el.getAttribute("data-tooltip")) { return el; }
+      el = el.parentNode;
+    }
+    return null;
+  }
+  function showTip(el) {
+    if (!tip) { tip = document.createElement("div"); tip.id = "rchan-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+    tip.textContent = el.getAttribute("data-tooltip");
+    tip.style.display = "block";
+    var r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.bottom + 8;                                   // below the icon by default
+    if (y + th > window.innerHeight - 4) { y = r.top - th - 8; }  // flip above if no room
+    x = Math.max(4, Math.min(x, window.innerWidth - tw - 4));
+    tip.style.left = x + "px"; tip.style.top = Math.max(4, y) + "px";
+  }
+  function hideTip() { if (tip) { tip.style.display = "none"; } }
+  function onTipOver(e) { var el = tipTarget(e.target); if (el) { showTip(el); } }
+  function onTipOut(e) {
+    var el = tipTarget(e.target);
+    if (el && (!e.relatedTarget || !el.contains(e.relatedTarget))) { hideTip(); }
   }
 
   /* ---------- init + observe ---------- */
@@ -282,6 +309,13 @@
     // clicking a thumb expands it in place (thumb swapped out under a stationary cursor,
     // so no fresh mouseover fires) — drop the floating preview so it never sticks.
     document.addEventListener("click", hideZoom, true);
+    // instant styled tooltips for [data-tooltip] icons
+    document.addEventListener("mouseover", onTipOver, true);
+    document.addEventListener("mouseout", onTipOut, true);
+    document.addEventListener("focusin", onTipOver, true);
+    document.addEventListener("focusout", hideTip, true);
+    document.addEventListener("scroll", hideTip, true);
+    document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

@@ -110,6 +110,19 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   box-shadow: 0 6px 24px rgba(0,0,0,.5); background: #0008;
 }
 
+/* ---------- Instant styled tooltip (icon labels) ---------- */
+#rchan-tip {
+  position: fixed; z-index: 10001; display: none; pointer-events: none;
+  background: #23252b; color: #f4f4f5; font-size: 12px; font-weight: 600;
+  line-height: 1.25; padding: 5px 9px; border-radius: 6px; white-space: nowrap;
+  max-width: 62vw; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08);
+}
+.theme_cream #rchan-tip { background: #2e2e2e; color: #fdfdfb; border-color: rgba(0,0,0,.15); }
+.theme_dark  #rchan-tip { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
+/* the labeled icons get a pointer cursor so they read as interactive */
+.coloredIcon[data-tooltip] { cursor: pointer; }
+
 /* ---------- Catalog: card-size selector + sizes (S/M/L/XL) ---------- */
 #rchan-catsize { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
 #rchan-catsize select { margin-left: 5px; padding: 3px 8px; border-radius: 6px; font: inherit; cursor: pointer; }

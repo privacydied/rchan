@@ -77,10 +77,12 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 #rchan-nav button {
   width: 40px; height: 40px; border: 0; border-radius: 50%; cursor: pointer;
-  font-size: 17px; line-height: 40px; text-align: center;
+  font-size: 18px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
   background: #c8102e; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3);
   opacity: .82; transition: opacity .12s ease, transform .08s ease;
 }
+#rchan-nav button svg { display: block; }
 #rchan-nav button:hover { opacity: 1; transform: translateY(-1px); }
 
 /* ---------- Per-post hide toggle ---------- */

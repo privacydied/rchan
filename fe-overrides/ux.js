@@ -9,24 +9,31 @@
     var m = location.pathname.match(/^\/([^\/.]+)\//);
     return m ? m[1] : null;
   }
-  function goCatalog() {
+  var SVG_GRID = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  var SVG_LIST = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>';
+  function isCatalog() { return /\/catalog(\.html)?$/.test(location.pathname); }
+  function toggleCatalog() {
     var b = getBoard();
-    if (b && b.charAt(0) !== ".") { location.href = "/" + b + "/catalog.html"; }
+    if (!b || b.charAt(0) === ".") { return; }
+    location.href = isCatalog() ? ("/" + b + "/") : ("/" + b + "/catalog.html");
   }
 
-  /* ---------- Floating nav buttons (top / catalog / bottom) ---------- */
+  /* ---------- Floating nav buttons (top / catalog-toggle / bottom) ---------- */
   function buildNav() {
     if (document.getElementById("rchan-nav")) { return; }
     var wrap = document.createElement("div");
     wrap.id = "rchan-nav";
-    function btn(label, title, fn) {
+    function btn(html, title, fn) {
       var b = document.createElement("button");
-      b.type = "button"; b.textContent = label; b.title = title;
+      b.type = "button"; b.innerHTML = html; b.title = title;
       b.addEventListener("click", fn);
       wrap.appendChild(b);
     }
     btn("↑", "Top", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
-    if (getBoard()) { btn("☷", "Catalog", goCatalog); } // ☷ grid glyph
+    if (getBoard()) {
+      var onCat = isCatalog();
+      btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
+    }
     btn("↓", "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
@@ -168,7 +175,7 @@
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) { return; }
     if (e.key === "t") { window.scrollTo({ top: 0, behavior: "smooth" }); }
     else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }
-    else if (e.key === "c") { goCatalog(); }
+    else if (e.key === "c") { toggleCatalog(); }
     else if (e.key === "r") {
       var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
       if (m) { m.focus(); e.preventDefault(); }

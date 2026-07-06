@@ -53,3 +53,33 @@
       document.documentElement, { subtree: true, childList: true });
   } catch (_) { /* no-op */ }
 })();
+
+// Animated favicon — sample the (animated) logo GIF to a canvas and swap the tab icon
+// on a timer, so browsers that don't animate GIF favicons (Chrome/Safari/Edge) still get
+// the animation. Firefox animates the <link> GIF natively; this just keeps it consistent.
+(function () {
+  function iconLink() {
+    var l = document.querySelector('link[rel~="icon"]');
+    if (!l) { l = document.createElement("link"); l.rel = "icon"; document.head.appendChild(l); }
+    return l;
+  }
+  var img = new Image();               // same-origin -> canvas is not tainted, toDataURL works
+  img.src = "/.static/logo.png";       // the earth gif, served as image/gif
+  img.style.cssText = "position:absolute;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none";
+  var canvas = document.createElement("canvas");
+  canvas.width = 32; canvas.height = 32;
+  var ctx = canvas.getContext("2d");
+  var timer = null;
+  img.addEventListener("load", function () {
+    if (timer) { return; }
+    if (document.body) { document.body.appendChild(img); } // keep it rendered so the gif animates
+    var link = iconLink();
+    timer = setInterval(function () {
+      try {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.drawImage(img, 0, 0, 32, 32);   // draws the gif's CURRENT frame
+        link.href = canvas.toDataURL("image/png");
+      } catch (e) { /* ignore */ }
+    }, 120);
+  });
+})();

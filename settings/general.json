@@ -13,5 +13,6 @@
   "topBoardsCount": 25,
   "frontPageStats": true,
   "overboard": "overboard",
-  "defaultTheme": "cream"
+  "defaultTheme": "cream",
+  "videoThumbPercentage": 25
 }

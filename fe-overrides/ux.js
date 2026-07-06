@@ -323,15 +323,107 @@
     if (el && (!e.relatedTarget || !el.contains(e.relatedTarget))) { hideTip(); }
   }
 
+  /* ---------- New-since-last-visit (thread + catalog) + replies-to-you ---------- */
+  var SEEN_KEY = "rchan_seen";
+  function seenAll() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch (e) { return {}; } }
+  function seenSave(o) { try { localStorage.setItem(SEEN_KEY, JSON.stringify(o)); } catch (e) {} }
+  function curThreadId() {
+    var t = document.getElementById("threadIdentifier");
+    if (t && t.value) { return t.value; }
+    var m = location.pathname.match(/\/res\/(\d+)/); return m ? m[1] : null;
+  }
+  function postIdOf(cell) {
+    var q = cell.getElementsByClassName("linkQuote")[0];
+    return q ? (parseInt((q.textContent || "").replace(/\D/g, ""), 10) || 0) : 0;
+  }
+  // On a thread: highlight posts newer than the last time you viewed it, drop a divider,
+  // then record the current high-water mark. Re-runs on live WS posts (highlights those too).
+  function markNewInThread() {
+    if (isCatalog()) { return; }
+    var board = getBoard(), tid = curThreadId();
+    if (!board || !tid) { return; }
+    var posts = document.getElementsByClassName("postCell");
+    if (!posts.length) { return; }
+    var key = board + "/" + tid, all = seenAll(), rec = all[key] || { maxId: 0, replies: 0 };
+    var curMax = rec.maxId, firstNew = null, newCount = 0;
+    for (var i = 0; i < posts.length; i++) {
+      var id = postIdOf(posts[i]);
+      if (id > curMax) { curMax = id; }
+      if (rec.maxId && id > rec.maxId && !posts[i].getAttribute("data-new")) {
+        posts[i].setAttribute("data-new", "1");
+        posts[i].classList.add("rchan-new");
+        if (!firstNew) { firstNew = posts[i]; }
+        newCount++;
+      }
+    }
+    if (firstNew && !document.getElementById("rchan-newline")) {
+      var d = document.createElement("div"); d.id = "rchan-newline";
+      d.textContent = newCount + " new post" + (newCount > 1 ? "s" : "") + " since last visit";
+      firstNew.parentNode.insertBefore(d, firstNew);
+    }
+    all[key] = { maxId: curMax, replies: posts.length };
+    seenSave(all);
+  }
+  // On the catalog: badge threads that gained replies since you last opened them.
+  function markNewInCatalog() {
+    if (!isCatalog()) { return; }
+    var board = getBoard(); if (!board) { return; }
+    var all = seenAll(), cells = catCells();
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      if (cell.getAttribute("data-newbadge")) { continue; }
+      var tid = catThreadId(cell); if (!tid) { continue; }
+      cell.setAttribute("data-newbadge", "1");
+      var rec = all[board + "/" + tid]; if (!rec) { continue; }
+      var diff = catNum(cell, "labelReplies") - (rec.replies || 0);
+      if (diff > 0) {
+        var b = document.createElement("span"); b.className = "rchan-newbadge"; b.textContent = "+" + diff + " new";
+        var stats = cell.getElementsByClassName("threadStats")[0] || cell;
+        stats.appendChild(b);
+      }
+    }
+  }
+  // Replies to your (You) posts: a floating indicator that cycles through them.
+  var youHits = [], youIdx = -1, youBtn = null;
+  function scanRepliesToYou() {
+    var mine = load(YOU_KEY); if (!mine.length) { if (youBtn) { youBtn.style.display = "none"; } return; }
+    var set = {}; for (var k = 0; k < mine.length; k++) { set[mine[k]] = 1; }
+    var posts = document.querySelectorAll(".postCell, .opCell");
+    youHits = [];
+    for (var i = 0; i < posts.length; i++) {
+      if (set[postIdOf(posts[i])]) { continue; }                    // skip your own posts
+      var qs = posts[i].getElementsByClassName("quoteLink");
+      for (var j = 0; j < qs.length; j++) {
+        var m = (qs[j].getAttribute("href") || "").match(/(\d+)\s*$/) || (qs[j].textContent || "").match(/(\d+)/);
+        if (m && set[m[1]]) { youHits.push(posts[i]); break; }
+      }
+    }
+    if (!youHits.length) { if (youBtn) { youBtn.style.display = "none"; } return; }
+    if (!youBtn) {
+      youBtn = document.createElement("button"); youBtn.id = "rchan-youbtn"; youBtn.type = "button";
+      youBtn.title = "Jump to replies to your posts";
+      youBtn.addEventListener("click", function () {
+        youIdx = (youIdx + 1) % youHits.length;
+        youHits[youIdx].scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      document.body.appendChild(youBtn);
+    }
+    youBtn.style.display = "";
+    youBtn.textContent = "↩ " + youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
+  }
+
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); markNewInThread(); scanRepliesToYou(); }, 80); }
   function init() {
     buildNav();
     buildCatalogTools();
     document.addEventListener("mouseover", onCatHover, true);
     decorateIcons(document);
     decorateYou(document);
+    markNewInThread();
+    markNewInCatalog();
+    scanRepliesToYou();
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);

@@ -412,9 +412,104 @@
     youBtn.textContent = "↩ " + youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
   }
 
+  /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ---------- */
+  var MAX_FILE = 32 * 1048576;   // maxFileSizeMB
+  function bytesHuman(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : n >= 1024 ? Math.round(n / 1024) + " KB" : n + " B"; }
+  function mimeOk(input, file) {
+    var acc = (input.getAttribute("accept") || "").toLowerCase().split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!acc.length) { return true; }
+    var mime = (file.type || "").toLowerCase();
+    return acc.some(function (a) { return a.slice(-2) === "/*" ? mime.indexOf(a.slice(0, -1)) === 0 : a === mime; });
+  }
+  function currentFiles(input) { return input.files ? Array.prototype.slice.call(input.files) : []; }
+  function setFiles(input, arr) {
+    try { var dt = new DataTransfer(); arr.forEach(function (f) { dt.items.add(f); }); input.files = dt.files; return true; }
+    catch (e) { return false; }   // unsupported browser: leave as-is
+  }
+  function addFiles(input, files) { setFiles(input, currentFiles(input).concat(files)); renderTray(input); }
+  function renderTray(input) {
+    var tray = document.getElementById("rchan-filetray"); if (!tray) { return; }
+    tray.innerHTML = "";
+    currentFiles(input).forEach(function (f, idx) {
+      var chip = document.createElement("div"); chip.className = "rchan-filechip";
+      if (!(mimeOk(input, f) && f.size <= MAX_FILE)) { chip.classList.add("rchan-filebad"); chip.title = "Unsupported type or over 32 MB"; }
+      if (/^image\//.test(f.type)) {
+        var im = document.createElement("img"); im.src = URL.createObjectURL(f);
+        im.onload = function () { URL.revokeObjectURL(im.src); }; chip.appendChild(im);
+      }
+      var meta = document.createElement("span"); meta.className = "rchan-filemeta";
+      meta.textContent = f.name + " · " + bytesHuman(f.size); chip.appendChild(meta);
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-filex"; x.textContent = "×"; x.title = "Remove";
+      x.addEventListener("click", function (ev) { ev.preventDefault(); var a = currentFiles(input); a.splice(idx, 1); setFiles(input, a); renderTray(input); });
+      chip.appendChild(x); tray.appendChild(chip);
+    });
+  }
+  function wrapSel(ta, pre, post) {
+    var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value, sel = v.slice(s, e);
+    ta.value = v.slice(0, s) + pre + sel + post + v.slice(e);
+    ta.focus();
+    var caret = sel ? s + pre.length + sel.length + post.length : s + pre.length;
+    ta.setSelectionRange(sel ? caret : s + pre.length, caret);
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function prefixLines(ta, prefix) {
+    var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+    var ls = v.lastIndexOf("\n", s - 1) + 1, block = v.slice(ls, e) || v.slice(ls);
+    var rep = block.replace(/^/gm, prefix);
+    ta.value = v.slice(0, ls) + rep + v.slice(ls + block.length);
+    ta.focus(); ta.setSelectionRange(ls, ls + rep.length);
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function enhancePostForm() {
+    var form = document.getElementById("postingForm");
+    if (!form || form.getAttribute("data-enh")) { return; }
+    var msg = document.getElementById("fieldMessage");
+    var input = document.getElementById("inputFiles");
+    if (!msg && !input) { return; }
+    form.setAttribute("data-enh", "1");
+    if (msg) {
+      var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
+      // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext
+      var FMT = [["B", "'''", "'''", "Bold"], ["I", "''", "''", "Italic"], ["Spoiler", "**", "**", "Spoiler"],
+                 ["S̶", "~~", "~~", "Strikethrough"], ["==", "==", "==", "Heading"], ["code", "[code]", "[/code]", "Code"]];
+      FMT.forEach(function (f) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = f[0]; b.title = f[3];
+        b.addEventListener("click", function (ev) { ev.preventDefault(); wrapSel(msg, f[1], f[2]); });
+        bar.appendChild(b);
+      });
+      var qb = document.createElement("button"); qb.type = "button"; qb.textContent = ">"; qb.title = "Greentext";
+      qb.addEventListener("click", function (ev) { ev.preventDefault(); prefixLines(msg, ">"); }); bar.appendChild(qb);
+      var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
+      msg.parentNode.insertBefore(bar, msg);
+      var upd = function () { count.textContent = msg.value.length + " chars"; };
+      msg.addEventListener("input", upd); upd();
+      if (input) {
+        msg.addEventListener("paste", function (e) {
+          var items = e.clipboardData && e.clipboardData.items; if (!items) { return; }
+          var add = [];
+          for (var i = 0; i < items.length; i++) { if (items[i].kind === "file") { var f = items[i].getAsFile(); if (f) { add.push(f); } } }
+          if (add.length) { addFiles(input, add); }
+        });
+      }
+    }
+    if (input) {
+      var tray = document.createElement("div"); tray.id = "rchan-filetray"; tray.className = "rchan-filetray";
+      (input.parentNode || form).appendChild(tray);
+      input.addEventListener("change", function () { renderTray(input); });
+      form.addEventListener("dragover", function (e) { e.preventDefault(); form.classList.add("rchan-dragover"); });
+      form.addEventListener("dragleave", function (e) { if (e.target === form) { form.classList.remove("rchan-dragover"); } });
+      form.addEventListener("drop", function (e) {
+        e.preventDefault(); form.classList.remove("rchan-dragover");
+        var fs = e.dataTransfer && e.dataTransfer.files;
+        if (fs && fs.length) { addFiles(input, Array.prototype.slice.call(fs)); }
+      });
+      renderTray(input);
+    }
+  }
+
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); markNewInThread(); scanRepliesToYou(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); }, 80); }
   function init() {
     buildNav();
     buildCatalogTools();
@@ -424,6 +519,7 @@
     markNewInThread();
     markNewInCatalog();
     scanRepliesToYou();
+    enhancePostForm();
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);

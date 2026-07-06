@@ -208,6 +208,32 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 #rchan-youbtn:hover { opacity: 1; transform: translateY(-1px); }
 
+/* ---------- Post form: toolbar, char counter, drag-drop, file previews ---------- */
+.rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
+.rchan-fmtbar button {
+  min-width: 26px; height: 24px; padding: 0 7px; border-radius: 5px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 700; line-height: 1; border: 1px solid #0002; background: #0000000a;
+}
+.rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.theme_dark .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
+.rchan-charcount { margin-left: auto; font-size: 11px; opacity: .7; }
+#postingForm.rchan-dragover { outline: 2px dashed #c8102e; outline-offset: 3px; }
+.rchan-filetray { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.rchan-filechip {
+  display: flex; align-items: center; gap: 6px; max-width: 240px;
+  padding: 3px 6px 3px 3px; border-radius: 7px; font-size: 12px;
+  background: #0000000d; border: 1px solid #0002;
+}
+.theme_dark .rchan-filechip { background: #1f2126; border-color: #2c2f36; }
+.rchan-filechip img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; display: block; }
+.rchan-filemeta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.rchan-filebad { border-color: #c8102e; background: #c8102e1a; }
+.rchan-filex {
+  border: 0; background: transparent; cursor: pointer; font-size: 15px; line-height: 1;
+  padding: 0 2px; opacity: .6; font-weight: 700;
+}
+.rchan-filex:hover { opacity: 1; color: #c8102e; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   body { font-size: 16px; }

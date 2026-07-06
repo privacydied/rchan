@@ -148,12 +148,23 @@
   /* ---------- Image hover-zoom ---------- */
   var zoom = null;
   function isImg(h) { return /\.(jpe?g|png|gif|webp|bmp)$/i.test(h || ""); }
+  function hideZoom() { if (zoom) { zoom.style.display = "none"; zoom.src = ""; } }
+  // True when this <img> is LynxChan's already-expanded inline full image (click-to-expand
+  // appends <img class="imgExpanded"> and hides the thumb). Don't float a duplicate over it.
+  function isExpanded(img, a) {
+    if (img.classList && img.classList.contains("imgExpanded")) { return true; }
+    if (a && a.querySelector) {
+      var exp = a.querySelector(".imgExpanded");
+      if (exp && exp.style.display !== "none") { return true; }
+    }
+    return false;
+  }
   function onOver(e) {
     var img = e.target;
     if (!img || img.tagName !== "IMG") { return; }
     var a = (img.closest && img.closest("a")) || img.parentNode;
     var href = a && a.getAttribute ? a.getAttribute("href") : null;
-    if (!isImg(href)) { return; }
+    if (!isImg(href) || isExpanded(img, a)) { hideZoom(); return; }
     if (!zoom) { zoom = document.createElement("img"); zoom.id = "rchan-zoom"; document.body.appendChild(zoom); }
     zoom.src = href; zoom.style.display = "block"; onMove(e);
   }
@@ -164,7 +175,7 @@
     if (y + zoom.offsetHeight > window.innerHeight) { y = Math.max(4, window.innerHeight - zoom.offsetHeight - 4); }
     zoom.style.left = Math.max(4, x) + "px"; zoom.style.top = Math.max(4, y) + "px";
   }
-  function onOut(e) { if (e.target && e.target.tagName === "IMG" && zoom) { zoom.style.display = "none"; zoom.src = ""; } }
+  function onOut(e) { if (e.target && e.target.tagName === "IMG") { hideZoom(); } }
 
   /* ---------- Keyboard shortcuts ---------- */
   function typing(e) {
@@ -192,6 +203,9 @@
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);
+    // clicking a thumb expands it in place (thumb swapped out under a stationary cursor,
+    // so no fresh mouseover fires) — drop the floating preview so it never sticks.
+    document.addEventListener("click", hideZoom, true);
     document.addEventListener("keydown", onKey);
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

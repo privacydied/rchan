@@ -267,9 +267,23 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .theme_dark .divMessage code { background: #0f1013; border-color: #2c2f36; color: #d7dae0; }
 .theme_cream .divMessage code { background: #f3efe4; border-color: #d7d7cb; color: #2e2e2e; }
 
+/* Thumbnail skeleton shimmer (removed on image load; animation auto-disabled by the
+   reduced-motion block above). */
+.rchan-skel {
+  background-image: linear-gradient(90deg, #0000000d 25%, #0000001c 37%, #0000000d 63%);
+  background-size: 400% 100%; animation: rchan-shimmer 1.4s ease infinite; border-radius: 4px;
+}
+.theme_dark .rchan-skel { background-image: linear-gradient(90deg, #ffffff08 25%, #ffffff14 37%, #ffffff08 63%); }
+@keyframes rchan-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   body { font-size: 16px; }
+  /* bigger, full-width Quick Reply so it's usable on phones */
+  #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; }
+  #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }
+  #quick-reply textarea, #qrbody { width: 100% !important; box-sizing: border-box; min-height: 110px; }
+  #rchan-nav { right: 10px; bottom: 10px; }
   .innerPost, .innerOP { padding: 8px; }
   .postCell { margin: 8px 4px; }
   /* keep replies from being pushed off-screen by deep indentation */

@@ -78,10 +78,31 @@
       var onCat = isCatalog();
       btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
     }
+    if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
+      btn("✎", "Reply / post", function () {
+        var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
+        if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
+      });
+    }
     btn("↓", "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
     });
     document.body.appendChild(wrap);
+  }
+
+  /* ---------- Thumbnail skeletons (shimmer until the image loads) ---------- */
+  function decorateThumbs(root) {
+    var imgs = (root || document).querySelectorAll(".imgLink img, .linkThumb img");
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      if (img.getAttribute("data-skel")) { continue; }
+      img.setAttribute("data-skel", "1");
+      if (img.complete && img.naturalWidth > 0) { continue; }     // already loaded
+      var wrap = img.parentNode;
+      if (wrap && wrap.classList) { wrap.classList.add("rchan-skel"); }
+      var clear = function () { if (this.parentNode && this.parentNode.classList) { this.parentNode.classList.remove("rchan-skel"); } };
+      img.addEventListener("load", clear); img.addEventListener("error", clear);
+    }
   }
 
   /* ---------- localStorage helpers ---------- */
@@ -527,12 +548,13 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); }, 80); }
   function init() {
     buildNav();
     buildCatalogTools();
     document.addEventListener("mouseover", onCatHover, true);
     decorateIcons(document);
+    decorateThumbs(document);
     decorateYou(document);
     markNewInThread();
     markNewInCatalog();

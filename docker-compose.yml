@@ -30,6 +30,8 @@ services:
     volumes:
       - ./settings:/lynxchan/src/be/settings
       - ./state:/lynxchan/state
+      # Per-thread / per-board Open Graph tags (modified copy of PenumbraLynx static.js).
+      - ./fe-overrides/be/static.js:/lynxchan/src/be/engine/domManipulator/static.js:ro
       # Custom site logo — replace ./branding/logo.png to rebrand (served at /.static/logo.png)
       - ./branding/logo.png:/lynxchan/src/fe/static/logo.png:ro
       # Customized front-page template (infoBox title text). Copy of PenumbraLynx's

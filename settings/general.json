@@ -14,5 +14,6 @@
   "frontPageStats": true,
   "overboard": "overboard",
   "defaultTheme": "cream",
-  "videoThumbPercentage": 25
+  "videoThumbPercentage": 25,
+  "wsPort": 8082
 }

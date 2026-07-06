@@ -5,6 +5,32 @@
 (function () {
   "use strict";
 
+  /* ---------- Live updates: route LynxChan's separate-port WebSocket through the
+     same-origin 443 path (/.ws) the reverse proxy upgrades. thread.js builds
+     ws(s)://<hostname>:<wsPort>; behind Cloudflare that custom port isn't reachable,
+     so rewrite any such same-host cross-port ws URL to wss://<host>/.ws. ---------- */
+  (function patchWebSocket() {
+    var Native = window.WebSocket;
+    if (!Native) { return; }
+    function Patched(url, protocols) {
+      try {
+        var u = new URL(url, location.href);
+        var wsish = (u.protocol === "ws:" || u.protocol === "wss:");
+        if (wsish && u.hostname === location.hostname && u.port && u.port !== location.port) {
+          u.protocol = (location.protocol === "https:") ? "wss:" : "ws:";
+          u.port = "";
+          u.pathname = "/.ws";
+          url = u.toString();
+        }
+      } catch (e) {}
+      return protocols === undefined ? new Native(url) : new Native(url, protocols);
+    }
+    Patched.prototype = Native.prototype;
+    Patched.CONNECTING = Native.CONNECTING; Patched.OPEN = Native.OPEN;
+    Patched.CLOSING = Native.CLOSING; Patched.CLOSED = Native.CLOSED;
+    window.WebSocket = Patched;
+  })();
+
   function getBoard() {
     var el = document.getElementById("boardIdentifier");
     if (el && el.value) { return el.value; }

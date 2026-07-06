@@ -11,6 +11,9 @@ themes.init = function() {
   }, {
     label : 'Cream',
     id : 'cream'
+  }, {
+    label : 'Dark',
+    id : 'dark'
   } ];
 
   var postingLink = document.getElementById('navPosting');

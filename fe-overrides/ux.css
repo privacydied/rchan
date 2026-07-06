@@ -1,0 +1,121 @@
+/* rchan UX layer — structural polish (all themes) + Cream/Dark colors + components.
+   Loaded site-wide via the router. Colors are scoped per-theme so non-cream/dark
+   themes keep their own palette; structure/spacing/mobile apply everywhere. */
+
+/* ---------- Typography & rhythm (all themes) ---------- */
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
+.title, .labelSubject { letter-spacing: .01em; }
+.labelSubject { font-weight: 700; }
+.linkName, .labelName { font-weight: 600; }
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
+.innerPost, .innerOP {
+  border-radius: 7px;
+  padding: 7px 9px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+  transition: box-shadow .12s ease;
+}
+.postCell { margin: 6px 0; }
+.innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
+.postInfo { opacity: .95; }
+.divMessage { margin-top: 5px; }
+
+/* thumbnails: never overflow, gentle rounding */
+.imgLink img, .imgExpanded { max-width: 100%; height: auto; border-radius: 4px; }
+
+/* ---------- Cream theme colours ---------- */
+.theme_cream .divMessage { color: #2e2e2e; }
+.theme_cream .greenText { color: #5b8a2b !important; }
+.theme_cream .redText  { color: #b5341f !important; }
+.theme_cream .labelSubject { color: #0d5b73; }
+.theme_cream .linkName, .theme_cream .labelName { color: #3a6b2e; }
+.theme_cream a { color: #274a6b; }
+.theme_cream .innerPost, .theme_cream .innerOP { border: 1px solid #d7d7cb; }
+.theme_cream .quoteLink, .theme_cream .panelBacklinks a { color: #8a2b1f; }
+
+/* ---------- Dark theme (selectable) ---------- */
+body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !important; }
+.theme_dark a { color: #7fb0e0; }
+.theme_dark .innerPost, .theme_dark .innerOP,
+.theme_dark .catalogCell, .theme_dark .sideCatalogCell, .theme_dark .markedPost,
+.theme_dark #quick-reply table, .theme_dark #postingForm, .theme_dark #postingTable,
+.theme_dark #postingForm td, .theme_dark .floatingMenu, .theme_dark #newPostFieldset,
+.theme_dark #divLatestPosts .latestPostCell, .theme_dark .topBoards a {
+  background: #1f2126 !important; color: #c9ccd1 !important; border: 1px solid #2c2f36 !important;
+}
+.theme_dark #postingForm th, .theme_dark .modalTableBody th { background: #262a31 !important; color: #c9ccd1 !important; }
+.theme_dark nav, .theme_dark #dynamicHeader { background: #1f2126 !important; }
+.theme_dark .divMessage { color: #c9ccd1 !important; }
+.theme_dark .greenText { color: #8ec07c !important; }
+.theme_dark .redText { color: #e06c75 !important; }
+.theme_dark .labelSubject { color: #79c0ff !important; }
+.theme_dark .linkName, .theme_dark .labelName { color: #8ec07c !important; }
+.theme_dark .quoteLink, .theme_dark .panelBacklinks a { color: #e0987f !important; }
+.theme_dark input, .theme_dark textarea, .theme_dark select {
+  background: #14151a !important; color: #c9ccd1 !important; border: 1px solid #333 !important;
+}
+
+/* ---------- Front page: board list as cards ---------- */
+#divBoards.topBoards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+#divBoards.topBoards a {
+  display: inline-block; padding: 8px 14px; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; transition: transform .08s ease;
+}
+#divBoards.topBoards a:hover { transform: translateY(-1px); text-decoration: none; }
+
+/* ---------- Floating nav buttons ---------- */
+#rchan-nav {
+  position: fixed; right: 12px; bottom: 12px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 6px;
+}
+#rchan-nav button {
+  width: 40px; height: 40px; border: 0; border-radius: 50%; cursor: pointer;
+  font-size: 17px; line-height: 40px; text-align: center;
+  background: #c8102e; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  opacity: .82; transition: opacity .12s ease, transform .08s ease;
+}
+#rchan-nav button:hover { opacity: 1; transform: translateY(-1px); }
+
+/* ---------- Per-post hide toggle ---------- */
+.rchan-hide {
+  cursor: pointer; user-select: none; margin-right: 5px; opacity: .55;
+  font-family: monospace; font-weight: 700;
+}
+.rchan-hide:hover { opacity: 1; }
+.rchan-stub {
+  cursor: pointer; opacity: .6; font-size: .85em; padding: 2px 6px;
+  display: block; margin: 4px 0;
+}
+.rchan-stub:hover { opacity: 1; }
+
+/* ---------- Hover-zoom preview ---------- */
+#rchan-zoom {
+  position: fixed; z-index: 10000; pointer-events: none; display: none;
+  max-width: 90vw; max-height: 90vh; border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.5); background: #0008;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .innerPost, .innerOP { padding: 8px; }
+  .postCell { margin: 8px 4px; }
+  /* keep replies from being pushed off-screen by deep indentation */
+  .divMessage { margin-left: 0 !important; }
+  /* thumbnails a touch smaller so text has room */
+  .imgLink img { max-height: 40vh; width: auto; }
+  /* bigger tap targets for the post links */
+  .linkQuote, .linkReply, .linkName, .rchan-hide { padding: 3px 2px; display: inline-block; }
+  /* header/nav wraps instead of overflowing */
+  #dynamicHeader, nav { flex-wrap: wrap; font-size: 15px; }
+  #rchan-nav button { width: 44px; height: 44px; line-height: 44px; } /* thumb-friendly */
+  /* posting form fields fill the width */
+  #postingForm input[type=text], #postingForm textarea { max-width: 100%; box-sizing: border-box; }
+}

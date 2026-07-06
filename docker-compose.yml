@@ -62,6 +62,8 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./fe-overrides/mod.js:/etc/nginx/rchan/mod.js:ro
       - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
+      - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
+      - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
     ports:
       - "127.0.0.1:8081:80"     # rchan.xyz + boards.rchan.xyz -> DSM -> here
     networks:

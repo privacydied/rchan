@@ -159,14 +159,28 @@
     }
     return false;
   }
+  // Full-image URL for a hovered thumbnail. Thread/index: the imgLink href IS the file.
+  // Catalog: the linkThumb href points at the thread, so derive the file from the thumb
+  // src (/.media/t_<hash>) plus the cell's data-filemime (/.media/<hash>.<ext>).
+  var MIME_EXT = { "image/jpeg": "jpg", "image/pjpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp", "image/bmp": "bmp" };
+  function resolveFull(img, a, href) {
+    if (isImg(href)) { return href; }
+    if (a && a.classList && a.classList.contains("linkThumb")) {
+      var ext = MIME_EXT[(a.getAttribute("data-filemime") || "").toLowerCase()];
+      var m = (img.getAttribute("src") || "").match(/\/\.media\/t_([a-z0-9]+)$/i);
+      if (ext && m) { return "/.media/" + m[1] + "." + ext; }
+    }
+    return null;
+  }
   function onOver(e) {
     var img = e.target;
     if (!img || img.tagName !== "IMG") { return; }
     var a = (img.closest && img.closest("a")) || img.parentNode;
     var href = a && a.getAttribute ? a.getAttribute("href") : null;
-    if (!isImg(href) || isExpanded(img, a)) { hideZoom(); return; }
+    var full = resolveFull(img, a, href);
+    if (!full || isExpanded(img, a)) { hideZoom(); return; }
     if (!zoom) { zoom = document.createElement("img"); zoom.id = "rchan-zoom"; document.body.appendChild(zoom); }
-    zoom.src = href; zoom.style.display = "block"; onMove(e);
+    zoom.src = full; zoom.style.display = "block"; onMove(e);
   }
   function onMove(e) {
     if (!zoom || zoom.style.display !== "block") { return; }
@@ -193,11 +207,45 @@
     }
   }
 
+  /* ---------- Catalog: card-size selector (S/M/L/XL, persisted) ---------- */
+  var CAT_KEY = "rchan_catsize", CAT_SIZES = ["s", "m", "l", "xl"], CAT_NAMES = { s: "Small", m: "Medium", l: "Large", xl: "XL" };
+  function applyCatSize(sz) {
+    if (CAT_SIZES.indexOf(sz) < 0) { sz = "m"; }
+    for (var i = 0; i < CAT_SIZES.length; i++) { document.body.classList.remove("rchan-cat-" + CAT_SIZES[i]); }
+    document.body.classList.add("rchan-cat-" + sz);
+  }
+  function buildCatalogSize() {
+    if (!isCatalog()) { return; }
+    var cur = localStorage.getItem(CAT_KEY) || "m";
+    applyCatSize(cur);
+    var threads = document.getElementById("divThreads");
+    if (!threads || document.getElementById("rchan-catsize")) { return; }
+    var bar = document.createElement("div");
+    bar.id = "rchan-catsize";
+    var label = document.createElement("label");
+    label.textContent = "Card size ";
+    var sel = document.createElement("select");
+    for (var i = 0; i < CAT_SIZES.length; i++) {
+      var o = document.createElement("option");
+      o.value = CAT_SIZES[i]; o.textContent = CAT_NAMES[CAT_SIZES[i]];
+      if (CAT_SIZES[i] === cur) { o.selected = true; }
+      sel.appendChild(o);
+    }
+    sel.addEventListener("change", function () {
+      localStorage.setItem(CAT_KEY, sel.value);
+      applyCatSize(sel.value);
+    });
+    label.appendChild(sel);
+    bar.appendChild(label);
+    threads.parentNode.insertBefore(bar, threads);
+  }
+
   /* ---------- init + observe ---------- */
   var pending = false;
   function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateHide(document); decorateYou(document); }, 80); }
   function init() {
     buildNav();
+    buildCatalogSize();
     decorateHide(document);
     decorateYou(document);
     document.addEventListener("mouseover", onOver, true);

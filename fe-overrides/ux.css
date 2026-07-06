@@ -110,6 +110,26 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   box-shadow: 0 6px 24px rgba(0,0,0,.5); background: #0008;
 }
 
+/* ---------- Catalog: card-size selector + sizes (S/M/L/XL) ---------- */
+#rchan-catsize { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
+#rchan-catsize select { margin-left: 5px; padding: 3px 8px; border-radius: 6px; font: inherit; cursor: pointer; }
+
+/* body class set by the dropdown; overrides the theme's fixed .catalogCell/.linkThumb img */
+.rchan-cat-s  .catalogCell   { width: 8em;  height: 10em; }
+.rchan-cat-s  .linkThumb img { max-width: 84px;  max-height: 84px; }
+.rchan-cat-m  .catalogCell   { width: 12em; height: 14em; }  /* engine default */
+.rchan-cat-m  .linkThumb img { max-width: 128px; max-height: 128px; }
+.rchan-cat-l  .catalogCell   { width: 16em; height: 18em; }
+.rchan-cat-l  .linkThumb img { max-width: 182px; max-height: 182px; }
+.rchan-cat-xl .catalogCell   { width: 21em; height: 23em; }
+.rchan-cat-xl .linkThumb img { max-width: 256px; max-height: 256px; }
+
+/* keep big cards from blowing up narrow screens */
+@media (max-width: 640px) {
+  .rchan-cat-l .catalogCell, .rchan-cat-xl .catalogCell { width: 46vw; height: auto; min-height: 12em; }
+  .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
+}
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   body { font-size: 16px; }

@@ -198,37 +198,62 @@
     }
   }
 
-  /* ---------- Catalog: card-size selector (S/M/L/XL, persisted) ---------- */
+  /* ---------- Catalog toolbar: sort + card-size (persisted) + prefetch-on-hover ---------- */
   var CAT_KEY = "rchan_catsize", CAT_SIZES = ["s", "m", "l", "xl"], CAT_NAMES = { s: "Small", m: "Medium", l: "Large", xl: "XL" };
+  var SORT_KEY = "rchan_catsort", SORT_MODES = ["bump", "new", "replies", "images"];
+  var SORT_NAMES = { bump: "Bump order", new: "Newest", replies: "Most replies", images: "Most images" };
   function applyCatSize(sz) {
     if (CAT_SIZES.indexOf(sz) < 0) { sz = "m"; }
     for (var i = 0; i < CAT_SIZES.length; i++) { document.body.classList.remove("rchan-cat-" + CAT_SIZES[i]); }
     document.body.classList.add("rchan-cat-" + sz);
   }
-  function buildCatalogSize() {
-    if (!isCatalog()) { return; }
-    var cur = localStorage.getItem(CAT_KEY) || "m";
-    applyCatSize(cur);
-    var threads = document.getElementById("divThreads");
-    if (!threads || document.getElementById("rchan-catsize")) { return; }
-    var bar = document.createElement("div");
-    bar.id = "rchan-catsize";
-    var label = document.createElement("label");
-    label.textContent = "Card size ";
-    var sel = document.createElement("select");
-    for (var i = 0; i < CAT_SIZES.length; i++) {
-      var o = document.createElement("option");
-      o.value = CAT_SIZES[i]; o.textContent = CAT_NAMES[CAT_SIZES[i]];
-      if (CAT_SIZES[i] === cur) { o.selected = true; }
-      sel.appendChild(o);
+  var catalogOrig = null;
+  function catCells() { var t = document.getElementById("divThreads"); return t ? Array.prototype.slice.call(t.getElementsByClassName("catalogCell")) : []; }
+  function catNum(cell, cls) { var e = cell.getElementsByClassName(cls)[0]; return e ? (parseInt((e.textContent || "").replace(/\D/g, ""), 10) || 0) : 0; }
+  function catThreadId(cell) { var a = cell.getElementsByClassName("linkThumb")[0]; var m = a && (a.getAttribute("href") || "").match(/\/res\/(\d+)/); return m ? parseInt(m[1], 10) : 0; }
+  function sortCatalog(mode) {
+    var t = document.getElementById("divThreads"); if (!t) { return; }
+    var cells = catCells(); if (!cells.length) { return; }
+    if (!catalogOrig) { catalogOrig = cells.slice(); }         // capture bump (server) order once
+    var s;
+    if (mode === "new") { s = cells.slice().sort(function (a, b) { return catThreadId(b) - catThreadId(a); }); }
+    else if (mode === "replies") { s = cells.slice().sort(function (a, b) { return catNum(b, "labelReplies") - catNum(a, "labelReplies"); }); }
+    else if (mode === "images") { s = cells.slice().sort(function (a, b) { return catNum(b, "labelImages") - catNum(a, "labelImages"); }); }
+    else { s = catalogOrig.filter(function (c) { return c.parentNode === t; }); }
+    s.forEach(function (c) { t.appendChild(c); });             // appendChild moves existing nodes → reorders
+  }
+  function mkSelect(id, modes, names, cur, onChange) {
+    var s = document.createElement("select"); s.id = id;
+    for (var i = 0; i < modes.length; i++) {
+      var o = document.createElement("option"); o.value = modes[i]; o.textContent = names[modes[i]];
+      if (modes[i] === cur) { o.selected = true; } s.appendChild(o);
     }
-    sel.addEventListener("change", function () {
-      localStorage.setItem(CAT_KEY, sel.value);
-      applyCatSize(sel.value);
-    });
-    label.appendChild(sel);
-    bar.appendChild(label);
+    s.addEventListener("change", function () { onChange(s.value); });
+    var l = document.createElement("label"); l.appendChild(s); return l;
+  }
+  function buildCatalogTools() {
+    if (!isCatalog()) { return; }
+    var curSize = localStorage.getItem(CAT_KEY) || "m"; applyCatSize(curSize);
+    var curSort = localStorage.getItem(SORT_KEY) || "bump"; if (curSort !== "bump") { sortCatalog(curSort); }
+    var threads = document.getElementById("divThreads");
+    if (!threads || document.getElementById("rchan-cattools")) { return; }
+    var bar = document.createElement("div"); bar.id = "rchan-cattools";
+    var s1 = mkSelect("rchan-catsort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); });
+    s1.insertBefore(document.createTextNode("Sort "), s1.firstChild);
+    var s2 = mkSelect("rchan-catsize", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); });
+    s2.insertBefore(document.createTextNode("Card size "), s2.firstChild);
+    bar.appendChild(s1); bar.appendChild(s2);
     threads.parentNode.insertBefore(bar, threads);
+  }
+  // prefetch a thread page when hovering its catalog cell (snappier open)
+  var prefetched = {};
+  function onCatHover(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
+    if (!a) { return; }
+    var href = a.getAttribute("href");
+    if (!href || prefetched[href]) { return; }
+    prefetched[href] = 1;
+    var l = document.createElement("link"); l.rel = "prefetch"; l.href = href; document.head.appendChild(l);
   }
 
   /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
@@ -303,7 +328,8 @@
   function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); }, 80); }
   function init() {
     buildNav();
-    buildCatalogSize();
+    buildCatalogTools();
+    document.addEventListener("mouseover", onCatHover, true);
     decorateIcons(document);
     decorateYou(document);
     document.addEventListener("mouseover", onOver, true);

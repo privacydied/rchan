@@ -111,9 +111,15 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* the labeled icons get a pointer cursor so they read as interactive */
 .coloredIcon[data-tooltip] { cursor: pointer; }
 
-/* ---------- Catalog: card-size selector + sizes (S/M/L/XL) ---------- */
-#rchan-catsize { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
-#rchan-catsize select { margin-left: 5px; padding: 3px 8px; border-radius: 6px; font: inherit; cursor: pointer; }
+/* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
+#rchan-cattools { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
+#rchan-cattools label { margin: 0 9px; }
+#rchan-cattools select { margin-left: 5px; padding: 3px 8px; border-radius: 6px; font: inherit; cursor: pointer; }
+/* native catalog tools (#divTools: search / refresh / auto) — unhidden by catalog.js, themed here */
+#divTools { text-align: center; margin: 4px 0 2px; font-size: 13px; }
+#divTools input[type=text] { padding: 3px 8px; border-radius: 6px; margin: 0 4px; }
+#divTools #catalogRefreshButton { padding: 3px 10px; border-radius: 6px; cursor: pointer; margin: 0 4px; font: inherit; }
+.theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
 
 /* body class set by the dropdown; overrides the theme's fixed .catalogCell/.linkThumb img */
 .rchan-cat-s  .catalogCell   { width: 8em;  height: 10em; }

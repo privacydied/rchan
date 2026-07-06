@@ -81,6 +81,13 @@
     }
     if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
       btn("✎", "Reply / post", function () {
+        var pf = document.getElementById("postingForm");                 // expand if collapsed
+        if (pf && pf.style.display === "none") {
+          pf.style.display = "";
+          var t = document.getElementById("rchan-formtoggle");
+          if (t) { t.textContent = "－ Hide post form"; t.setAttribute("aria-expanded", "true"); }
+          try { localStorage.removeItem("rchan_form_collapsed"); } catch (e) {}
+        }
         var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
         if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
       });
@@ -524,6 +531,24 @@
     var input = document.getElementById("inputFiles");
     if (!msg && !input) { return; }
     form.setAttribute("data-enh", "1");
+
+    // Collapsible posting form: a toggle placed *before* #postingForm (so it survives the
+    // collapse and isn't hit by the engine's "#postingForm button" sizing). State persisted.
+    var COLLAPSE_KEY = "rchan_form_collapsed";
+    var tog = document.createElement("button");
+    tog.type = "button"; tog.id = "rchan-formtoggle";
+    form.parentNode.insertBefore(tog, form);
+    var setCollapsed = function (c) {
+      form.style.display = c ? "none" : "";
+      tog.textContent = c ? "＋ Show post form" : "－ Hide post form";
+      tog.setAttribute("aria-expanded", c ? "false" : "true");
+    };
+    tog.addEventListener("click", function () {
+      var collapse = form.style.display !== "none";        // visible now → collapse
+      setCollapsed(collapse);
+      try { collapse ? localStorage.setItem(COLLAPSE_KEY, "1") : localStorage.removeItem(COLLAPSE_KEY); } catch (e) {}
+    });
+    setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
     if (msg) {
       var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
       // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext

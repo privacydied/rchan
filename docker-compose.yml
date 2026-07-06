@@ -64,6 +64,10 @@ services:
       - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
       - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
+      - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro
+      - ./fe-overrides/sw.js:/etc/nginx/rchan/sw.js:ro
+      - ./branding/icon-192.png:/etc/nginx/rchan/icon-192.png:ro
+      - ./branding/icon-512.png:/etc/nginx/rchan/icon-512.png:ro
     ports:
       - "127.0.0.1:8081:80"     # rchan.xyz + boards.rchan.xyz -> DSM -> here
     networks:

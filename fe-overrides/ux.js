@@ -72,6 +72,7 @@
       b.type = "button"; b.innerHTML = html; b.title = title;
       b.addEventListener("click", fn);
       wrap.appendChild(b);
+      return b;
     }
     btn("↑", "Top", function () { window.scrollTo({ top: 0, behavior: SB }); });
     if (getBoard()) {
@@ -83,6 +84,15 @@
         var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
         if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
       });
+    }
+    if (curThreadId() && "Notification" in window) {
+      var bell = btn("🔔", "Notify me of new replies in this thread (while this tab is open)", function () {
+        if (localStorage.getItem(NOTIFY_KEY) === "1") { localStorage.removeItem(NOTIFY_KEY); bell.classList.remove("rchan-on"); return; }
+        Notification.requestPermission().then(function (p) {
+          if (p === "granted") { localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on"); }
+        });
+      });
+      if (localStorage.getItem(NOTIFY_KEY) === "1") { bell.classList.add("rchan-on"); }
     }
     btn("↓", "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
@@ -361,7 +371,7 @@
   }
 
   /* ---------- New-since-last-visit (thread + catalog) + replies-to-you ---------- */
-  var SEEN_KEY = "rchan_seen";
+  var SEEN_KEY = "rchan_seen", NOTIFY_KEY = "rchan_notify";
   function seenAll() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch (e) { return {}; } }
   function seenSave(o) { try { localStorage.setItem(SEEN_KEY, JSON.stringify(o)); } catch (e) {} }
   function curThreadId() {
@@ -400,6 +410,16 @@
     }
     all[key] = { maxId: curMax, replies: posts.length };
     seenSave(all);
+    // Foreground desktop notification when new posts land while the tab is hidden (opt-in via 🔔).
+    if (newCount > 0 && document.hidden && "Notification" in window &&
+        Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1") {
+      try {
+        var n = new Notification("rchan — " + newCount + " new repl" + (newCount > 1 ? "ies" : "y"), {
+          body: "/" + board + "/ · thread " + tid, icon: "/.rchan/icon-192.png", tag: "rchan-" + board + "-" + tid
+        });
+        n.onclick = function () { window.focus(); this.close(); };
+      } catch (e) {}
+    }
   }
   // On the catalog: badge threads that gained replies since you last opened them.
   function markNewInCatalog() {
@@ -576,6 +596,13 @@
     document.addEventListener("keydown", onKey);
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }
+  // PWA: register the (cache-free) service worker so the site is installable.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/.rchan/sw.js", { scope: "/" }).catch(function () {});
+    });
+  }
+
   hookPostCapture(); // wrap request APIs early, before any post is sent
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); } else { init(); }
 })();

@@ -1,0 +1,16 @@
+{
+  "name": "rchan",
+  "short_name": "rchan",
+  "description": "rchan imageboard",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EEEEE4",
+  "theme_color": "#c8102e",
+  "icons": [
+    { "src": "/.rchan/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/.rchan/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/.rchan/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

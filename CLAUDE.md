@@ -33,6 +33,24 @@ If something *seems* to require removing data (e.g. a stray test thread):
 > wiped the board's real content. No backup existed, so it was unrecoverable. This must
 > never happen again — treat the DB as sacred.
 
+## Regenerating a single thread's static HTML (non-destructive)
+LynxChan generates board/thread pages JIT and caches each post's **rendered HTML** inside
+the post document (`miscOps.individualCaches`: innerCache/outerCache/clearCache/…). If you
+edit a post's file/thumb data directly in Mongo, the page will keep showing the OLD render
+until that cache is cleared **and** the thread is rebuilt. To force a correct rebuild without
+touching post content or losing data:
+1. Clear the render cache on the affected posts — one `updateOne` per exact `postId`:
+   `db.posts.updateOne({boardUri:"rdr",postId:ID},{$unset:{innerCache:"",outerCache:"",previewCache:"",clearCache:"",alternativeCaches:"",hashedCache:"",previewHashedCache:"",outerHashedCache:"",outerClearCache:""}})`
+2. Trigger the running engine to re-render (it does the correct compressed JIT rebuild).
+   Log in as admin and toggle a thread setting on then off — net-zero content change:
+   - `curl -c cj -d login=... -d password=... "http://<lynxchan-ip>:8080/login.js?json=1"`
+   - `curl -b cj -e "http://<lynxchan-ip>:8080/x" -d boardUri=rdr -d threadId=54 -d lock=1 "http://<lynxchan-ip>:8080/changeThreadSettings.js?json=1"` then the same **without** `lock` to restore.
+   - The `Referer` host MUST equal the `Host` header (CSRF check in `formOps.checkReferer`).
+   `setNewThreadSettings` does `process.send({board,thread})` → master rebuilds the thread.
+Do NOT try to init the engine in a side-script (`require('./kernel')` re-runs boot → crash),
+and do NOT hand-edit the gridfs page (it's gzip-compressed with a `.gz` sibling + dedup).
+`regen-video-thumbs.js` already clears these caches after updating a thumb.
+
 ## Before ANY database operation
 - Default to **read-only**. Anything that writes → take a mongodump first.
 - For writes, scope to exact documents by `_id` and confirm the affected count is what you expect.

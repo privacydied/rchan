@@ -3,3 +3,4 @@ mongo-data/
 state/
 recovered-images/
 db-export.log
+regen-video-thumbs.js

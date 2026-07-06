@@ -213,19 +213,32 @@
     navLinkHome: "Home", navBoardList: "Board list", navOverboard: "Overboard",
     navPosting: "Posting help", linkManagement: "Board management",
     linkModeration: "Moderate this board", navOptions: "Settings",
-    linkAccount: "Your account", linkGlobalManagement: "Global management"
+    linkAccount: "Your account", linkGlobalManagement: "Global management",
+    // native modules that auto-inject their icons (watcher/gallery/favourite/side-catalog)
+    watcherButton: "Watch this thread", galleryLink: "Gallery view",
+    favouriteButton: "Favourite this board", navSideCatalog: "Toggle side catalog",
+    closeWatcherMenuButton: "Close", closeSideCatalogButton: "Close side catalog"
+  };
+  var CLASS_TITLES = {                          // labelled by class (these have no usable id)
+    watchButton: "Watch this thread",
+    linkQuote: "Reply — quotes this post"       // clicking a post No. opens Quick Reply with >>N
   };
   function humanizeId(id) {
     var s = id.replace(/^(link|nav)/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
   }
+  function iconLabel(el) {
+    if (el.id && ICON_TITLES[el.id]) { return ICON_TITLES[el.id]; }
+    for (var k in CLASS_TITLES) { if (el.classList && el.classList.contains(k)) { return CLASS_TITLES[k]; } }
+    return el.id ? humanizeId(el.id) : "";
+  }
   function decorateIcons(root) {
-    var icons = (root || document).querySelectorAll(".coloredIcon");
+    var icons = (root || document).querySelectorAll(".coloredIcon, #favouriteButton, .watchButton, .linkQuote");
     for (var i = 0; i < icons.length; i++) {
       var a = icons[i];
       if (a.getAttribute("data-tip")) { continue; }
       a.setAttribute("data-tip", "1");
-      var t = ICON_TITLES[a.id] || (a.id ? humanizeId(a.id) : "");
+      var t = iconLabel(a);
       if (!t) { continue; }
       a.setAttribute("data-tooltip", t);           // styled tooltip source (no native title)
       if (!a.getAttribute("aria-label")) { a.setAttribute("aria-label", t); }

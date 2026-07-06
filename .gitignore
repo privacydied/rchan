@@ -4,3 +4,10 @@ state/
 recovered-images/
 db-export.log
 regen-video-thumbs.js
+
+# TLS / certs — never commit (origin cert private key lives here)
+origin.pem
+private.key
+*.pem
+*.key
+*.crt

@@ -241,6 +241,32 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
+/* ============ Tier 3 — reduced-motion, spoiler/code polish, dark fixes ============ */
+
+/* Honour the OS "reduce motion" setting — neutralise transitions/animations site-wide
+   (favicon animation is paused separately in favicon.js). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* Spoiler: the engine blacks it out but its hover-reveal sets black text — invisible on the
+   dark theme. Fix the revealed colour per theme (also reveals on tap via :active). */
+.theme_dark span.spoiler:hover, .theme_dark span.spoiler:active { color: #c9ccd1 !important; }
+.theme_cream span.spoiler:hover, .theme_cream span.spoiler:active { color: #2e2e2e !important; }
+
+/* [code] blocks: the engine only sets overflow — give them a real monospace block look. */
+.divMessage code {
+  display: block; margin: 6px 0; padding: .55em .7em; border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .92em; line-height: 1.4; white-space: pre; overflow-x: auto;
+  background: #00000010; border: 1px solid #00000018;
+}
+.theme_dark .divMessage code { background: #0f1013; border-color: #2c2f36; color: #d7dae0; }
+.theme_cream .divMessage code { background: #f3efe4; border-color: #d7d7cb; color: #2e2e2e; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   body { font-size: 16px; }

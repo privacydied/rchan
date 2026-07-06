@@ -31,6 +31,22 @@
     window.WebSocket = Patched;
   })();
 
+  // Respect the OS "reduce motion" preference for our scripted scrolling.
+  var SB = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
+
+  /* Auto-dark: if the visitor hasn't explicitly chosen a theme and their OS prefers dark,
+     switch the default (cream) to dark. Respects an explicit pick (localStorage.selectedTheme)
+     and doesn't persist, so it keeps tracking the OS. Runs after themeLoader (we're at body end). */
+  (function autoDark() {
+    try {
+      if (localStorage.getItem("selectedTheme")) { return; }
+      if (!window.matchMedia || !matchMedia("(prefers-color-scheme: dark)").matches) { return; }
+      var b = document.body; if (!b) { return; }
+      if (/theme_\w+/.test(b.className)) { b.className = b.className.replace(/theme_\w+/, "theme_dark"); }
+      else { b.classList.add("theme_dark"); }
+    } catch (e) {}
+  })();
+
   function getBoard() {
     var el = document.getElementById("boardIdentifier");
     if (el && el.value) { return el.value; }
@@ -57,13 +73,13 @@
       b.addEventListener("click", fn);
       wrap.appendChild(b);
     }
-    btn("↑", "Top", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    btn("↑", "Top", function () { window.scrollTo({ top: 0, behavior: SB }); });
     if (getBoard()) {
       var onCat = isCatalog();
       btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
     }
     btn("↓", "Bottom", function () {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
     });
     document.body.appendChild(wrap);
   }
@@ -189,8 +205,8 @@
   }
   function onKey(e) {
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    if (e.key === "t") { window.scrollTo({ top: 0, behavior: "smooth" }); }
-    else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }
+    if (e.key === "t") { window.scrollTo({ top: 0, behavior: SB }); }
+    else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: SB }); }
     else if (e.key === "c") { toggleCatalog(); }
     else if (e.key === "r") {
       var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
@@ -404,7 +420,7 @@
       youBtn.title = "Jump to replies to your posts";
       youBtn.addEventListener("click", function () {
         youIdx = (youIdx + 1) % youHits.length;
-        youHits[youIdx].scrollIntoView({ behavior: "smooth", block: "center" });
+        youHits[youIdx].scrollIntoView({ behavior: SB, block: "center" });
       });
       document.body.appendChild(youBtn);
     }

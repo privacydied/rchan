@@ -15,5 +15,7 @@
 ];
 var l=document.querySelector("link[rel*=icon]");
 if(!l){l=document.createElement("link");l.rel="icon";document.head.appendChild(l);}
-var i=0;setInterval(function(){l.href=F[i];i=(i+1)%F.length;},90);
+var i=0;
+if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){l.href=F[0];}
+else{setInterval(function(){l.href=F[i];i=(i+1)%F.length;},90);}
 })();

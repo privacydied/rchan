@@ -240,12 +240,40 @@
     threads.parentNode.insertBefore(bar, threads);
   }
 
+  /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
+  var ICON_TITLES = {
+    linkBack: "Return to board index", linkReturn: "Return to board index",
+    linkTop: "Go to top", linkBottom: "Go to bottom",
+    navCatalog: "Catalog", linkLogs: "Board logs", linkRss: "RSS feed",
+    navLinkHome: "Home", navBoardList: "Board list", navOverboard: "Overboard",
+    navPosting: "Posting help", linkManagement: "Board management",
+    linkModeration: "Moderate this board", navOptions: "Settings",
+    linkAccount: "Your account", linkGlobalManagement: "Global management"
+  };
+  function humanizeId(id) {
+    var s = id.replace(/^(link|nav)/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  }
+  function decorateIcons(root) {
+    var icons = (root || document).querySelectorAll(".coloredIcon");
+    for (var i = 0; i < icons.length; i++) {
+      var a = icons[i];
+      if (a.getAttribute("data-tip")) { continue; }
+      a.setAttribute("data-tip", "1");
+      var t = ICON_TITLES[a.id] || (a.id ? humanizeId(a.id) : "");
+      if (!t) { continue; }
+      if (!a.title) { a.title = t; }
+      if (!a.getAttribute("aria-label")) { a.setAttribute("aria-label", t); }
+    }
+  }
+
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateHide(document); decorateYou(document); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateHide(document); decorateYou(document); decorateIcons(document); }, 80); }
   function init() {
     buildNav();
     buildCatalogSize();
+    decorateIcons(document);
     decorateHide(document);
     decorateYou(document);
     document.addEventListener("mouseover", onOver, true);

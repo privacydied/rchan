@@ -1,5 +1,7 @@
 // rchan UX layer — same-origin (CSP-safe) client enhancements.
-// Nav buttons, per-post hide, "(You)" highlighting, image hover-zoom, keyboard shortcuts.
+// Nav buttons, "(You)" highlighting, image hover-zoom, catalog card-size, icon tooltips,
+// keyboard shortcuts. Post hiding is intentionally NOT here — PenumbraLynx's native
+// hiding.js already provides a richer hide menu (hide post/OP/thread, filter name/ID/etc.).
 (function () {
   "use strict";
 
@@ -43,7 +45,7 @@
   /* ---------- localStorage helpers ---------- */
   function load(key) { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
   function save(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr.slice(-5000))); } catch (e) {} }
-  var HIDE_KEY = "rchan_hidden", YOU_KEY = "rchan_you";
+  var YOU_KEY = "rchan_you";
   function postId(inner) {
     var q = inner.querySelector(".linkQuote");
     return q ? (q.textContent || "").replace(/\D/g, "") : null;
@@ -105,43 +107,6 @@
         a.setAttribute("data-you", "1");
         a.appendChild(document.createTextNode(" (You)"));
       }
-    }
-  }
-
-  /* ---------- Per-post hide (persisted) ---------- */
-  function setHidden(inner, id, hide) {
-    var arr = load(HIDE_KEY), idx = arr.indexOf(id);
-    if (hide && idx < 0) { arr.push(id); save(HIDE_KEY, arr); }
-    if (!hide && idx > -1) { arr.splice(idx, 1); save(HIDE_KEY, arr); }
-    var stub = inner.previousSibling && inner.previousSibling.className === "rchan-stub" ? inner.previousSibling : null;
-    if (hide) {
-      inner.style.display = "none";
-      if (!stub) {
-        stub = document.createElement("span");
-        stub.className = "rchan-stub";
-        stub.textContent = "[+] hidden post " + (id ? "#" + id : "");
-        stub.addEventListener("click", function () { setHidden(inner, id, false); });
-        inner.parentNode.insertBefore(stub, inner);
-      }
-    } else {
-      inner.style.display = "";
-      if (stub) { stub.remove(); }
-    }
-  }
-  function decorateHide(root) {
-    var posts = (root || document).querySelectorAll(".innerPost, .innerOP"), hidden = load(HIDE_KEY);
-    for (var i = 0; i < posts.length; i++) {
-      var inner = posts[i];
-      if (inner.getAttribute("data-hide")) { continue; }
-      inner.setAttribute("data-hide", "1");
-      var id = postId(inner), anchor = inner.querySelector(".linkQuote");
-      if (anchor) {
-        var t = document.createElement("span");
-        t.className = "rchan-hide"; t.title = "Hide post"; t.textContent = "−"; // −
-        (function (ir, ii) { t.addEventListener("click", function () { setHidden(ir, ii, true); }); })(inner, id);
-        anchor.parentNode.insertBefore(t, anchor);
-      }
-      if (id && hidden.indexOf(id) > -1) { setHidden(inner, id, true); }
     }
   }
 
@@ -296,12 +261,11 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateHide(document); decorateYou(document); decorateIcons(document); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); }, 80); }
   function init() {
     buildNav();
     buildCatalogSize();
     decorateIcons(document);
-    decorateHide(document);
     decorateYou(document);
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);

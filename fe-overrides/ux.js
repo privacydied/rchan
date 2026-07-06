@@ -471,9 +471,11 @@
       var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
       // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext
       var FMT = [["B", "'''", "'''", "Bold"], ["I", "''", "''", "Italic"], ["Spoiler", "**", "**", "Spoiler"],
-                 ["S̶", "~~", "~~", "Strikethrough"], ["==", "==", "==", "Heading"], ["code", "[code]", "[/code]", "Code"]];
+                 ["S", "~~", "~~", "Strikethrough"], ["==", "==", "==", "Heading"], ["code", "[code]", "[/code]", "Code"]];
       FMT.forEach(function (f) {
         var b = document.createElement("button"); b.type = "button"; b.textContent = f[0]; b.title = f[3];
+        if (f[3] === "Strikethrough") { b.style.textDecoration = "line-through"; }  // CSS, not a combining char
+        else if (f[3] === "Italic") { b.style.fontStyle = "italic"; }
         b.addEventListener("click", function (ev) { ev.preventDefault(); wrapSel(msg, f[1], f[2]); });
         bar.appendChild(b);
       });

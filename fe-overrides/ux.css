@@ -211,12 +211,22 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* ---------- Post form: collapse toggle + toolbar, char counter, drag-drop, previews ---------- */
 #rchan-formtoggle {
-  display: inline-block; margin: 4px 0; padding: 3px 11px; border-radius: 6px;
+  display: block; width: -moz-fit-content; width: fit-content; margin: 6px auto; /* centered */
+  padding: 3px 11px; border-radius: 6px;
   border: 1px solid #0002; background: #0000000a; cursor: pointer; font: inherit;
   font-size: 13px; font-weight: 600;
 }
 #rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #rchan-formtoggle { background: #262a31; color: #c9ccd1; border-color: #333; }
+
+/* slide the posting form open/closed (grid-rows 1fr<->0fr animates true auto height;
+   the reduced-motion block above makes it instant when the OS asks). */
+#postingForm.rchan-form {
+  display: grid; grid-template-rows: 1fr;
+  transition: grid-template-rows .28s ease, opacity .28s ease;
+}
+#postingForm.rchan-form > * { min-height: 0; overflow: hidden; }
+#postingForm.rchan-collapsed { grid-template-rows: 0fr; opacity: 0; }
 .rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
 /* scoped under #postingForm to beat the engine's "#postingForm button {width:8em;font-size:125%}"
    (that rule is for the Post submit button; without the id our toolbar buttons inherit it). */

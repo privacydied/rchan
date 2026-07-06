@@ -82,8 +82,8 @@
     if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
       btn("✎", "Reply / post", function () {
         var pf = document.getElementById("postingForm");                 // expand if collapsed
-        if (pf && pf.style.display === "none") {
-          pf.style.display = "";
+        if (pf && pf.classList.contains("rchan-collapsed")) {
+          pf.classList.remove("rchan-collapsed");
           var t = document.getElementById("rchan-formtoggle");
           if (t) { t.textContent = "－ Hide post form"; t.setAttribute("aria-expanded", "true"); }
           try { localStorage.removeItem("rchan_form_collapsed"); } catch (e) {}
@@ -532,23 +532,27 @@
     if (!msg && !input) { return; }
     form.setAttribute("data-enh", "1");
 
-    // Collapsible posting form: a toggle placed *before* #postingForm (so it survives the
-    // collapse and isn't hit by the engine's "#postingForm button" sizing). State persisted.
+    // Collapsible posting form with a slide animation. The toggle sits *before* #postingForm
+    // (so it survives the collapse and dodges the "#postingForm button" sizing). Collapse is a
+    // grid-template-rows 1fr->0fr transition (animates true auto height); state is persisted.
     var COLLAPSE_KEY = "rchan_form_collapsed";
     var tog = document.createElement("button");
     tog.type = "button"; tog.id = "rchan-formtoggle";
     form.parentNode.insertBefore(tog, form);
+    form.classList.add("rchan-form");
     var setCollapsed = function (c) {
-      form.style.display = c ? "none" : "";
+      form.classList.toggle("rchan-collapsed", c);
       tog.textContent = c ? "＋ Show post form" : "－ Hide post form";
       tog.setAttribute("aria-expanded", c ? "false" : "true");
     };
     tog.addEventListener("click", function () {
-      var collapse = form.style.display !== "none";        // visible now → collapse
+      var collapse = !form.classList.contains("rchan-collapsed");   // visible now → collapse
       setCollapsed(collapse);
       try { collapse ? localStorage.setItem(COLLAPSE_KEY, "1") : localStorage.removeItem(COLLAPSE_KEY); } catch (e) {}
     });
-    setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
+    if (localStorage.getItem(COLLAPSE_KEY) === "1") {                // apply initial state w/o animating
+      form.style.transition = "none"; setCollapsed(true); void form.offsetHeight; form.style.transition = "";
+    } else { setCollapsed(false); }
     if (msg) {
       var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
       // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext

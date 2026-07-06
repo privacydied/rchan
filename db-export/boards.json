@@ -1,0 +1,28 @@
+[{
+	"_id": {
+		"$oid": "6a4aa8da1afc3ec1a5e9f3e9"
+	},
+	"boardUri": "rdr",
+	"boardName": "rdr",
+	"boardDescription": "rdr 4 eva",
+	"owner": "admin",
+	"settings": [
+		"disableIds"
+	],
+	"uniqueIps": 11,
+	"lastPostId": 51,
+	"captchaMode": 2.0,
+	"postsPerHour": 0,
+	"threadCount": 1.0,
+	"anonymousName": "",
+	"tags": [],
+	"rules": [
+		"You are responsible for your own posts.",
+		"rchan hosts posts; it does not author or endorse them.",
+		"No content that is unlawful under UK law.",
+		"No spam, flooding, or off-topic dumps.",
+		"Follow the global rules.",
+		"Report unlawful content or request removal at admin@rchan.xyz."
+	]
+}]
+

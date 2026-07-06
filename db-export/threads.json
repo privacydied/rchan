@@ -1,0 +1,35 @@
+[{
+	"_id": {
+		"$oid": "6a4b0b8ef77897902e1214ec"
+	},
+	"boardUri": "rdr",
+	"threadId": 51,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T01:57:34.841Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T01:57:34.79Z"
+	},
+	"subject": "Visible?",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "does this show on the index",
+	"email": null,
+	"files": [
+		{
+			"originalName": "e.gif",
+			"path": "/.media/be5ece24bd2ccc2b330ac3f9c60f5f958b89b5cf85cb69caa18919b2f78254de.gif",
+			"mime": "image/gif",
+			"thumb": "/.media/t_be5ece24bd2ccc2b330ac3f9c60f5f958b89b5cf85cb69caa18919b2f78254de",
+			"size": 52614,
+			"sha256": "be5ece24bd2ccc2b330ac3f9c60f5f958b89b5cf85cb69caa18919b2f78254de",
+			"width": 160,
+			"height": 160
+		}
+	],
+	"page": 1
+}]
+

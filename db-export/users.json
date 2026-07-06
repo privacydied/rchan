@@ -1,0 +1,11 @@
+[{
+	"_id": {
+		"$oid": "6a45494590499c1d8afa0f21"
+	},
+	"login": "admin",
+	"globalRole": 0,
+	"ownedBoards": [
+		"rdr"
+	]
+}]
+

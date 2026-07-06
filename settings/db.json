@@ -1,0 +1,5 @@
+{
+  "address": "mongo",
+  "port": 27017,
+  "db": "lynxchan"
+}

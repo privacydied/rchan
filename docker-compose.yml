@@ -1,0 +1,68 @@
+# rchan — LynxChan imageboard stack
+# Fronted by DSM's built-in reverse proxy + Certificate manager (TLS terminates there).
+# Host ports are bound to 127.0.0.1 ONLY: nothing is exposed to the LAN, so the
+# engine's trustedProxies:["*"] stays safe (only the local reverse proxy can reach it).
+services:
+  mongo:
+    image: mongo:4.4
+    container_name: rchan-mongo
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "1"]
+    volumes:
+      - ./mongo-data:/data/db
+    networks:
+      - rchan-internal
+
+  lynxchan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rchan-lynxchan:local
+    container_name: rchan-lynxchan
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    env_file: .env
+    environment:
+      DB_HOST: mongo
+      DB_PORT: "27017"
+      NODE_ENV: production
+    volumes:
+      - ./settings:/lynxchan/src/be/settings
+      - ./state:/lynxchan/state
+      # Custom site logo — replace ./branding/logo.png to rebrand (served at /.static/logo.png)
+      - ./branding/logo.png:/lynxchan/src/fe/static/logo.png:ro
+      # Customized front-page template (infoBox title text). Copy of PenumbraLynx's
+      # index.html — re-copy from the image if the upstream template changes.
+      - ./fe-overrides/index.html:/lynxchan/src/fe/templates/pages/index.html:ro
+      # Adds the "Cream" theme to the theme switcher (copy of PenumbraLynx themes.js).
+      - ./fe-overrides/themes.js:/lynxchan/src/fe/static/js/themes.js:ro
+      # Site-wide global rules page (copy of PenumbraLynx globalRules.html).
+      - ./fe-overrides/globalRules.html:/lynxchan/src/fe/static/pages/globalRules.html:ro
+      # Captcha-gated contact page (reveals admin@rchan.xyz after solving a captcha).
+      - ./fe-overrides/contact.html:/lynxchan/src/fe/static/pages/contact.html:ro
+    # No published host port: the engine is reached only via the internal network
+    # (rchan-internal) by the router below, as http://lynxchan:8080.
+    networks:
+      - rchan-internal
+
+  # Front router: the ONLY host-exposed port. DSM points every hostname here on
+  # 8081; this nginx splits by Host (rchan.xyz = landing, boards.rchan.xyz = engine),
+  # so DSM never needs per-subdomain backend ports.
+  landing:
+    image: nginx:alpine
+    container_name: rchan-landing
+    restart: unless-stopped
+    depends_on:
+      - lynxchan
+    volumes:
+      - /volume1/web/rchan:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:8081:80"     # rchan.xyz + boards.rchan.xyz -> DSM -> here
+    networks:
+      - rchan-internal
+
+networks:
+  rchan-internal:
+    driver: bridge

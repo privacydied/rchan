@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Contact</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="/.static/css/global.css">
+</head>
+<body class="theme_cream">
+
+  <script src="/.static/js/themeLoader.js"></script>
+
+  <nav id="dynamicHeader"></nav>
+
+  <header>
+    <img src="/.static/logo.png" class="logoImg" alt="logo" />
+  </header>
+
+  <div id="settingsWrapper">
+    <fieldset id="settingsFieldset">
+      <legend>Contact</legend>
+
+      <p>
+        To report unlawful content, request its removal, or reach an administrator for
+        any other reason, solve the captcha below to reveal our contact address. Please
+        include the <strong>post link</strong> and the <strong>reason</strong> so we can
+        act quickly.
+      </p>
+
+      <form id="capForm" onsubmit="return false;">
+        <p>
+          <img id="capImg" alt="captcha"
+               style="vertical-align:middle;border:1px solid #999;background:#fff"
+               src="/captcha.js" />
+          <a href="#" id="capReload" title="new captcha">&#8635;</a>
+        </p>
+        <p>
+          <input id="capAns" type="text" autocomplete="off" placeholder="type the captcha" />
+          <button id="revealBtn" type="submit">Reveal contact</button>
+        </p>
+        <p id="capMsg" style="color:#a11;min-height:1em"></p>
+      </form>
+
+      <p id="contactReveal"></p>
+
+    </fieldset>
+  </div>
+
+  <script>
+  (function () {
+    function getCookie(n) {
+      var m = document.cookie.match('(^|;)\\s*' + n + '\\s*=\\s*([^;]+)');
+      return m ? m.pop() : '';
+    }
+    var img = document.getElementById('capImg');
+    function reload() { img.src = '/captcha.js?d=' + Date.now(); }
+    document.getElementById('capReload').addEventListener('click', function (e) {
+      e.preventDefault(); reload();
+    });
+    document.getElementById('revealBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('capMsg');
+      var ans = document.getElementById('capAns').value.trim();
+      var cid = getCookie('captchaid');
+      if (!ans) { msg.textContent = 'Enter the captcha text.'; return; }
+      if (!cid) { msg.textContent = 'Captcha expired — reloading.'; reload(); return; }
+      msg.textContent = 'Checking…';
+      fetch('/solveCaptcha.js?json=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin',
+        body: 'captchaId=' + encodeURIComponent(cid) + '&answer=' + encodeURIComponent(ans)
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.status === 'ok') {
+          var email = ['admin', 'rchan.xyz'].join('@');
+          document.getElementById('contactReveal').innerHTML =
+            'Contact: <a href="mailto:' + email + '">' + email + '</a>';
+          document.getElementById('capForm').style.display = 'none';
+        } else {
+          msg.textContent = 'Incorrect — try again.';
+          document.getElementById('capAns').value = ''; reload();
+        }
+      }).catch(function () {
+        msg.textContent = 'Something went wrong — try again.'; reload();
+      });
+    });
+  })();
+  </script>
+
+</body>
+</html>

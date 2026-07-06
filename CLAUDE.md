@@ -8,6 +8,12 @@ imageboard's data. This applies to the whole `lynxchan` MongoDB, every collectio
 and the `mongo-data/` files on disk. There is **no scenario** — cleanup, testing,
 "just a test thread", refactor, reset — where wiping the DB is acceptable.
 
+**This means: DO NOT RUN THE COMMAND.** The rule is about *execution*, not just intent.
+Never type, paste, `docker exec`, script, schedule, or otherwise **run** any command
+that could delete/overwrite DB data — not "to test", not "temporarily", not as a hidden
+sub-step of a larger task, not even if you plan to restore it after. If a command *could*
+wipe data, it does not get run. Full stop. When in doubt, don't run it — ask first.
+
 **Forbidden** unless the user explicitly asks for that exact operation *in the moment*
 **and** a fresh verified backup was just taken:
 - `deleteMany`, `deleteOne`, `remove`, `drop()`, `dropDatabase()`

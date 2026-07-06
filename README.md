@@ -118,6 +118,17 @@ sudo docker exec -i rchan-mongo mongorestore --gzip --archive --drop \
   < /volume1/cloud/Dropbox/rchan-backups/rchan-<timestamp>.archive.gz
 ```
 
+### Content in git (`db-export.sh`)
+`db-export.sh` exports the **content** collections (`boards`, `threads`, `posts`,
+`users`) to sorted, pretty JSON in `db-export/*.json` and commits any change — small,
+human-readable, and diffable. **No media** (gridfs stays in the Dropbox dumps) and **no
+secrets** (user passwords, poster IPs/asn/bypassId, board ipSalt are excluded by field
+whitelists). Runs daily via cron (`/etc/crontab`, 04:15) and can be run by hand:
+`sudo /volume1/docker/rchan/db-export.sh`. Set a git remote to push it off-box (the
+local Gitea is on this same NAS, so it isn't off-box on its own).
+
+> ⛔ **See `CLAUDE.md` — the database must never be wiped/deleted under any circumstances.**
+
 ## Branding & front page
 **Logo** — bind-mounted from `./branding/logo.png` to the engine's
 `/lynxchan/src/fe/static/logo.png` (served at `/.static/logo.png`, shown in the header /

@@ -1,3 +1,5 @@
 .env
 mongo-data/
 state/
+recovered-images/
+db-export.log

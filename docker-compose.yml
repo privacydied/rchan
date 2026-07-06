@@ -61,6 +61,7 @@ services:
       - /volume1/web/rchan:/usr/share/nginx/html:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./fe-overrides/mod.js:/etc/nginx/rchan/mod.js:ro
+      - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
     ports:
       - "127.0.0.1:8081:80"     # rchan.xyz + boards.rchan.xyz -> DSM -> here
     networks:

@@ -191,12 +191,17 @@ exports.setThreadTitle = function(document, threadData) {
     var ogDesc = threadData.message ? String(threadData.message)
         .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 200)
         : ('/' + threadData.boardUri + '/');
-    var ogImg = SITE + '/.static/logo.png';
+    // logo.png is an animated GIF (Twitter cards reject GIF); use a real PNG fallback.
+    // Prefer the OP's FULL image for a proper large card — the thumb is only ~128px, below
+    // Twitter's 300x157 minimum. For video/audio OPs fall back to the (generated) thumb.
+    var ogImg = SITE + '/.rchan/icon-512.png';
     var large = false;
-    if (threadData.files && threadData.files.length
-        && threadData.files[0].thumb) {
-      ogImg = SITE + threadData.files[0].thumb;
+    var f = (threadData.files && threadData.files.length) ? threadData.files[0] : null;
+    if (f && /^image\//.test(f.mime || '') && f.path) {
+      ogImg = SITE + f.path;
       large = true;
+    } else if (f && f.thumb) {
+      ogImg = SITE + f.thumb;
     }
     var ogUrl = SITE + '/' + threadData.boardUri + '/res/'
         + threadData.threadId + '.html';
@@ -523,10 +528,10 @@ exports.page = function(page, threads, pageCount, boardData, flagData,
         + '<meta property="og:description" content="'
         + bEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">'
         + '<meta property="og:image" '
-        + 'content="https://boards.rchan.xyz/.static/logo.png">'
+        + 'content="https://boards.rchan.xyz/.rchan/icon-512.png">'
         + '<meta name="twitter:card" content="summary">'
         + '<meta name="twitter:image" '
-        + 'content="https://boards.rchan.xyz/.static/logo.png">';
+        + 'content="https://boards.rchan.xyz/.rchan/icon-512.png">';
     document = document.replace('</head>', function() {
       return bOg + '</head>';
     });

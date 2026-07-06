@@ -49,7 +49,7 @@ touching post content or losing data:
    `setNewThreadSettings` does `process.send({board,thread})` → master rebuilds the thread.
 Do NOT try to init the engine in a side-script (`require('./kernel')` re-runs boot → crash),
 and do NOT hand-edit the gridfs page (it's gzip-compressed with a `.gz` sibling + dedup).
-`regen-video-thumbs.js` already clears these caches after updating a thumb.
+`tests/regen-video-thumbs.js` already clears these caches after updating a thumb.
 
 ## Before ANY database operation
 - Default to **read-only**. Anything that writes → take a mongodump first.

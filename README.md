@@ -100,6 +100,24 @@ settings UI (the sentinel stops the entrypoint from re-creating root).
 ## Config changes
 Edit `settings/general.json`, then `sudo docker compose restart lynxchan`.
 
+## Backups
+The `backup` service (`mongo:4.4`) runs `mongodump` of the `lynxchan` DB to
+`/volume1/cloud/Dropbox/rchan-backups/` — one dump immediately on start, then every 24h,
+keeping the newest 14 (`rchan-<timestamp>.archive.gz`, gzip, **includes gridfs media**).
+Dropbox syncs them off-box.
+
+**`mongo-data/` is the only irreplaceable state** — threads, posts, accounts, and
+uploaded media all live in MongoDB. Take a manual dump before any risky DB change:
+```sh
+sudo docker exec rchan-mongo mongodump --db lynxchan --gzip --archive \
+  > /volume1/cloud/Dropbox/rchan-backups/rchan-manual-$(date +%Y%m%d-%H%M%S).archive.gz
+```
+**Restore** an archive into the running DB (`--drop` replaces collections):
+```sh
+sudo docker exec -i rchan-mongo mongorestore --gzip --archive --drop \
+  < /volume1/cloud/Dropbox/rchan-backups/rchan-<timestamp>.archive.gz
+```
+
 ## Branding & front page
 **Logo** — bind-mounted from `./branding/logo.png` to the engine's
 `/lynxchan/src/fe/static/logo.png` (served at `/.static/logo.png`, shown in the header /

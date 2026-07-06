@@ -66,6 +66,37 @@ services:
     networks:
       - rchan-internal
 
+  # Nightly mongodump of the imageboard DB to Dropbox (off-box), keeping the last 14.
+  # Runs one backup immediately on start, then every 24h.
+  # Restore:  sudo docker exec -i rchan-mongo mongorestore --gzip --archive --drop < rchan-YYYYMMDD-HHMMSS.archive.gz
+  backup:
+    image: mongo:4.4
+    container_name: rchan-backup
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    networks:
+      - rchan-internal
+    volumes:
+      - /volume1/cloud/Dropbox/rchan-backups:/backups
+    entrypoint:
+      - bash
+      - -c
+      - |
+        until mongo --host mongo --quiet --eval "db.version()" >/dev/null 2>&1; do
+          echo "[backup] waiting for mongo..."; sleep 3;
+        done
+        while true; do
+          ts=$$(date +%Y%m%d-%H%M%S)
+          if mongodump --host mongo --db lynxchan --gzip --archive="/backups/rchan-$$ts.archive.gz"; then
+            echo "[backup] ok $$ts ($$(du -h /backups/rchan-$$ts.archive.gz | cut -f1))"
+          else
+            echo "[backup] FAILED $$ts"; rm -f "/backups/rchan-$$ts.archive.gz"
+          fi
+          ls -1t /backups/rchan-*.archive.gz 2>/dev/null | tail -n +15 | xargs -r rm -f
+          sleep 86400
+        done
+
 networks:
   rchan-internal:
     driver: bridge

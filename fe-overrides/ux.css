@@ -95,6 +95,12 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 .rchan-stub:hover { opacity: 1; }
 
+/* ---------- "(You)" — your own posts + quotes pointing at them ---------- */
+.rchan-you { box-shadow: inset 4px 0 0 #c8102e !important; }
+.theme_cream .rchan-you { background: #f4e9e3 !important; }
+.theme_dark .rchan-you { background: #2a2126 !important; }
+.quoteLink[data-you] { font-weight: 700; }
+
 /* ---------- Hover-zoom preview ---------- */
 #rchan-zoom {
   position: fixed; z-index: 10000; pointer-events: none; display: none;

@@ -30,7 +30,7 @@ body {
    commercial font that ships nowhere, so: Helvetica Neue at its Black weight
    (macOS/iOS render it natively; others fall back to Inter 900 / Arial Black)
    plus a gentle scaleX + tracking to fake the extended width. */
-.boardHeader p#labelName {
+.boardHeader p#labelName, #catalogId {
   font-family: "Helvetica Neue", "HelveticaNeue", "Inter", "Arial Black", Arial, sans-serif;
   font-weight: 900;
   font-stretch: expanded;
@@ -38,9 +38,14 @@ body {
   transform: scaleX(1.06);
   transform-origin: center;
 }
-.boardHeader p#labelName, .boardHeader p#labelDescription { color: #393939; }
+/* catalog heading: match labelName's 200% (engine has it at 150%) and make the
+   span.title inside follow the heading's font instead of the generic .title rule */
+#catalogId { font-size: 200%; }
+#catalogId .title { font-family: inherit; font-size: 100%; }
+.boardHeader p#labelName, .boardHeader p#labelDescription, #catalogId { color: #393939; }
 /* …but keep them readable on the dark theme */
-.theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription { color: #c9ccd1; }
+.theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
+.theme_dark #catalogId { color: #c9ccd1; }
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
 /* file-info blocks (name / size / dims) in fixed-width type */
@@ -123,10 +128,10 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   display: flex; flex-direction: column; gap: 6px;
 }
 #rchan-nav button {
-  width: 40px; height: 40px; border: 0; border-radius: 50%; cursor: pointer;
+  width: 40px; height: 40px; border: 0; border-radius: 0; cursor: pointer;
   font-size: 18px; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  background: #c8102e; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  background: #393939; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .82; transition: opacity .12s ease, transform .08s ease;
 }
 #rchan-nav button svg { display: block; }

@@ -92,11 +92,8 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .theme_dark .rchan-you { background: #2a2126 !important; }
 .quoteLink[data-you] { font-weight: 700; }
 
-/* ---------- Video hover-to-play preview ---------- */
-.rchan-vidhover { object-fit: cover; border-radius: 4px; display: block; background: #000; cursor: pointer; }
-
-/* ---------- Hover-zoom preview ---------- */
-#rchan-zoom {
+/* ---------- Hover-zoom preview (image + video pop-out) ---------- */
+#rchan-zoom, #rchan-vidzoom {
   position: fixed; z-index: 10000; pointer-events: none; display: none;
   max-width: 90vw; max-height: 90vh; border-radius: 6px;
   box-shadow: 0 6px 24px rgba(0,0,0,.5); background: #0008;

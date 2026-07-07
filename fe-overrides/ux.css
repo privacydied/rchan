@@ -54,7 +54,8 @@ body hr { border: none; border-top: 1px solid #CFCFC4; height: 0; }
 /* ---------- Type sizes (body prefix outranks engine %-rules; all fixed) ---------- */
 body .postInfo, body .opHead, body .divMessage, body .panelIp, body .panelProxyIp,
   body .contentOmissionIndicator, body .labelOmission, body .labelId,
-  body .panelASN, body .panelBypassId { font-size: 10pt; }
+  body .panelASN, body .panelBypassId,
+  body .panelUploads, body .opUploadPanel { font-size: 10pt; }
 body input, body select, body textarea { font-size: 10pt; }
 body #postingForm button, body #qrbutton { font-size: 10pt; }
 body #postingForm label, body .divRefresh label, body .divRefresh input,
@@ -161,15 +162,15 @@ body nav, body #dynamicHeader {
   height: auto;
   box-sizing: border-box;      /* engine sets width:100%; without this the 6px
                                   side padding overflows the viewport -> h-scrollbar */
-  padding: 4px 6px 12px 6px;   /* generous padding-bottom */
+  padding: 4px 6px 6px 6px;
   line-height: 1.6;
   background: #E6E6DA;
   border-bottom: 1px solid #CFCFC4;
 }
 body #dynamicHeader a, body nav a { padding: 2px 4px; display: inline-block; }
 body #navLinkSpan, body #navBoardsSpan, body #navOptionsSpan { margin-right: 10px; }
-html body { margin-top: 42px; }              /* clear the fixed nav */
-body #sideCatalogDiv { top: 42px; height: calc(100vh - 42px); }
+html body { margin-top: 36px; }              /* clear the fixed nav */
+body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
 /* footer (4chan #absbot: x-small) */
 body footer { font-size: x-small; }
 

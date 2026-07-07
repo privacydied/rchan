@@ -589,6 +589,35 @@
     ta.focus(); ta.setSelectionRange(ls, ls + rep.length);
     ta.dispatchEvent(new Event("input", { bubbles: true }));
   }
+  // Formatting toolbar for a message textarea (main post form + quick reply).
+  function buildFmtBar(msg) {
+    var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
+    // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext
+    var FMT = [["B", "'''", "'''", "Bold"], ["I", "''", "''", "Italic"], ["Spoiler", "**", "**", "Spoiler"],
+               ["S", "~~", "~~", "Strikethrough"], ["==", "==", "==", "Heading"], ["code", "[code]", "[/code]", "Code"]];
+    FMT.forEach(function (f) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = f[0]; b.title = f[3];
+      if (f[3] === "Strikethrough") { b.style.textDecoration = "line-through"; }  // CSS, not a combining char
+      else if (f[3] === "Italic") { b.style.fontStyle = "italic"; }
+      b.addEventListener("click", function (ev) { ev.preventDefault(); wrapSel(msg, f[1], f[2]); });
+      bar.appendChild(b);
+    });
+    var qb = document.createElement("button"); qb.type = "button"; qb.textContent = ">"; qb.title = "Greentext";
+    qb.addEventListener("click", function (ev) { ev.preventDefault(); prefixLines(msg, ">"); }); bar.appendChild(qb);
+    var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
+    var upd = function () { count.textContent = msg.value.length + " chars"; };
+    msg.addEventListener("input", upd); upd();
+    return bar;
+  }
+  // Quick Reply is built lazily by qr.js (innerHTML); the MutationObserver-driven
+  // refresh() lands here once #qrbody exists. wrapSel/prefixLines dispatch an
+  // "input" event, which qr.js's registerSync mirrors into #fieldMessage.
+  function enhanceQuickReply() {
+    var ta = document.getElementById("qrbody");
+    if (!ta || ta.getAttribute("data-fmt")) { return; }
+    ta.setAttribute("data-fmt", "1");
+    ta.parentNode.insertBefore(buildFmtBar(ta), ta);
+  }
   function enhancePostForm() {
     var form = document.getElementById("postingForm");
     if (!form || form.getAttribute("data-enh")) { return; }
@@ -619,23 +648,7 @@
       form.style.transition = "none"; setCollapsed(true); void form.offsetHeight; form.style.transition = "";
     } else { setCollapsed(false); }
     if (msg) {
-      var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
-      // LynxChan markup: '''bold''' ''italic'' **spoiler** ~~strike~~ ==heading== [code] >greentext
-      var FMT = [["B", "'''", "'''", "Bold"], ["I", "''", "''", "Italic"], ["Spoiler", "**", "**", "Spoiler"],
-                 ["S", "~~", "~~", "Strikethrough"], ["==", "==", "==", "Heading"], ["code", "[code]", "[/code]", "Code"]];
-      FMT.forEach(function (f) {
-        var b = document.createElement("button"); b.type = "button"; b.textContent = f[0]; b.title = f[3];
-        if (f[3] === "Strikethrough") { b.style.textDecoration = "line-through"; }  // CSS, not a combining char
-        else if (f[3] === "Italic") { b.style.fontStyle = "italic"; }
-        b.addEventListener("click", function (ev) { ev.preventDefault(); wrapSel(msg, f[1], f[2]); });
-        bar.appendChild(b);
-      });
-      var qb = document.createElement("button"); qb.type = "button"; qb.textContent = ">"; qb.title = "Greentext";
-      qb.addEventListener("click", function (ev) { ev.preventDefault(); prefixLines(msg, ">"); }); bar.appendChild(qb);
-      var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
-      msg.parentNode.insertBefore(bar, msg);
-      var upd = function () { count.textContent = msg.value.length + " chars"; };
-      msg.addEventListener("input", upd); upd();
+      msg.parentNode.insertBefore(buildFmtBar(msg), msg);
       if (input) {
         msg.addEventListener("paste", function (e) {
           var items = e.clipboardData && e.clipboardData.items; if (!items) { return; }
@@ -662,7 +675,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); }, 80); }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
@@ -687,7 +700,7 @@
     document.addEventListener("keydown", onKey);
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
-     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm
+     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

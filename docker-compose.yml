@@ -27,6 +27,8 @@ services:
       DB_HOST: mongo
       DB_PORT: "27017"
       NODE_ENV: production
+      # fallback module path for host-mounted addon deps (geoip-lite)
+      NODE_PATH: /lynxchan/addon-deps
     volumes:
       - ./settings:/lynxchan/src/be/settings
       - ./state:/lynxchan/state
@@ -49,6 +51,11 @@ services:
       - ./fe-overrides/contact.html:/lynxchan/src/fe/static/pages/contact.html:ro
       # geoflags addon: country flags next to the name (geoip-lite), enabled via addons + locationFlagMode
       - ./fe-overrides/addons/geoflags.js:/lynxchan/src/be/addons/geoflags.js:ro
+      # geoip-lite + deps for the geoflags addon, installed on the HOST (pure JS + data,
+      # arch-independent). Mounted at a side path and resolved via NODE_PATH because the
+      # running image predates the Dockerfile's geoip-lite layer — a `docker exec npm
+      # install` doesn't survive container recreation (flags silently died that way once).
+      - ./addons-deps/node_modules:/lynxchan/addon-deps:ro
       - ./fe-overrides/addons/fixvideothumbs.js:/lynxchan/src/be/addons/fixvideothumbs.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.

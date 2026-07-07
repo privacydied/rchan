@@ -35,9 +35,12 @@ body {
   font-weight: 900;
   font-stretch: expanded;
   letter-spacing: .03em;
-  transform: scaleX(1.12);
+  transform: scaleX(1.06);
   transform-origin: center;
 }
+.boardHeader p#labelName, .boardHeader p#labelDescription { color: #393939; }
+/* …but keep them readable on the dark theme */
+.theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription { color: #c9ccd1; }
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
 /* file-info blocks (name / size / dims) in fixed-width type */
@@ -58,6 +61,8 @@ body .postInfo, body .opHead, body .divMessage, body .panelUploads, body .panelI
 }
 /* …except file info, which goes smaller (after the undo above so it wins) */
 body .panelUploads, body .opUploadPanel { font-size: 75%; }
+/* …and the post header line (name / subject / date / No.), slightly reduced */
+body .postInfo, body .opHead { font-size: 90%; }
 
 /* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
 .innerPost, .innerOP {
@@ -226,8 +231,9 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .watchedNotification::before { color: #e06c75 !important; }
 
 /* Quick Reply (qr.js #quick-reply) */
-#quick-reply { border-radius: 9px; overflow: hidden; box-shadow: 0 12px 34px rgba(0,0,0,.4); }
-#quick-reply table { border-radius: 9px; }
+#quick-reply { overflow: hidden; box-shadow: 0 12px 34px rgba(0,0,0,.4); width: min(560px, 94vw); }
+#quick-reply table { width: 100%; }
+#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; }
 .theme_cream #quick-reply table { background: #fbf7ee; }
 
 /* Gallery lightbox (gallery.js .modalPanel / .galleryImage) */

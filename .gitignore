@@ -10,3 +10,8 @@ private.key
 *.pem
 *.key
 *.crt
+
+# geoip-lite + deps for the geoflags addon — host-installed, mounted into the
+# engine at /lynxchan/addon-deps (see docker-compose.yml). ~163MB of node_modules;
+# regenerate with: cd addons-deps && npm install
+addons-deps/

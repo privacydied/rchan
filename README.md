@@ -177,3 +177,19 @@ sudo docker compose build --build-arg ENGINE_REPO=https://github.com/skyssolutio
 sudo docker compose build --build-arg FE_REPO=https://gitgud.io/LynxChan/LynxChanFront-Placeholder.git
 sudo docker compose up -d
 ```
+
+## Admin flag override (`flagoverride` addon)
+Root/admin accounts get a "Flag" dropdown in the post form (built client-side by
+`ux.js` only when `/account.js` reports `globalRole <= 1`) to manually pick the
+country flag on a new thread/reply, overriding geoip. **Enforcement is
+server-side** in `fe-overrides/addons/flagoverride.js`: it wraps
+`postingOps.thread.newThread` / `postingOps.post.newPost` (all posting paths,
+incl. no-JS/TOR), strips the `flagOverride` field from every request, and only
+re-applies it for authenticated accounts with
+`globalRole <= flagOverrideMinRole` (set in `settings/general.json`, default 1)
+after validating the code against the flag PNGs shipped with the front-end.
+Unauthorized or invalid values are dropped silently (post falls back to the
+automatic flag). Board custom flags keep using the engine's native `flag`
+field/validation. NOTE: `flagOverrideMinRole` is a custom key — saving global
+settings from the web UI rewrites general.json and may drop it; the addon then
+defaults to 1.

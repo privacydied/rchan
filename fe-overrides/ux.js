@@ -139,7 +139,17 @@
     var re = /\/(replyThread|newThread)\.js/;
     var oOpen = XMLHttpRequest.prototype.open, oSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.open = function (m, u) { this.__u = u; return oOpen.apply(this, arguments); };
-    XMLHttpRequest.prototype.send = function () {
+    XMLHttpRequest.prototype.send = function (body) {
+      // admin flag override: ride the outgoing posting FormData (the engine's
+      // fe JS builds its payload from a fixed field list, so a plain <select>
+      // in the form would never be sent). Server re-checks the role anyway.
+      try {
+        var sel = document.getElementById("rchan-flagoverride");
+        if (sel && /^[a-z]{2}$/i.test(sel.value) && re.test(this.__u || "") &&
+            typeof FormData !== "undefined" && body instanceof FormData) {
+          body.append("flagOverride", sel.value.toUpperCase());
+        }
+      } catch (e) {}
       var x = this;
       this.addEventListener("load", function () {
         try {
@@ -758,6 +768,56 @@
     ta.setAttribute("data-fmt", "1");
     ta.parentNode.insertBefore(buildFmtBar(ta), ta);
   }
+  /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the
+     flagoverride addon server-side). LynxChan serves one cached page to every
+     role, so per-role markup can't be server-rendered; instead the dropdown is
+     built only after /account.js confirms globalRole <= 1. A normal poster
+     never gets the control, and hand-crafting the field is rejected by the
+     addon's role check anyway. ---------- */
+  function buildFlagOverride(form, msg) {
+    if (document.getElementById("rchan-flagoverride")) { return; }
+    fetch("/account.js?json=1").then(function (r) { return r.json(); }).then(function (acc) {
+      if (!acc || acc.status !== "ok" || !acc.data) { return; }
+      if (typeof acc.data.globalRole !== "number" || acc.data.globalRole > 1) { return; }
+      if (document.getElementById("rchan-flagoverride")) { return; }
+      fetch("/.rchan/flags.json").then(function (r) { return r.json(); }).then(function (codes) {
+        var names; try { names = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { names = null; }
+        var row = document.createElement("div"); row.id = "rchan-flagrow";
+        row.appendChild(document.createTextNode("Flag "));
+        var sel = document.createElement("select"); sel.id = "rchan-flagoverride"; sel.name = "flagOverride";
+        var auto = document.createElement("option"); auto.value = ""; auto.textContent = "Auto";
+        sel.appendChild(auto);
+        var natives = document.getElementById("flagCombobox");   // board custom flags (native field)
+        if (natives && natives.options.length > 1) {
+          var gB = document.createElement("optgroup"); gB.label = "Board flags";
+          for (var i = 0; i < natives.options.length; i++) {
+            var no = natives.options[i]; if (!no.value) { continue; }
+            var ob = document.createElement("option"); ob.value = "b:" + no.value; ob.textContent = no.textContent;
+            gB.appendChild(ob);
+          }
+          sel.appendChild(gB);
+        }
+        var gC = document.createElement("optgroup"); gC.label = "Countries";
+        (codes || []).map(function (c) {
+          var C = c.toUpperCase(), n = C;
+          try { n = (names && names.of(C)) || C; } catch (e2) {}
+          return { c: C, n: n };
+        }).sort(function (a, b) { return a.n < b.n ? -1 : 1; }).forEach(function (o) {
+          var op = document.createElement("option"); op.value = o.c; op.textContent = o.n;
+          gC.appendChild(op);
+        });
+        sel.appendChild(gC);
+        sel.addEventListener("change", function () {
+          var v = sel.value;
+          if (natives) { natives.value = v.indexOf("b:") === 0 ? v.slice(2) : ""; }
+          // country codes ride the XHR hook; b: values only set the native combobox
+        });
+        row.appendChild(sel);
+        (msg ? msg.parentNode : form).insertBefore(row, msg || null);
+      }).catch(function () {});
+    }).catch(function () {});
+  }
+
   function enhancePostForm() {
     var form = document.getElementById("postingForm");
     if (!form || form.getAttribute("data-enh")) { return; }
@@ -765,6 +825,7 @@
     var input = document.getElementById("inputFiles");
     if (!msg && !input) { return; }
     form.setAttribute("data-enh", "1");
+    buildFlagOverride(form, msg);
 
     // Collapsible posting form with a slide animation. The toggle sits *before* #postingForm
     // (so it survives the collapse and dodges the "#postingForm button" sizing). Collapse is a

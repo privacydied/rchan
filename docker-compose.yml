@@ -57,6 +57,9 @@ services:
       # install` doesn't survive container recreation (flags silently died that way once).
       - ./addons-deps/node_modules:/lynxchan/addon-deps:ro
       - ./fe-overrides/addons/fixvideothumbs.js:/lynxchan/src/be/addons/fixvideothumbs.js:ro
+      # flagoverride addon: admin-only manual flag on posts (server-side role gate;
+      # threshold via flagOverrideMinRole in settings/general.json, default 1)
+      - ./fe-overrides/addons/flagoverride.js:/lynxchan/src/be/addons/flagoverride.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:
@@ -79,6 +82,7 @@ services:
       - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
       - ./fe-overrides/Roboto.woff2:/etc/nginx/rchan/roboto.woff2:ro
       - ./fe-overrides/RobotoMono.woff2:/etc/nginx/rchan/robotomono.woff2:ro
+      - ./fe-overrides/flags.json:/etc/nginx/rchan/flags.json:ro
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
       - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro
       - ./fe-overrides/sw.js:/etc/nginx/rchan/sw.js:ro

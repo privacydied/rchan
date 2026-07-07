@@ -6,7 +6,9 @@
   "tempDirectory": "/tmp",
   "siteTitle": "rchan",
   "useCacheControl": true,
-  "trustedProxies": ["*"],
+  "trustedProxies": [
+    "*"
+  ],
   "maxRequestSizeMB": 32,
   "maxFileSizeMB": 32,
   "maxFiles": 8,
@@ -17,5 +19,10 @@
   "videoThumbPercentage": 25,
   "mediaThumb": true,
   "wsPort": 8082,
-  "addons": ["geoflags", "fixvideothumbs"]
+  "addons": [
+    "geoflags",
+    "fixvideothumbs",
+    "flagoverride"
+  ],
+  "flagOverrideMinRole": 1
 }

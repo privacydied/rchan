@@ -23,7 +23,9 @@ body {
   line-height: 1.45;
   -webkit-text-size-adjust: 100%;
 }
-.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
+/* Inter runs wide at body sizes — pull the tracking in slightly so message
+   text reads denser (same trick GitHub uses with Inter). */
+.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; letter-spacing: -.011em; }
 .title, .labelSubject { letter-spacing: .01em; }
 .title { font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 85%; }
 /* Board name: Helvetica Neue Black Extended look. The true Extended cut is a
@@ -48,9 +50,17 @@ body {
 .theme_dark #catalogId { color: #c9ccd1; }
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
+/* Roboto Mono (variable, latin subset, self-hosted — CSP is same-origin-only) */
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/.rchan/robotomono.woff2") format("woff2");
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
 /* file-info blocks (name / size / dims) in fixed-width type */
 .panelUploads, .opUploadPanel {
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+  font-family: "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
 }
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -65,9 +75,9 @@ body .postInfo, body .opHead, body .divMessage, body .panelUploads, body .panelI
   font-size: 100%;
 }
 /* …except file info, which goes smaller (after the undo above so it wins) */
-body .panelUploads, body .opUploadPanel { font-size: 75%; }
+body .panelUploads, body .opUploadPanel { font-size: 65%; }
 /* …and the post header line (name / subject / date / No.), slightly reduced */
-body .postInfo, body .opHead { font-size: 90%; }
+body .postInfo, body .opHead { font-size: 80%; }
 
 /* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
 .innerPost, .innerOP {

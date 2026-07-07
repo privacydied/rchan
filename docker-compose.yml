@@ -78,6 +78,7 @@ services:
       - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
       - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
       - ./fe-overrides/InterVariable.woff2:/etc/nginx/rchan/inter.woff2:ro
+      - ./fe-overrides/RobotoMono.woff2:/etc/nginx/rchan/robotomono.woff2:ro
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
       - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro
       - ./fe-overrides/sw.js:/etc/nginx/rchan/sw.js:ro

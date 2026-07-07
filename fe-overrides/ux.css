@@ -61,8 +61,8 @@ body #postingForm button, body #qrbutton { font-size: 10pt; }
 body #postingForm label, body .divRefresh label, body .divRefresh input,
 body .spoilerCheckbox, body #boardContentLinks { font-size: 10pt; }
 body .panelBacklinks { font-size: x-small; }                     /* 4chan .backlink */
-body .catalogCell .divMessage, body .catalogCell .labelSubject, body .threadStats,
-body .catalogLabel, body .linkThumb, body .sideCatalogCell, body .small { font-size: x-small; }
+/* (catalog card sizes live in the catalog section below, 4chan-exact) */
+body .sideCatalogCell, body .small { font-size: x-small; }
 
 /* ---------- Board header (yotsuba: .boardTitle / .boardSubtitle) ---------- */
 .boardHeader { text-align: center; clear: both; margin-top: 70px; }
@@ -253,24 +253,58 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 #divTools #catalogRefreshButton { padding: 3px 10px; cursor: pointer; margin: 0 4px; font: inherit; }
 .theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
 
-/* body class set by the dropdown; overrides the theme's fixed .catalogCell/.linkThumb img */
-.rchan-cat-s  .catalogCell   { width: 8em;  height: 10em; }
-.rchan-cat-s  .linkThumb img { max-width: 84px;  max-height: 84px; }
-.rchan-cat-m  .catalogCell   { width: 12em; height: 14em; }  /* engine default */
-.rchan-cat-m  .linkThumb img { max-width: 128px; max-height: 128px; }
-.rchan-cat-l  .catalogCell   { width: 16em; height: 18em; }
-.rchan-cat-l  .linkThumb img { max-width: 182px; max-height: 182px; }
-.rchan-cat-xl .catalogCell   { width: 21em; height: 23em; }
-.rchan-cat-xl .linkThumb img { max-width: 256px; max-height: 256px; }
-/* catalog cells: cream cells like replies */
+/* ---------- Catalog grid: 4chan catalog_yotsuba_b_new.705.css, exact ----------
+   4chan threads are BARE inline-blocks on the page background — no card box,
+   no border. The shadow sits on the THUMBNAIL (4chan: 0 0 5px blur; ours:
+   square per the system). meta = 11px "R / I / P" line; teaser padded 15px. */
+body #divThreads { padding: 20px 0; text-align: center; }
 body .catalogCell {
-  background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
-  box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  vertical-align: top;
+  display: inline-block;
+  word-wrap: break-word;
+  overflow: hidden;
+  margin: 5px 2px 20px;
+  padding: 5px 0 3px 0;
+  position: relative;
+  width: 180px;            /* 4chan .extended-small (teaser shown) */
+  height: auto;
+  max-height: 320px;
 }
+body .catalogCell .linkThumb img {
+  display: block;
+  margin: auto;
+  min-width: 50px; min-height: 50px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1);   /* square shadow kept (4chan: 0 0 5px .25) */
+}
+body .catalogCell .threadStats {
+  cursor: help;
+  font-size: 11px;
+  line-height: 8px;
+  margin: 2px 0 1px;
+}
+body .catalogCell .labelSubject, body .catalogCell .divMessage {
+  display: block;
+  padding: 0 15px;
+  margin: 0;
+  font-size: 10pt;
+}
+body .catalogCell .labelSubject { font-weight: 700; }
+/* size dropdown remaps to 4chan's modes (small/extended-small/large/extended-large) */
+.rchan-cat-s  .catalogCell   { width: 165px; max-height: 250px; }
+.rchan-cat-s  .linkThumb img { max-width: 150px; max-height: 150px; }
+.rchan-cat-m  .catalogCell   { width: 180px; max-height: 320px; }   /* default */
+.rchan-cat-m  .linkThumb img { max-width: 150px; max-height: 150px; }
+.rchan-cat-l  .catalogCell   { width: 270px; max-height: 410px; }
+.rchan-cat-l  .linkThumb img { max-width: 250px; max-height: 250px; }
+.rchan-cat-xl .catalogCell   { width: 360px; max-height: 500px; }
+.rchan-cat-xl .linkThumb img { max-width: 320px; max-height: 320px; }
 
 /* keep big cards from blowing up narrow screens */
 @media (max-width: 640px) {
-  .rchan-cat-l .catalogCell, .rchan-cat-xl .catalogCell { width: 46vw; height: auto; min-height: 12em; }
+  .rchan-cat-l .catalogCell, .rchan-cat-xl .catalogCell { width: 46vw; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 

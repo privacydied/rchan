@@ -34,18 +34,8 @@
   // Respect the OS "reduce motion" preference for our scripted scrolling.
   var SB = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
 
-  /* Auto-dark: if the visitor hasn't explicitly chosen a theme and their OS prefers dark,
-     switch the default (cream) to dark. Respects an explicit pick (localStorage.selectedTheme)
-     and doesn't persist, so it keeps tracking the OS. Runs after themeLoader (we're at body end). */
-  (function autoDark() {
-    try {
-      if (localStorage.getItem("selectedTheme")) { return; }
-      if (!window.matchMedia || !matchMedia("(prefers-color-scheme: dark)").matches) { return; }
-      var b = document.body; if (!b) { return; }
-      if (/theme_\w+/.test(b.className)) { b.className = b.className.replace(/theme_\w+/, "theme_dark"); }
-      else { b.classList.add("theme_dark"); }
-    } catch (e) {}
-  })();
+  // Default theme is cream for everyone (server sets body.theme_cream). Dark is opt-in via the
+  // theme switcher — we intentionally do NOT auto-switch to dark based on the OS preference.
 
   function getBoard() {
     var el = document.getElementById("boardIdentifier");

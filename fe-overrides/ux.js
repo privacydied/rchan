@@ -43,6 +43,12 @@
     var m = location.pathname.match(/^\/([^\/.]+)\//);
     return m ? m[1] : null;
   }
+  // Contextual post-form labels: a thread page replies, a board index makes a thread.
+  function formLabels() {
+    var inThread = /\/res\//.test(location.pathname);
+    return inThread ? { show: "＋ Reply to thread", hide: "－ Hide reply form" }
+                    : { show: "＋ Create new thread", hide: "－ Hide thread form" };
+  }
   var SVG_GRID = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
   var SVG_LIST = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>';
   function isCatalog() { return /\/catalog(\.html)?$/.test(location.pathname); }
@@ -76,7 +82,7 @@
         if (pf && pf.classList.contains("rchan-collapsed")) {
           pf.classList.remove("rchan-collapsed");
           var t = document.getElementById("rchan-formtoggle");
-          if (t) { t.textContent = "－ Hide post form"; t.setAttribute("aria-expanded", "true"); }
+          if (t) { t.textContent = formLabels().hide; t.setAttribute("aria-expanded", "true"); }
           try { localStorage.removeItem("rchan_form_collapsed"); } catch (e) {}
         }
         var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
@@ -636,7 +642,8 @@
     form.classList.add("rchan-form");
     var setCollapsed = function (c) {
       form.classList.toggle("rchan-collapsed", c);
-      tog.textContent = c ? "＋ Show post form" : "－ Hide post form";
+      var L = formLabels();
+      tog.textContent = c ? L.show : L.hide;
       tog.setAttribute("aria-expanded", c ? "false" : "true");
     };
     tog.addEventListener("click", function () {

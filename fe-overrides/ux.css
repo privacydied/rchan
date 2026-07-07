@@ -1,36 +1,48 @@
-/* rchan UX layer — structural polish (all themes) + Cream/Dark colors + components.
-   Loaded site-wide via the router. Colors are scoped per-theme so non-cream/dark
-   themes keep their own palette; structure/spacing/mobile apply everywhere.
+/* rchan UX layer — Yotsuba-clone design system + functional components.
+   Loaded site-wide via the router.
 
    ============================ DESIGN SYSTEM ============================
-   Flat, square, paper-like. When adding rules, use these tokens:
-   - Radius: 0 everywhere. No rounded corners, no pills.
-   - Shadows (hard offset, no blur):
-       small (posts, buttons, chips):        2px 2px 0 rgba(0,0,0,.1)
-       large (menus, tooltips, QR, gallery): 4px 4px 0 rgba(0,0,0,.18)
-   - Chrome color: #393939 (buttons, headings). Accents: #c8102e (you/actions),
-     #2ea043 (new/on). Dark-theme text: #c9ccd1.
-   - Fonts: Roboto (body, self-hosted), Roboto Mono (file info, self-hosted),
-     Helvetica Neue 900 + scaleX (display: board name / catalog heading).
-   - Type sizes vs the engine's posting.css (80% base): messages 100%,
-     header lines 80% (engine default), file info 65%. Root bump: html 120%.
+   EXACT COPY of 4chan's yotsubluenew.716.css structure & typography,
+   re-palette'd to CREAM, with SQUARE offset shadows. Tokens:
+
+   - Base type: arial, helvetica, sans-serif @ 10pt. EVERYTHING is 10pt
+     except: meta text x-small (backlinks, subtitles, footer), page list
+     13px, board nav 13px, board title 28px Tahoma. All hardcoded.
+   - Palette (cream mapping of yotsuba blue):
+       page bg        #EEEEE4   (4chan #EEF2FF)
+       cell bg        #E6E6DA   (4chan #D6DAF0)
+       cell border    #CFCFC4   (4chan #B7C5D9)
+       text           #393939   (4chan #000)
+       link           #274a6b   (4chan #34345C)   hover #c8102e (#DD0000)
+       name           #3a6b2e   (4chan #117743)
+       subject        #0d5b73   (4chan #0F0C5D)
+       greentext      #5b8a2b   (4chan #789922)
+       quotelink      #8a2b1f   (4chan #D00), always underlined
+   - Structure: replies are shrink-wrapped cells (display:table, padding 2px,
+     border right+bottom only) on the page background; the OP has NO cell —
+     it sits directly on the page. Messages are indented (blockquote-style
+     margins). hr = 1px top border in the cell-border colour.
+   - Shadows (square, no blur): cells 2px 2px 0 rgba(0,0,0,.1);
+     floating panels 4px 4px 0 rgba(0,0,0,.18). Radius: 0 everywhere.
+   - Exception kept by request: file info uses Roboto Mono (self-hosted).
    ======================================================================= */
 
-/* ---------- Global text scale ----------
-   LynxChan sizes almost all text in % (global.css sets body{font-size:85%}), so a single
-   bump of the ROOT font-size scales the whole site proportionally. LynxChan never sets an
-   html font-size, so this is uncontested (no !important needed). */
-html { font-size: 120%; }
-
-/* ---------- Typography (all themes) ---------- */
-/* Self-hosted fonts (CSP is same-origin-only, so no external font hosts) */
-@font-face {
-  font-family: "Roboto";
-  src: url("/.rchan/roboto.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+/* ---------- Base (yotsuba: body / links / hr / images) ---------- */
+html body {
+  font-family: arial, helvetica, sans-serif;
+  font-size: 10pt;
+  color: #393939;
+  background: #EEEEE4;   /* outranks global.css's body{#EEF2FF + fade-blue image} */
+  margin-left: 0; margin-right: 0; margin-top: 5px;
+  padding-left: 5px; padding-right: 5px;
+  -webkit-text-size-adjust: 100%;
 }
+/* body prefix: global.css sets `a { text-decoration: underline }` and loads after us */
+body a, body a:visited { color: #274a6b; text-decoration: none; }
+body a:hover { color: #c8102e !important; text-decoration: none; }
+img { border: none; }
+body hr { border: none; border-top: 1px solid #CFCFC4; height: 0; }
+
 @font-face {
   font-family: "Roboto Mono";
   src: url("/.rchan/robotomono.woff2") format("woff2");
@@ -38,100 +50,162 @@ html { font-size: 120%; }
   font-style: normal;
   font-display: swap;
 }
-body {
-  font-family: "Roboto", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.45;
-  -webkit-text-size-adjust: 100%;
-}
-.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
-.title, .labelSubject { letter-spacing: .01em; }
-.title { font-size: 85%; }
-.labelSubject { font-weight: 700; }
-.linkName, .labelName { font-weight: 600; }
-/* Display face: board name + catalog heading. True HN Black Extended is a
-   commercial cut that ships nowhere; approximate with HN Black weight
-   (Inter 900 / Arial Black fallbacks) + a gentle scaleX + tracking. */
+
+/* ---------- Type sizes (body prefix outranks engine %-rules; all fixed) ---------- */
+body .postInfo, body .opHead, body .divMessage, body .panelIp, body .panelProxyIp,
+  body .contentOmissionIndicator, body .labelOmission, body .labelId,
+  body .panelASN, body .panelBypassId { font-size: 10pt; }
+body input, body select, body textarea { font-size: 10pt; }
+body #postingForm button, body #qrbutton { font-size: 10pt; }
+body #postingForm label, body .divRefresh label, body .divRefresh input,
+body .spoilerCheckbox, body #boardContentLinks { font-size: 10pt; }
+body .panelBacklinks { font-size: x-small; }                     /* 4chan .backlink */
+body .catalogCell .divMessage, body .catalogCell .labelSubject, body .threadStats,
+body .catalogLabel, body .linkThumb, body .sideCatalogCell, body .small { font-size: x-small; }
+
+/* ---------- Board header (yotsuba: .boardTitle / .boardSubtitle) ---------- */
+.boardHeader { text-align: center; clear: both; margin-top: 28px; }
 .boardHeader p#labelName, #catalogId {
-  font-family: "Helvetica Neue", "HelveticaNeue", "Roboto", "Arial Black", Arial, sans-serif;
-  font-weight: 900;
-  font-stretch: expanded;
-  letter-spacing: .03em;
-  transform: scaleX(1.06);
-  transform-origin: center;
+  font-family: Tahoma, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -2px;   /* 4chan boardTitle — exact copy */
+  margin-top: 0;
+  color: #393939;
 }
-#catalogId { font-size: 200%; }             /* engine has 150%; match labelName */
-#catalogId .title { font-family: inherit; font-size: 100%; }
-.boardHeader p#labelName, .boardHeader p#labelDescription, #catalogId { color: #393939; }
+#catalogId .title { font-family: inherit; font-size: 28px; }
+.boardHeader p#labelDescription { font-size: x-small; color: #393939; }
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
-/* file-info blocks (name / size / dims): fixed-width, small */
-.panelUploads, .opUploadPanel {
-  font-family: "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
-}
-a { text-decoration: none; }
-a:hover { text-decoration: underline; }
-/* undo global.css's hard `hr { border-color: black }` (body hr outranks it;
-   theme rules like .theme_cyber hr are more specific still and keep working) */
-body hr { border-color: currentColor; }
 
-/* ---------- Type sizes (body prefix outranks the engine's posting.css) ----------
-   The engine sets post text/info to 80%. Deviations only; header lines
-   (.postInfo/.opHead) stay at the engine's 80% — no rule needed. */
-body .divMessage { font-size: 100%; }
-body .panelUploads, body .opUploadPanel { font-size: 65%; }
-
-/* ---------- Post cells: spacing + paper depth (all themes) ---------- */
-.innerPost, .innerOP {
-  padding: 7px 9px;
-  transition: box-shadow .12s ease;
+/* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
+.postCell { margin: 4px 0; }
+/* replies: shrink-wrapped cell, border right+bottom only, on the page bg */
+body .innerPost {
+  background: #E6E6DA;
+  border: 1px solid #CFCFC4;
+  border-left: none;
+  border-top: none;
+  display: table;
+  padding: 2px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1);   /* square shadow kept */
 }
-.innerPost { box-shadow: 2px 2px 0 rgba(0,0,0,.1); }
-.postCell { margin: 6px 0; }
+/* the OP has no cell: it sits directly on the page background */
+body .innerOP {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
-.postInfo { opacity: .95; }
-.divMessage { margin-top: 5px; }
-
+/* message: blockquote-style indentation (4chan blockquote.postMessage) */
+body .divMessage {
+  display: block;
+  margin: 13px 40px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+/* header line: name green bold, subject blue bold, post No. black -> red hover */
+.linkName, .labelName { color: #3a6b2e; font-weight: 700; }
+.labelSubject { color: #0d5b73; font-weight: 700; }
+.linkQuote, .linkSelf { color: #393939; }
+.linkQuote:hover, .linkSelf:hover { color: #c8102e !important; }
+/* quotes */
+.greenText { color: #5b8a2b; }
+.redText { color: #b5341f; }
+.quoteLink, .panelBacklinks a { color: #8a2b1f !important; text-decoration: underline; }
+/* file info: Roboto Mono kept by request. The nowrap/ellipsis (4chan .fileText)
+   goes on the text line ONLY — putting overflow:hidden on .panelUploads would
+   create a BFC that traps the floated thumbnail and pushes the message below. */
+.panelUploads, .opUploadPanel {
+  font-family: "Roboto Mono", ui-monospace, "SF Mono", Consolas, Menlo, monospace;
+}
+.uploadDetails {
+  max-width: 600px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OP thumbnail floats beside the post (4chan: div.post div.file .fileThumb) */
+.innerOP .imgLink { margin: 3px 20px 5px 20px; }
+.innerOP { overflow: hidden; }   /* contain the float (4chan div.post) */
 /* thumbnails: never overflow */
 .imgLink img, .imgExpanded { max-width: 100%; height: auto; }
 
-/* ---------- Cream theme colours ---------- */
-.theme_cream .divMessage { color: #2e2e2e; }
-.theme_cream .greenText { color: #5b8a2b !important; }
-.theme_cream .redText  { color: #b5341f !important; }
-.theme_cream .labelSubject { color: #0d5b73; }
-.theme_cream .linkName, .theme_cream .labelName { color: #3a6b2e; }
-.theme_cream a { color: #274a6b; }
-.theme_cream .quoteLink, .theme_cream .panelBacklinks a { color: #8a2b1f; }
+/* ---------- Form/table colours (cream) ---------- */
+/* posting-form label cells (4chan table.postForm td:first-child = #98E + black border) */
+body #postingForm th {
+  background: #DCDCCF;
+  color: #393939;
+  font-weight: 700;
+  border: 1px solid #393939;
+  padding: 0 5px;
+  font-size: 10pt;
+}
+/* page list (4chan div.pagelist: cell bg, right+bottom border, 13px) */
+body .pageLink, body #divPages a, body .pagesDiv a {
+  font-size: 13px;
+  background: #E6E6DA;
+  border-right: 1px solid #CFCFC4;
+  border-bottom: 1px solid #CFCFC4;
+  padding: 3px 7px;
+  display: inline-block;
+  margin: 0 2px 2px 0;
+}
+/* board nav — 13px, roomy spacing (per request; 4chan has 9pt).
+   The engine pins nav to the top with a hardcoded height:18px and a blue bg;
+   give the taller bar a real (auto) height, cream colours, and push the page
+   content + side catalog down by the new ~42px so nothing sits underneath. */
+body nav, body #dynamicHeader {
+  font-size: 13px;
+  height: auto;
+  box-sizing: border-box;      /* engine sets width:100%; without this the 6px
+                                  side padding overflows the viewport -> h-scrollbar */
+  padding: 4px 6px 12px 6px;   /* generous padding-bottom */
+  line-height: 1.6;
+  background: #E6E6DA;
+  border-bottom: 1px solid #CFCFC4;
+}
+body #dynamicHeader a, body nav a { padding: 2px 4px; display: inline-block; }
+body #navLinkSpan, body #navBoardsSpan, body #navOptionsSpan { margin-right: 10px; }
+html body { margin-top: 42px; }              /* clear the fixed nav */
+body #sideCatalogDiv { top: 42px; height: calc(100vh - 42px); }
+/* footer (4chan #absbot: x-small) */
+body footer { font-size: x-small; }
 
 /* ---------- Dark theme (selectable) ---------- */
 body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !important; }
 .theme_dark a { color: #7fb0e0; }
-.theme_dark .innerPost, .theme_dark .innerOP,
+.theme_dark .innerPost,
 .theme_dark .catalogCell, .theme_dark .sideCatalogCell, .theme_dark .markedPost,
 .theme_dark #quick-reply table, .theme_dark #postingForm, .theme_dark #postingTable,
 .theme_dark #postingForm td, .theme_dark .floatingMenu, .theme_dark #newPostFieldset,
 .theme_dark #divLatestPosts .latestPostCell, .theme_dark .topBoards a {
   background: #1f2126 !important; color: #c9ccd1 !important; border: 1px solid #2c2f36 !important;
 }
-.theme_dark #postingForm th, .theme_dark .modalTableBody th { background: #262a31 !important; color: #c9ccd1 !important; }
+.theme_dark .innerPost { border-left: none !important; border-top: none !important; }
+.theme_dark .innerOP { background: transparent !important; border: none !important; }
+.theme_dark #postingForm th, .theme_dark .modalTableBody th { background: #262a31 !important; color: #c9ccd1 !important; border-color: #2c2f36 !important; }
 .theme_dark nav, .theme_dark #dynamicHeader { background: #1f2126 !important; }
 .theme_dark .divMessage { color: #c9ccd1 !important; }
 .theme_dark .greenText { color: #8ec07c !important; }
 .theme_dark .redText { color: #e06c75 !important; }
 .theme_dark .labelSubject { color: #79c0ff !important; }
 .theme_dark .linkName, .theme_dark .labelName { color: #8ec07c !important; }
+.theme_dark .linkQuote, .theme_dark .linkSelf { color: #c9ccd1; }
 .theme_dark .quoteLink, .theme_dark .panelBacklinks a { color: #e0987f !important; }
 .theme_dark input, .theme_dark textarea, .theme_dark select {
   background: #14151a !important; color: #c9ccd1 !important; border: 1px solid #333 !important;
 }
+.theme_dark .pageLink, .theme_dark #divPages a { background: #1f2126; border-color: #2c2f36; }
 
 /* ---------- Front page: board list as cards ---------- */
 #divBoards.topBoards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 #divBoards.topBoards a {
   display: inline-block; padding: 8px 14px;
-  box-shadow: 2px 2px 0 rgba(0,0,0,.1); font-weight: 600; transition: transform .08s ease;
+  background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1); font-weight: 700;
 }
-#divBoards.topBoards a:hover { transform: translateY(-1px); text-decoration: none; }
 
 /* ---------- Floating nav buttons ---------- */
 #rchan-nav {
@@ -143,17 +217,15 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   font-size: 18px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   background: #393939; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
-  opacity: .82; transition: opacity .12s ease, transform .08s ease;
+  opacity: .82; transition: opacity .12s ease;
 }
 #rchan-nav button svg { display: block; }
-#rchan-nav button:hover { opacity: 1; transform: translateY(-1px); }
+#rchan-nav button:hover { opacity: 1; }
 #rchan-nav button.rchan-on { background: #2ea043; opacity: 1; }   /* notifications enabled */
 
 /* ---------- "(You)" — your own posts + quotes pointing at them ---------- */
-.rchan-you { box-shadow: inset 4px 0 0 #c8102e !important; }
-/* replies keep the ambient paper shadow alongside the (You) stripe
-   (box-shadows replace, not stack, so the combined rule is needed) */
 .innerPost.rchan-you { box-shadow: inset 4px 0 0 #c8102e, 2px 2px 0 rgba(0,0,0,.1) !important; }
+.innerOP.rchan-you { box-shadow: inset 4px 0 0 #c8102e !important; }
 .theme_cream .rchan-you { background: #f4e9e3 !important; }
 .theme_dark .rchan-you { background: #2a2126 !important; }
 .quoteLink[data-you] { font-weight: 700; }
@@ -168,22 +240,19 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Instant styled tooltip (icon labels) ---------- */
 #rchan-tip {
   position: fixed; z-index: 10001; display: none; pointer-events: none;
-  background: #23252b; color: #f4f4f5; font-size: 12px; font-weight: 600;
+  background: #2e2e2e; color: #fdfdfb; font-size: x-small; font-weight: 700;
   line-height: 1.25; padding: 5px 9px; white-space: nowrap;
   max-width: 62vw; overflow: hidden; text-overflow: ellipsis;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); border: 1px solid rgba(0,0,0,.15);
 }
-.theme_cream #rchan-tip { background: #2e2e2e; color: #fdfdfb; border-color: rgba(0,0,0,.15); }
-.theme_dark  #rchan-tip { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
-/* the labeled icons get a pointer cursor so they read as interactive */
+.theme_dark #rchan-tip { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
 .coloredIcon[data-tooltip] { cursor: pointer; }
 
 /* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
-#rchan-cattools { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
+#rchan-cattools { text-align: center; margin: 10px 0 2px; font-size: 10pt; font-weight: 700; }
 #rchan-cattools label { margin: 0 9px; }
 #rchan-cattools select { margin-left: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
-/* native catalog tools (#divTools: search / refresh / auto) — unhidden by catalog.js, themed here */
-#divTools { text-align: center; margin: 4px 0 2px; font-size: 13px; }
+#divTools { text-align: center; margin: 4px 0 2px; font-size: 10pt; }
 #divTools input[type=text] { padding: 3px 8px; margin: 0 4px; }
 #divTools #catalogRefreshButton { padding: 3px 10px; cursor: pointer; margin: 0 4px; font: inherit; }
 .theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
@@ -197,6 +266,11 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .rchan-cat-l  .linkThumb img { max-width: 182px; max-height: 182px; }
 .rchan-cat-xl .catalogCell   { width: 21em; height: 23em; }
 .rchan-cat-xl .linkThumb img { max-width: 256px; max-height: 256px; }
+/* catalog cells: cream cells like replies */
+body .catalogCell {
+  background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+}
 
 /* keep big cards from blowing up narrow screens */
 @media (max-width: 640px) {
@@ -204,97 +278,95 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
-/* ============ Tier 1 — theme native PenumbraLynx components (cream + dark) ============ */
-
-/* coloredIcon glyphs are an icon font colored by `color`; the engine default (#34345C,
-   dark navy) is invisible on the dark theme — watcher/gallery/favourite/nav icons vanish.
-   Keep every themed icon legible. */
+/* ---------- Icons legibility per theme ---------- */
 .theme_dark .coloredIcon, .theme_dark .unhideButton, .theme_dark .embedButton,
 .theme_dark #showFormsButton, .theme_dark #favouriteButton, .theme_dark .watchButton {
   color: #9fc4e8 !important;
 }
 .theme_dark .coloredIcon:hover, .theme_dark .watchButton:hover, .theme_dark #favouriteButton:hover { color: #d6e8f8 !important; }
-.theme_cream .coloredIcon, .theme_cream .unhideButton, .theme_cream .embedButton,
-.theme_cream #favouriteButton, .theme_cream .watchButton { color: #274a6b; }
-.theme_cream .coloredIcon:hover, .theme_cream .watchButton:hover, .theme_cream #favouriteButton:hover { color: #c8102e; }
+.coloredIcon, .unhideButton, .embedButton, #favouriteButton, .watchButton { color: #274a6b; }
+.coloredIcon:hover, .watchButton:hover, #favouriteButton:hover { color: #c8102e; }
 .checkedFavouriteButton { color: #f2b21e !important; }   /* favourited = gold, any theme */
 #watcherButton, #galleryLink, #favouriteButton, .watchButton, .hideButton { cursor: pointer; }
 
-/* Quote hover-preview (tooltips.js builds div.quoteTooltip with NO native styling) */
+/* ---------- Quote hover-preview (tooltips.js div.quoteTooltip) ---------- */
 .quoteTooltip {
   position: absolute; z-index: 10002; max-width: min(680px, 92vw);
   box-shadow: 4px 4px 0 rgba(0,0,0,.18); overflow: hidden;
+  background: #E6E6DA; border: 1px solid #CFCFC4;
 }
-.quoteTooltip .innerPost, .quoteTooltip .innerOP { margin: 0 !important; box-shadow: none; }
-.theme_cream .quoteTooltip, .theme_cream .quoteTooltip .innerPost, .theme_cream .quoteTooltip .innerOP { background: #fbf7ee !important; border: 1px solid #d7d7cb; }
-.theme_dark  .quoteTooltip, .theme_dark  .quoteTooltip .innerPost, .theme_dark  .quoteTooltip .innerOP { background: #1f2126 !important; border: 1px solid #2c2f36; }
+.quoteTooltip .innerPost, .quoteTooltip .innerOP {
+  margin: 0 !important; box-shadow: none; display: block; border: none; background: #E6E6DA;
+}
+.theme_dark .quoteTooltip, .theme_dark .quoteTooltip .innerPost, .theme_dark .quoteTooltip .innerOP { background: #1f2126 !important; border-color: #2c2f36; }
 
-/* Backlinks ("N replies" pointing at a post) */
-.panelBacklinks { font-size: 85%; opacity: .92; }
+/* ---------- Backlinks row ---------- */
 .panelBacklinks a { margin-right: 4px; }
 
-/* Floating menus: watcher (#watchedMenu), native hide menu, posting extra menu */
-.floatingMenu, .hideMenu, .extraMenu, #watchedMenu { padding: 6px 8px; }
-.floatingMenu, .hideMenu, .extraMenu, #watchedMenu { box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
+/* ---------- Floating menus: watcher, hide menu, posting extra menu ----------
+   (body prefix: global.css paints .floatingMenu #D6DAF0 and loads after us) */
+body .floatingMenu, body .hideMenu, body .extraMenu, body #watchedMenu {
+  padding: 6px 8px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+  background: #E6E6DA; color: #393939; border: 1px solid #CFCFC4;
+}
 .hideMenu div, .extraMenu div, #watchedMenu .watchedCell { padding: 3px 6px; }
 .hideMenu div:hover, .extraMenu div:hover { background: rgba(200,16,46,.12); }
-.theme_cream .floatingMenu, .theme_cream .hideMenu, .theme_cream .extraMenu, .theme_cream #watchedMenu {
-  background: #fbf7ee; color: #2e2e2e; border: 1px solid #d7d7cb;
-}
-.theme_dark .hideMenu, .theme_dark .extraMenu, .theme_dark #watchedMenu {
+.theme_dark .floatingMenu, .theme_dark .hideMenu, .theme_dark .extraMenu, .theme_dark #watchedMenu {
   background: #1f2126; color: #c9ccd1; border: 1px solid #2c2f36;
 }
 .watchedNotification::before { color: #e06c75 !important; }
 
-/* Quick Reply (qr.js #quick-reply). The engine's threadPage.css pins width:300px
-   and loads after this sheet, so the width needs the body prefix to outrank it.
-   resize:both + overflow:auto = native resize handle (bottom-right corner). */
+/* ---------- Quick Reply (qr.js #quick-reply) ----------
+   The engine's threadPage.css pins width:300px and loads after this sheet,
+   so sizing needs the body prefix. resize:both + overflow:auto = native
+   resize handle; draggable by its header as before. */
 body #quick-reply {
   width: 400px; height: 680px;
   min-width: 340px; max-width: 96vw; max-height: 92vh;
   resize: both; overflow: auto;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+  background: #E6E6DA; border: 1px solid #CFCFC4;
 }
-#quick-reply table { width: 100%; }
+body #quick-reply table { width: 100%; background: #E6E6DA; }
 #quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 90px; }
-.theme_cream #quick-reply table { background: #fbf7ee; }
+body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f2126 !important; border-color: #2c2f36; }
 
-/* Gallery lightbox (gallery.js .modalPanel / .galleryImage) */
+/* ---------- Gallery lightbox ---------- */
 .modalPanel { backdrop-filter: blur(2px); }
 .galleryImage { max-width: 92vw; max-height: 86vh; box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
 
 /* ---------- New-since-last-visit + replies-to-you ---------- */
 .postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043, 2px 2px 0 rgba(0,0,0,.1) !important; }
 #rchan-newline {
-  text-align: center; margin: 12px auto; font-size: .78em; font-weight: 700;
-  color: #2ea043; text-transform: uppercase; letter-spacing: .04em;
+  text-align: center; margin: 12px auto; font-size: x-small; font-weight: 700;
+  color: #2ea043; text-transform: uppercase;
   border-top: 1px dashed #2ea04366; padding-top: 6px; max-width: 90%;
 }
 .rchan-newbadge {
   display: inline-block; margin-left: 6px; padding: 0 7px;
-  background: #2ea043; color: #fff; font-size: .8em; font-weight: 700; vertical-align: middle;
+  background: #2ea043; color: #fff; font-size: x-small; font-weight: 700; vertical-align: middle;
 }
 #rchan-youbtn {
   position: fixed; left: 12px; bottom: 12px; z-index: 9999;
   border: 0; cursor: pointer; padding: 8px 13px;
-  font: inherit; font-size: 13px; font-weight: 700;
+  font: inherit; font-size: 10pt; font-weight: 700;
   background: #c8102e; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
-  opacity: .9; transition: opacity .12s ease, transform .08s ease;
+  opacity: .9; transition: opacity .12s ease;
 }
-#rchan-youbtn:hover { opacity: 1; transform: translateY(-1px); }
+#rchan-youbtn:hover { opacity: 1; }
 
 /* ---------- Post form: collapse toggle + toolbar, char counter, drag-drop, previews ---------- */
 #rchan-formtoggle {
   display: block; width: -moz-fit-content; width: fit-content; margin: 6px auto; /* centered */
   padding: 3px 11px;
-  border: 1px solid #0002; background: #0000000a; cursor: pointer; font: inherit;
-  font-size: 13px; font-weight: 600;
+  border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer; font: inherit;
+  font-size: 10pt; font-weight: 700;
 }
 #rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #rchan-formtoggle { background: #262a31; color: #c9ccd1; border-color: #333; }
 
-/* slide the posting form open/closed (grid-rows 1fr<->0fr animates true auto height;
-   the reduced-motion block above makes it instant when the OS asks). */
+/* slide the posting form open/closed (grid-rows 1fr<->0fr animates true auto height) */
 #postingForm.rchan-form {
   display: grid; grid-template-rows: 1fr; justify-items: center; /* center the form */
   transition: grid-template-rows .28s ease, opacity .28s ease;
@@ -303,24 +375,23 @@ body #quick-reply {
 #postingForm.rchan-collapsed { grid-template-rows: 0fr; opacity: 0; }
 .rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
 /* scoped under #postingForm/#quick-reply to beat the engine's "#postingForm button
-   {width:8em;font-size:125%}" (that rule is for the Post submit button; without the
-   scope our toolbar buttons inherit it). */
+   {width:8em;font-size:125%}" (that rule is for the Post submit button). */
 #postingForm .rchan-fmtbar button, #quick-reply .rchan-fmtbar button {
   width: auto !important; min-width: 26px !important; height: 24px !important;
   margin: 0 !important; padding: 0 8px !important; box-sizing: border-box;
   cursor: pointer;
-  font-family: inherit; font-size: 12px !important; font-weight: 700; line-height: 1 !important;
-  border: 1px solid #0002; background: #0000000a;
+  font-family: inherit; font-size: x-small !important; font-weight: 700; line-height: 1 !important;
+  border: 1px solid #CFCFC4; background: #E6E6DA;
 }
 #postingForm .rchan-fmtbar button:hover, #quick-reply .rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #postingForm .rchan-fmtbar button, .theme_dark #quick-reply .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
-.rchan-charcount { margin-left: auto; font-size: 11px; opacity: .7; }
+.rchan-charcount { margin-left: auto; font-size: x-small; opacity: .7; }
 #postingForm.rchan-dragover { outline: 2px dashed #c8102e; outline-offset: 3px; }
 .rchan-filetray { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rchan-filechip {
   display: flex; align-items: center; gap: 6px; max-width: 240px;
-  padding: 3px 6px 3px 3px; font-size: 12px;
-  background: #0000000d; border: 1px solid #0002;
+  padding: 3px 6px 3px 3px; font-size: x-small;
+  background: #E6E6DA; border: 1px solid #CFCFC4;
 }
 .theme_dark .rchan-filechip { background: #1f2126; border-color: #2c2f36; }
 .rchan-filechip img { width: 34px; height: 34px; object-fit: cover; display: block; }
@@ -330,38 +401,28 @@ body #quick-reply {
   width: auto !important; min-width: 0 !important; height: auto !important;
   margin: 0 !important; padding: 0 2px !important;
   border: 0; background: transparent; cursor: pointer;
-  font-size: 15px !important; line-height: 1; opacity: .6; font-weight: 700;
+  font-size: 10pt !important; line-height: 1; opacity: .6; font-weight: 700;
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
-/* ============ Tier 3 — reduced-motion, spoiler/code polish, dark fixes ============ */
-
-/* Honour the OS "reduce motion" setting — neutralise transitions/animations site-wide
-   (favicon animation is paused separately in favicon.js). */
+/* ---------- Reduced motion / spoilers / code ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important; animation-iteration-count: 1 !important;
     transition-duration: .001ms !important; scroll-behavior: auto !important;
   }
 }
-
-/* Spoiler: the engine blacks it out but its hover-reveal sets black text — invisible on the
-   dark theme. Fix the revealed colour per theme (also reveals on tap via :active). */
 .theme_dark span.spoiler:hover, .theme_dark span.spoiler:active { color: #c9ccd1 !important; }
-.theme_cream span.spoiler:hover, .theme_cream span.spoiler:active { color: #2e2e2e !important; }
-
-/* [code] blocks: the engine only sets overflow — give them a real monospace block look. */
+span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 .divMessage code {
-  display: block; margin: 6px 0; padding: .55em .7em;
+  display: block; margin: 6px 0; padding: 6px 8px;
   font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: .92em; line-height: 1.4; white-space: pre; overflow-x: auto;
-  background: #00000010; border: 1px solid #00000018;
+  font-size: 10pt; line-height: 1.4; white-space: pre; overflow-x: auto;
+  background: #E6E6DA; border: 1px solid #CFCFC4;
 }
 .theme_dark .divMessage code { background: #0f1013; border-color: #2c2f36; color: #d7dae0; }
-.theme_cream .divMessage code { background: #f3efe4; border-color: #d7d7cb; color: #2e2e2e; }
 
-/* Thumbnail skeleton shimmer (removed on image load; animation auto-disabled by the
-   reduced-motion block above). */
+/* ---------- Thumbnail skeleton shimmer ---------- */
 .rchan-skel {
   background-image: linear-gradient(90deg, #0000000d 25%, #0000001c 37%, #0000000d 63%);
   background-size: 400% 100%; animation: rchan-shimmer 1.4s ease infinite;
@@ -371,22 +432,20 @@ body #quick-reply {
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
-  body { font-size: 18px; }   /* matches the global text bump; keep phones readable */
   /* bigger, full-width Quick Reply so it's usable on phones */
   body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; height: auto; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }
   #quick-reply textarea, #qrbody { width: 100% !important; box-sizing: border-box; min-height: 110px; }
   #rchan-nav { right: 10px; bottom: 10px; }
-  .innerPost, .innerOP { padding: 8px; }
+  body .innerPost { display: block; }   /* shrink-wrap doesn't fit phones */
+  body .divMessage { margin: 8px 10px; }
   .postCell { margin: 8px 4px; }
-  /* keep replies from being pushed off-screen by deep indentation */
-  .divMessage { margin-left: 0 !important; }
   /* thumbnails a touch smaller so text has room */
   .imgLink img { max-height: 40vh; width: auto; }
   /* bigger tap targets for the post links */
   .linkQuote, .linkReply, .linkName { padding: 3px 2px; display: inline-block; }
   /* header/nav wraps instead of overflowing */
-  #dynamicHeader, nav { flex-wrap: wrap; font-size: 15px; }
+  #dynamicHeader, nav { flex-wrap: wrap; }
   #rchan-nav button { width: 44px; height: 44px; line-height: 44px; } /* thumb-friendly */
   /* posting form fields fill the width */
   #postingForm input[type=text], #postingForm textarea { max-width: 100%; box-sizing: border-box; }

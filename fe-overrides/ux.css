@@ -10,7 +10,7 @@
        large (menus, tooltips, QR, gallery): 4px 4px 0 rgba(0,0,0,.18)
    - Chrome color: #393939 (buttons, headings). Accents: #c8102e (you/actions),
      #2ea043 (new/on). Dark-theme text: #c9ccd1.
-   - Fonts: Inter (body, self-hosted), Roboto Mono (file info, self-hosted),
+   - Fonts: Roboto (body, self-hosted), Roboto Mono (file info, self-hosted),
      Helvetica Neue 900 + scaleX (display: board name / catalog heading).
    - Type sizes vs the engine's posting.css (80% base): messages 100%,
      header lines 80% (engine default), file info 65%. Root bump: html 120%.
@@ -25,8 +25,8 @@ html { font-size: 120%; }
 /* ---------- Typography (all themes) ---------- */
 /* Self-hosted fonts (CSP is same-origin-only, so no external font hosts) */
 @font-face {
-  font-family: "Inter";
-  src: url("/.rchan/inter.woff2") format("woff2");
+  font-family: "Roboto";
+  src: url("/.rchan/roboto.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -39,13 +39,11 @@ html { font-size: 120%; }
   font-display: swap;
 }
 body {
-  font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Roboto", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   line-height: 1.45;
   -webkit-text-size-adjust: 100%;
 }
-/* Inter runs wide at body sizes — pull the tracking in slightly so message
-   text reads denser (same trick GitHub uses with Inter). */
-.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; letter-spacing: -.011em; }
+.divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
 .title, .labelSubject { letter-spacing: .01em; }
 .title { font-size: 85%; }
 .labelSubject { font-weight: 700; }
@@ -54,7 +52,7 @@ body {
    commercial cut that ships nowhere; approximate with HN Black weight
    (Inter 900 / Arial Black fallbacks) + a gentle scaleX + tracking. */
 .boardHeader p#labelName, #catalogId {
-  font-family: "Helvetica Neue", "HelveticaNeue", "Inter", "Arial Black", Arial, sans-serif;
+  font-family: "Helvetica Neue", "HelveticaNeue", "Roboto", "Arial Black", Arial, sans-serif;
   font-weight: 900;
   font-stretch: expanded;
   letter-spacing: .03em;
@@ -252,8 +250,8 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
    and loads after this sheet, so the width needs the body prefix to outrank it.
    resize:both + overflow:auto = native resize handle (bottom-right corner). */
 body #quick-reply {
-  width: min(720px, 96vw);
-  min-width: 340px; max-width: 96vw;
+  width: 400px; height: 680px;
+  min-width: 340px; max-width: 96vw; max-height: 92vh;
   resize: both; overflow: auto;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
 }
@@ -375,7 +373,7 @@ body #quick-reply {
 @media (max-width: 640px) {
   body { font-size: 18px; }   /* matches the global text bump; keep phones readable */
   /* bigger, full-width Quick Reply so it's usable on phones */
-  body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; resize: none; }
+  body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; height: auto; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }
   #quick-reply textarea, #qrbody { width: 100% !important; box-sizing: border-box; min-height: 110px; }
   #rchan-nav { right: 10px; bottom: 10px; }

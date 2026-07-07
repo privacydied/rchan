@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libmagick++-dev \
       pkg-config \
       ffmpeg \
+      bc \
+
       libavformat-dev \
       libavcodec-dev \
       libavutil-dev \

@@ -15,6 +15,7 @@
   "overboard": "overboard",
   "defaultTheme": "cream",
   "videoThumbPercentage": 25,
+  "mediaThumb": true,
   "wsPort": 8082,
-  "addons": ["geoflags"]
+  "addons": ["geoflags", "fixvideothumbs"]
 }

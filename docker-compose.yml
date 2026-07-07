@@ -45,6 +45,7 @@ services:
       - ./fe-overrides/contact.html:/lynxchan/src/fe/static/pages/contact.html:ro
       # geoflags addon: country flags next to the name (geoip-lite), enabled via addons + locationFlagMode
       - ./fe-overrides/addons/geoflags.js:/lynxchan/src/be/addons/geoflags.js:ro
+      - ./fe-overrides/addons/fixvideothumbs.js:/lynxchan/src/be/addons/fixvideothumbs.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:

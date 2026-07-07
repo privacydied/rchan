@@ -1,20 +1,40 @@
 /* rchan UX layer — structural polish (all themes) + Cream/Dark colors + components.
    Loaded site-wide via the router. Colors are scoped per-theme so non-cream/dark
-   themes keep their own palette; structure/spacing/mobile apply everywhere. */
+   themes keep their own palette; structure/spacing/mobile apply everywhere.
+
+   ============================ DESIGN SYSTEM ============================
+   Flat, square, paper-like. When adding rules, use these tokens:
+   - Radius: 0 everywhere. No rounded corners, no pills.
+   - Shadows (hard offset, no blur):
+       small (posts, buttons, chips):        2px 2px 0 rgba(0,0,0,.1)
+       large (menus, tooltips, QR, gallery): 4px 4px 0 rgba(0,0,0,.18)
+   - Chrome color: #393939 (buttons, headings). Accents: #c8102e (you/actions),
+     #2ea043 (new/on). Dark-theme text: #c9ccd1.
+   - Fonts: Inter (body, self-hosted), Roboto Mono (file info, self-hosted),
+     Helvetica Neue 900 + scaleX (display: board name / catalog heading).
+   - Type sizes vs the engine's posting.css (80% base): messages 100%,
+     header lines 80% (engine default), file info 65%. Root bump: html 120%.
+   ======================================================================= */
 
 /* ---------- Global text scale ----------
    LynxChan sizes almost all text in % (global.css sets body{font-size:85%}), so a single
    bump of the ROOT font-size scales the whole site proportionally. LynxChan never sets an
-   html font-size, so this is uncontested (no !important needed). 120% of the 16px default
-   ≈ 19.2px root → ~16.3px base body text (was ~13.6px). Adjust this one number to taste. */
+   html font-size, so this is uncontested (no !important needed). */
 html { font-size: 120%; }
 
-/* ---------- Typography & rhythm (all themes) ---------- */
-/* Inter (variable, self-hosted at /.rchan/inter.woff2 — CSP is same-origin-only) */
+/* ---------- Typography (all themes) ---------- */
+/* Self-hosted fonts (CSP is same-origin-only, so no external font hosts) */
 @font-face {
   font-family: "Inter";
   src: url("/.rchan/inter.woff2") format("woff2");
   font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/.rchan/robotomono.woff2") format("woff2");
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
 }
@@ -27,11 +47,12 @@ body {
    text reads denser (same trick GitHub uses with Inter). */
 .divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; letter-spacing: -.011em; }
 .title, .labelSubject { letter-spacing: .01em; }
-.title { font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 85%; }
-/* Board name: Helvetica Neue Black Extended look. The true Extended cut is a
-   commercial font that ships nowhere, so: Helvetica Neue at its Black weight
-   (macOS/iOS render it natively; others fall back to Inter 900 / Arial Black)
-   plus a gentle scaleX + tracking to fake the extended width. */
+.title { font-size: 85%; }
+.labelSubject { font-weight: 700; }
+.linkName, .labelName { font-weight: 600; }
+/* Display face: board name + catalog heading. True HN Black Extended is a
+   commercial cut that ships nowhere; approximate with HN Black weight
+   (Inter 900 / Arial Black fallbacks) + a gentle scaleX + tracking. */
 .boardHeader p#labelName, #catalogId {
   font-family: "Helvetica Neue", "HelveticaNeue", "Inter", "Arial Black", Arial, sans-serif;
   font-weight: 900;
@@ -40,25 +61,12 @@ body {
   transform: scaleX(1.06);
   transform-origin: center;
 }
-/* catalog heading: match labelName's 200% (engine has it at 150%) and make the
-   span.title inside follow the heading's font instead of the generic .title rule */
-#catalogId { font-size: 200%; }
+#catalogId { font-size: 200%; }             /* engine has 150%; match labelName */
 #catalogId .title { font-family: inherit; font-size: 100%; }
 .boardHeader p#labelName, .boardHeader p#labelDescription, #catalogId { color: #393939; }
-/* …but keep them readable on the dark theme */
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
-.labelSubject { font-weight: 700; }
-.linkName, .labelName { font-weight: 600; }
-/* Roboto Mono (variable, latin subset, self-hosted — CSP is same-origin-only) */
-@font-face {
-  font-family: "Roboto Mono";
-  src: url("/.rchan/robotomono.woff2") format("woff2");
-  font-weight: 100 700;
-  font-style: normal;
-  font-display: swap;
-}
-/* file-info blocks (name / size / dims) in fixed-width type */
+/* file-info blocks (name / size / dims): fixed-width, small */
 .panelUploads, .opUploadPanel {
   font-family: "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
 }
@@ -67,31 +75,26 @@ a:hover { text-decoration: underline; }
 /* undo global.css's hard `hr { border-color: black }` (body hr outranks it;
    theme rules like .theme_cyber hr are more specific still and keep working) */
 body hr { border-color: currentColor; }
-/* undo posting.css's 80% shrink on post text/info — 100% = plain inheritance,
-   i.e. the same as the rule not existing (body prefix outranks the engine rule) */
-body .postInfo, body .opHead, body .divMessage, body .panelUploads, body .panelIp,
-  body .panelProxyIp, body .contentOmissionIndicator, body .labelOmission,
-  body .labelId, body .panelASN, body .panelBypassId {
-  font-size: 100%;
-}
-/* …except file info, which goes smaller (after the undo above so it wins) */
-body .panelUploads, body .opUploadPanel { font-size: 65%; }
-/* …and the post header line (name / subject / date / No.), slightly reduced */
-body .postInfo, body .opHead { font-size: 80%; }
 
-/* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
+/* ---------- Type sizes (body prefix outranks the engine's posting.css) ----------
+   The engine sets post text/info to 80%. Deviations only; header lines
+   (.postInfo/.opHead) stay at the engine's 80% — no rule needed. */
+body .divMessage { font-size: 100%; }
+body .panelUploads, body .opUploadPanel { font-size: 65%; }
+
+/* ---------- Post cells: spacing + paper depth (all themes) ---------- */
 .innerPost, .innerOP {
   padding: 7px 9px;
   transition: box-shadow .12s ease;
 }
-.innerPost { box-shadow: 2px 2px 0px rgba(0,0,0,.1); }
+.innerPost { box-shadow: 2px 2px 0 rgba(0,0,0,.1); }
 .postCell { margin: 6px 0; }
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
 .postInfo { opacity: .95; }
 .divMessage { margin-top: 5px; }
 
-/* thumbnails: never overflow, gentle rounding */
-.imgLink img, .imgExpanded { max-width: 100%; height: auto; border-radius: 4px; }
+/* thumbnails: never overflow */
+.imgLink img, .imgExpanded { max-width: 100%; height: auto; }
 
 /* ---------- Cream theme colours ---------- */
 .theme_cream .divMessage { color: #2e2e2e; }
@@ -127,8 +130,8 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Front page: board list as cards ---------- */
 #divBoards.topBoards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 #divBoards.topBoards a {
-  display: inline-block; padding: 8px 14px; border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; transition: transform .08s ease;
+  display: inline-block; padding: 8px 14px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1); font-weight: 600; transition: transform .08s ease;
 }
 #divBoards.topBoards a:hover { transform: translateY(-1px); text-decoration: none; }
 
@@ -138,7 +141,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   display: flex; flex-direction: column; gap: 6px;
 }
 #rchan-nav button {
-  width: 40px; height: 40px; border: 0; border-radius: 0; cursor: pointer;
+  width: 40px; height: 40px; border: 0; cursor: pointer;
   font-size: 18px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   background: #393939; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
@@ -160,17 +163,17 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Hover-zoom preview (image + video pop-out) ---------- */
 #rchan-zoom, #rchan-vidzoom {
   position: fixed; z-index: 10000; pointer-events: none; display: none;
-  max-width: 90vw; max-height: 90vh; border-radius: 6px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.5); background: #0008;
+  max-width: 90vw; max-height: 90vh;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); background: #0008;
 }
 
 /* ---------- Instant styled tooltip (icon labels) ---------- */
 #rchan-tip {
   position: fixed; z-index: 10001; display: none; pointer-events: none;
   background: #23252b; color: #f4f4f5; font-size: 12px; font-weight: 600;
-  line-height: 1.25; padding: 5px 9px; border-radius: 6px; white-space: nowrap;
+  line-height: 1.25; padding: 5px 9px; white-space: nowrap;
   max-width: 62vw; overflow: hidden; text-overflow: ellipsis;
-  box-shadow: 0 4px 14px rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.08);
 }
 .theme_cream #rchan-tip { background: #2e2e2e; color: #fdfdfb; border-color: rgba(0,0,0,.15); }
 .theme_dark  #rchan-tip { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
@@ -180,11 +183,11 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
 #rchan-cattools { text-align: center; margin: 10px 0 2px; font-size: 14px; font-weight: 600; }
 #rchan-cattools label { margin: 0 9px; }
-#rchan-cattools select { margin-left: 5px; padding: 3px 8px; border-radius: 6px; font: inherit; cursor: pointer; }
+#rchan-cattools select { margin-left: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
 /* native catalog tools (#divTools: search / refresh / auto) — unhidden by catalog.js, themed here */
 #divTools { text-align: center; margin: 4px 0 2px; font-size: 13px; }
-#divTools input[type=text] { padding: 3px 8px; border-radius: 6px; margin: 0 4px; }
-#divTools #catalogRefreshButton { padding: 3px 10px; border-radius: 6px; cursor: pointer; margin: 0 4px; font: inherit; }
+#divTools input[type=text] { padding: 3px 8px; margin: 0 4px; }
+#divTools #catalogRefreshButton { padding: 3px 10px; cursor: pointer; margin: 0 4px; font: inherit; }
 .theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
 
 /* body class set by the dropdown; overrides the theme's fixed .catalogCell/.linkThumb img */
@@ -222,9 +225,9 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* Quote hover-preview (tooltips.js builds div.quoteTooltip with NO native styling) */
 .quoteTooltip {
   position: absolute; z-index: 10002; max-width: min(680px, 92vw);
-  border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.4); overflow: hidden;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); overflow: hidden;
 }
-.quoteTooltip .innerPost, .quoteTooltip .innerOP { margin: 0 !important; border-radius: 8px; box-shadow: none; }
+.quoteTooltip .innerPost, .quoteTooltip .innerOP { margin: 0 !important; box-shadow: none; }
 .theme_cream .quoteTooltip, .theme_cream .quoteTooltip .innerPost, .theme_cream .quoteTooltip .innerOP { background: #fbf7ee !important; border: 1px solid #d7d7cb; }
 .theme_dark  .quoteTooltip, .theme_dark  .quoteTooltip .innerPost, .theme_dark  .quoteTooltip .innerOP { background: #1f2126 !important; border: 1px solid #2c2f36; }
 
@@ -233,27 +236,34 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .panelBacklinks a { margin-right: 4px; }
 
 /* Floating menus: watcher (#watchedMenu), native hide menu, posting extra menu */
-.floatingMenu, .hideMenu, .extraMenu, #watchedMenu { border-radius: 8px; padding: 6px 8px; }
-.floatingMenu { box-shadow: 0 6px 20px rgba(0,0,0,.28); }
-.hideMenu div, .extraMenu div, #watchedMenu .watchedCell { padding: 3px 6px; border-radius: 5px; }
+.floatingMenu, .hideMenu, .extraMenu, #watchedMenu { padding: 6px 8px; }
+.floatingMenu, .hideMenu, .extraMenu, #watchedMenu { box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
+.hideMenu div, .extraMenu div, #watchedMenu .watchedCell { padding: 3px 6px; }
 .hideMenu div:hover, .extraMenu div:hover { background: rgba(200,16,46,.12); }
 .theme_cream .floatingMenu, .theme_cream .hideMenu, .theme_cream .extraMenu, .theme_cream #watchedMenu {
-  background: #fbf7ee; color: #2e2e2e; border: 1px solid #d7d7cb; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  background: #fbf7ee; color: #2e2e2e; border: 1px solid #d7d7cb;
 }
 .theme_dark .hideMenu, .theme_dark .extraMenu, .theme_dark #watchedMenu {
-  background: #1f2126; color: #c9ccd1; border: 1px solid #2c2f36; box-shadow: 0 6px 20px rgba(0,0,0,.45);
+  background: #1f2126; color: #c9ccd1; border: 1px solid #2c2f36;
 }
 .watchedNotification::before { color: #e06c75 !important; }
 
-/* Quick Reply (qr.js #quick-reply) */
-#quick-reply { overflow: hidden; box-shadow: 0 12px 34px rgba(0,0,0,.4); width: min(560px, 94vw); }
+/* Quick Reply (qr.js #quick-reply). The engine's threadPage.css pins width:300px
+   and loads after this sheet, so the width needs the body prefix to outrank it.
+   resize:both + overflow:auto = native resize handle (bottom-right corner). */
+body #quick-reply {
+  width: min(720px, 96vw);
+  min-width: 340px; max-width: 96vw;
+  resize: both; overflow: auto;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+}
 #quick-reply table { width: 100%; }
-#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; }
+#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 90px; }
 .theme_cream #quick-reply table { background: #fbf7ee; }
 
 /* Gallery lightbox (gallery.js .modalPanel / .galleryImage) */
 .modalPanel { backdrop-filter: blur(2px); }
-.galleryImage { max-width: 92vw; max-height: 86vh; border-radius: 6px; box-shadow: 0 10px 44px rgba(0,0,0,.6); }
+.galleryImage { max-width: 92vw; max-height: 86vh; box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
 
 /* ---------- New-since-last-visit + replies-to-you ---------- */
 .postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043, 2px 2px 0 rgba(0,0,0,.1) !important; }
@@ -263,14 +273,14 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   border-top: 1px dashed #2ea04366; padding-top: 6px; max-width: 90%;
 }
 .rchan-newbadge {
-  display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 10px;
+  display: inline-block; margin-left: 6px; padding: 0 7px;
   background: #2ea043; color: #fff; font-size: .8em; font-weight: 700; vertical-align: middle;
 }
 #rchan-youbtn {
   position: fixed; left: 12px; bottom: 12px; z-index: 9999;
-  border: 0; border-radius: 18px; cursor: pointer; padding: 8px 13px;
+  border: 0; cursor: pointer; padding: 8px 13px;
   font: inherit; font-size: 13px; font-weight: 700;
-  background: #c8102e; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  background: #c8102e; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .9; transition: opacity .12s ease, transform .08s ease;
 }
 #rchan-youbtn:hover { opacity: 1; transform: translateY(-1px); }
@@ -278,7 +288,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Post form: collapse toggle + toolbar, char counter, drag-drop, previews ---------- */
 #rchan-formtoggle {
   display: block; width: -moz-fit-content; width: fit-content; margin: 6px auto; /* centered */
-  padding: 3px 11px; border-radius: 6px;
+  padding: 3px 11px;
   border: 1px solid #0002; background: #0000000a; cursor: pointer; font: inherit;
   font-size: 13px; font-weight: 600;
 }
@@ -294,27 +304,28 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 #postingForm.rchan-form > * { min-height: 0; overflow: hidden; }
 #postingForm.rchan-collapsed { grid-template-rows: 0fr; opacity: 0; }
 .rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
-/* scoped under #postingForm to beat the engine's "#postingForm button {width:8em;font-size:125%}"
-   (that rule is for the Post submit button; without the id our toolbar buttons inherit it). */
-#postingForm .rchan-fmtbar button {
+/* scoped under #postingForm/#quick-reply to beat the engine's "#postingForm button
+   {width:8em;font-size:125%}" (that rule is for the Post submit button; without the
+   scope our toolbar buttons inherit it). */
+#postingForm .rchan-fmtbar button, #quick-reply .rchan-fmtbar button {
   width: auto !important; min-width: 26px !important; height: 24px !important;
   margin: 0 !important; padding: 0 8px !important; box-sizing: border-box;
-  border-radius: 5px; cursor: pointer;
+  cursor: pointer;
   font-family: inherit; font-size: 12px !important; font-weight: 700; line-height: 1 !important;
   border: 1px solid #0002; background: #0000000a;
 }
-#postingForm .rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
-.theme_dark #postingForm .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
+#postingForm .rchan-fmtbar button:hover, #quick-reply .rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.theme_dark #postingForm .rchan-fmtbar button, .theme_dark #quick-reply .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
 .rchan-charcount { margin-left: auto; font-size: 11px; opacity: .7; }
 #postingForm.rchan-dragover { outline: 2px dashed #c8102e; outline-offset: 3px; }
 .rchan-filetray { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rchan-filechip {
   display: flex; align-items: center; gap: 6px; max-width: 240px;
-  padding: 3px 6px 3px 3px; border-radius: 7px; font-size: 12px;
+  padding: 3px 6px 3px 3px; font-size: 12px;
   background: #0000000d; border: 1px solid #0002;
 }
 .theme_dark .rchan-filechip { background: #1f2126; border-color: #2c2f36; }
-.rchan-filechip img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; display: block; }
+.rchan-filechip img { width: 34px; height: 34px; object-fit: cover; display: block; }
 .rchan-filemeta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
 .rchan-filebad { border-color: #c8102e; background: #c8102e1a; }
 #postingForm .rchan-filex {
@@ -343,8 +354,8 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* [code] blocks: the engine only sets overflow — give them a real monospace block look. */
 .divMessage code {
-  display: block; margin: 6px 0; padding: .55em .7em; border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  display: block; margin: 6px 0; padding: .55em .7em;
+  font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: .92em; line-height: 1.4; white-space: pre; overflow-x: auto;
   background: #00000010; border: 1px solid #00000018;
 }
@@ -355,7 +366,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
    reduced-motion block above). */
 .rchan-skel {
   background-image: linear-gradient(90deg, #0000000d 25%, #0000001c 37%, #0000000d 63%);
-  background-size: 400% 100%; animation: rchan-shimmer 1.4s ease infinite; border-radius: 4px;
+  background-size: 400% 100%; animation: rchan-shimmer 1.4s ease infinite;
 }
 .theme_dark .rchan-skel { background-image: linear-gradient(90deg, #ffffff08 25%, #ffffff14 37%, #ffffff08 63%); }
 @keyframes rchan-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
@@ -364,7 +375,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 @media (max-width: 640px) {
   body { font-size: 18px; }   /* matches the global text bump; keep phones readable */
   /* bigger, full-width Quick Reply so it's usable on phones */
-  #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; }
+  body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }
   #quick-reply textarea, #qrbody { width: 100% !important; box-sizing: border-box; min-height: 110px; }
   #rchan-nav { right: 10px; bottom: 10px; }

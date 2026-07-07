@@ -427,13 +427,14 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
    into it; qr.js is thread-only). Same visual language as #quick-reply. */
 #rchan-qr {
   position: fixed; top: 60px; right: 30px; z-index: 10005;
-  width: 400px; min-width: 340px; max-width: 96vw; max-height: 92vh;
+  width: 425px; min-width: 340px; max-width: 96vw; max-height: 92vh;
   resize: both; overflow: auto; display: none;
   background: #E6E6DA; border: 1px solid #CFCFC4;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
 }
 #rchan-qr-header {
   cursor: move; user-select: none;
+  position: sticky; top: 0; z-index: 1;    /* stays visible when the box body scrolls */
   background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
   padding: 3px 8px; font-size: 10pt; font-weight: 700;
   display: flex; align-items: center; justify-content: space-between;

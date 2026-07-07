@@ -6,7 +6,7 @@
 	"threadId": 51,
 	"id": null,
 	"lastBump": {
-		"$date": "2026-07-06T01:57:34.841Z"
+		"$date": "2026-07-06T03:40:26.673Z"
 	},
 	"creation": {
 		"$date": "2026-07-06T01:57:34.79Z"
@@ -28,6 +28,322 @@
 			"sha256": "be5ece24bd2ccc2b330ac3f9c60f5f958b89b5cf85cb69caa18919b2f78254de",
 			"width": 160,
 			"height": 160
+		}
+	],
+	"page": 1,
+	"fileCount": 0,
+	"postCount": 1
+},
+{
+	"_id": {
+		"$oid": "6a4b4c974f1e5feba3f9f252"
+	},
+	"boardUri": "rdr",
+	"threadId": 53,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T06:35:03.186Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T06:35:03.186Z"
+	},
+	"subject": "any gay guys here?",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "email me pry@privacydied.net",
+	"email": null,
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4b4d684f1e5feba3f9f25a"
+	},
+	"boardUri": "rdr",
+	"threadId": 54,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-07T01:37:35.916Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T06:38:32.685Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "China General",
+	"email": null,
+	"files": [
+		{
+			"originalName": "20250201_100228.jpg",
+			"path": "/.media/66b55c322acee3af42086d95b3e86fe949ad503766a60e769e9ae1c836d8e2e9.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_66b55c322acee3af42086d95b3e86fe949ad503766a60e769e9ae1c836d8e2e9",
+			"size": 128796,
+			"sha256": "66b55c322acee3af42086d95b3e86fe949ad503766a60e769e9ae1c836d8e2e9",
+			"width": 1100,
+			"height": 619
+		}
+	],
+	"page": 1,
+	"fileCount": 5,
+	"postCount": 6,
+	"autoSage": null,
+	"cyclic": false
+},
+{
+	"_id": {
+		"$oid": "6a4badf3f77897902e121559"
+	},
+	"boardUri": "rdr",
+	"threadId": 58,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T17:19:56.887Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T13:30:26.761Z"
+	},
+	"subject": "/tg/ - tomboy general",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "/tg/ - tomboy general",
+	"email": null,
+	"files": [
+		{
+			"originalName": "HLFzHcybwAE7dAX.jpg",
+			"path": "/.media/636449aaa7067859c7876a6444491528aa992e123d068fb32f94a9b47c88804b.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_636449aaa7067859c7876a6444491528aa992e123d068fb32f94a9b47c88804b",
+			"size": 317930,
+			"sha256": "636449aaa7067859c7876a6444491528aa992e123d068fb32f94a9b47c88804b",
+			"width": 1366,
+			"height": 2048
+		}
+	],
+	"page": 1,
+	"fileCount": 5,
+	"postCount": 6
+},
+{
+	"_id": {
+		"$oid": "6a4bd327fcc8b1dfb9d12c68"
+	},
+	"boardUri": "rdr",
+	"threadId": 63,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T16:09:11.874Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T16:09:11.872Z"
+	},
+	"subject": "NIGGER",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "niggamane",
+	"message": "ITS NIGGGGGGER TIME",
+	"email": null,
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4bdcb8de97b7a9fa23c12b"
+	},
+	"boardUri": "rdr",
+	"threadId": 64,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T23:36:05.21Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T16:50:00.631Z"
+	},
+	"subject": "Bbw thread",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Fat chick review thread",
+	"email": null,
+	"files": [
+		{
+			"originalName": "IMG_5336.jpeg",
+			"path": "/.media/16e38b83f00279959edf630a70af565092455237ff78b6ea945174b46f655ad8.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_16e38b83f00279959edf630a70af565092455237ff78b6ea945174b46f655ad8",
+			"size": 84094,
+			"sha256": "16e38b83f00279959edf630a70af565092455237ff78b6ea945174b46f655ad8",
+			"width": 837,
+			"height": 1024
+		}
+	],
+	"page": 1,
+	"fileCount": 1,
+	"postCount": 2
+},
+{
+	"_id": {
+		"$oid": "6a4bdf9a163d0091998b8a77"
+	},
+	"boardUri": "rdr",
+	"threadId": 66,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T17:02:18.835Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T17:02:18.285Z"
+	},
+	"subject": "UBI4WOMEN",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "the only way to solve the loneliness epidemic and birthrate/incel problem is UBI 4 women:\r\n\r\n>men and women no longer put against each other competing for the same roles\r\n>more men in the workforce means less angry, unemployed men, with free time (crime rate will probably lower and incel problem reduced)\r\n>women can stay home and raise the kids making more well adjusted members of society because they’re not just pawned off to nanny or grandparents \r\n>women can still do fake email job if she wants but will not be eligible for UBI (very lucrative offer)\r\n>because competition for jobs is reduced men can actually form unions and protest workplace exploitation without fear of instantly being replaced \r\n>less stressed populace more likely to fuck \r\n>fucking = higher birth rate",
+	"email": null,
+	"files": [
+		{
+			"originalName": "napoleon1.png",
+			"path": "/.media/77dfe5ba14b72fc23480594e12e9a349ffec74d35e75c67e2dab9cc1c9df0ff0.png",
+			"mime": "image/png",
+			"thumb": "/.media/t_77dfe5ba14b72fc23480594e12e9a349ffec74d35e75c67e2dab9cc1c9df0ff0",
+			"size": 2045490,
+			"sha256": "77dfe5ba14b72fc23480594e12e9a349ffec74d35e75c67e2dab9cc1c9df0ff0",
+			"width": 2500,
+			"height": 2500
+		}
+	],
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4be971fcc8b1dfb9d12c97"
+	},
+	"boardUri": "rdr",
+	"threadId": 71,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-06T17:44:17.279Z"
+	},
+	"creation": {
+		"$date": "2026-07-06T17:44:16.282Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Things normies got one shot by\r\n>LLMs/generative AI\r\n>Stoicism\r\n>Antisemitism \r\n>Nietzsche\r\n>NFTs/gimmick crypto/shitcoining\r\n>\"\"\"Goth\"\"\"\r\n>The terms \"incel\", \"foid\", and \"larp\"\r\n>Looksmaxxing\r\n>Monster\r\n>\"White girl music\"",
+	"email": null,
+	"files": [
+		{
+			"originalName": "GQSIdR3aUAALVcK.jpeg",
+			"path": "/.media/03de4b92f6d67045a8f93dc577fc5b6a99ca30482f90dc55b46ca6b4b714829b.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_03de4b92f6d67045a8f93dc577fc5b6a99ca30482f90dc55b46ca6b4b714829b",
+			"size": 203695,
+			"sha256": "03de4b92f6d67045a8f93dc577fc5b6a99ca30482f90dc55b46ca6b4b714829b",
+			"width": 1125,
+			"height": 1009
+		}
+	],
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4c4e67c5c566d56148aed7"
+	},
+	"boardUri": "rdr",
+	"threadId": 76,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-07T00:55:58.313Z"
+	},
+	"creation": {
+		"$date": "2026-07-07T00:55:03.166Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "this could be us",
+	"message": "but u playin",
+	"email": null,
+	"files": [
+		{
+			"originalName": "image.jpeg",
+			"path": "/.media/5e307277333aed1a9eaca08f793edd3cdc51a0318092326268e5a814bfe30276.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_5e307277333aed1a9eaca08f793edd3cdc51a0318092326268e5a814bfe30276",
+			"size": 56849,
+			"sha256": "5e307277333aed1a9eaca08f793edd3cdc51a0318092326268e5a814bfe30276",
+			"width": 544,
+			"height": 680
+		}
+	],
+	"page": 1,
+	"fileCount": 1,
+	"postCount": 1
+},
+{
+	"_id": {
+		"$oid": "6a4c5639d577bb39ee2de948"
+	},
+	"boardUri": "rdr",
+	"threadId": 78,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-07T01:28:25.889Z"
+	},
+	"creation": {
+		"$date": "2026-07-07T01:28:25.888Z"
+	},
+	"subject": "mashed potato no milk",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "mashed potato recipe without milk low calorie low fat tasty garlic",
+	"email": null,
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4c619d921c4c68a16b1410"
+	},
+	"boardUri": "rdr",
+	"threadId": 80,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-07T02:17:01.779Z"
+	},
+	"creation": {
+		"$date": "2026-07-07T02:16:57.951Z"
+	},
+	"subject": "Third world products",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Would you eat Mickey Mouse rice shavings?",
+	"email": null,
+	"files": [
+		{
+			"originalName": "IMG_7236.jpeg",
+			"path": "/.media/63cd9451a56acb5fa5dc5ac2e665b023f5c76e783cb776f2e91089f4bb607cad.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_63cd9451a56acb5fa5dc5ac2e665b023f5c76e783cb776f2e91089f4bb607cad",
+			"size": 2140546,
+			"sha256": "63cd9451a56acb5fa5dc5ac2e665b023f5c76e783cb776f2e91089f4bb607cad",
+			"width": 4032,
+			"height": 3024
 		}
 	],
 	"page": 1

@@ -9,11 +9,11 @@
 	"settings": [
 		"disableIds"
 	],
-	"uniqueIps": 11,
-	"lastPostId": 51,
+	"uniqueIps": 15,
+	"lastPostId": 80,
 	"captchaMode": 2.0,
-	"postsPerHour": 0,
-	"threadCount": 1.0,
+	"postsPerHour": 1,
+	"threadCount": 9,
 	"anonymousName": "",
 	"tags": [],
 	"rules": [

@@ -49,7 +49,8 @@
   function toggleCatalog() {
     var b = getBoard();
     if (!b || b.charAt(0) === ".") { return; }
-    location.href = isCatalog() ? ("/" + b + "/") : ("/" + b + "/catalog.html");
+    // "?index" bypasses the router's board-root -> catalog redirect (see nginx default.conf)
+    location.href = isCatalog() ? ("/" + b + "/?index") : ("/" + b + "/catalog");
   }
 
   /* ---------- Floating nav buttons (top / catalog-toggle / bottom) ---------- */

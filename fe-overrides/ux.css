@@ -17,6 +17,7 @@ body {
 }
 .divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
 .title, .labelSubject { letter-spacing: .01em; }
+.title { font-family: Georgia, "Times New Roman", Times, serif; }
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
 a { text-decoration: none; }
@@ -26,9 +27,9 @@ a:hover { text-decoration: underline; }
 .innerPost, .innerOP {
   border-radius: 7px;
   padding: 7px 9px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.08);
   transition: box-shadow .12s ease;
 }
+.innerPost { box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .postCell { margin: 6px 0; }
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
 .postInfo { opacity: .95; }
@@ -44,7 +45,6 @@ a:hover { text-decoration: underline; }
 .theme_cream .labelSubject { color: #0d5b73; }
 .theme_cream .linkName, .theme_cream .labelName { color: #3a6b2e; }
 .theme_cream a { color: #274a6b; }
-.theme_cream .innerPost, .theme_cream .innerOP { border: 1px solid #d7d7cb; }
 .theme_cream .quoteLink, .theme_cream .panelBacklinks a { color: #8a2b1f; }
 
 /* ---------- Dark theme (selectable) ---------- */

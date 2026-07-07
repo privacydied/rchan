@@ -231,17 +231,32 @@
   }
   function onOut(e) { if (e.target && e.target.tagName === "IMG") { hideZoom(); } }
 
-  /* ---------- Video: floating autoplay pop-out on hover (mirrors image zoom) ---------- */
+  /* ---------- Video: floating autoplay pop-out on hover (mirrors image zoom) ----------
+   * NOTE: LynxChan's native thumbs.js (setPlayer) rewrites every video/audio thumbnail at
+   * load: it REMOVES the original <a class="imgLink" data-filemime="video/…"> and replaces
+   * it with <span><a class="hideLink"/><video controls/><a href="/.media/x.mp4"><img
+   * class="imgLink"></a></span>. So after load the anchor has NO imgLink class and NO
+   * data-filemime — the only reliable signal is the anchor href's video extension. Catalog
+   * (linkThumb) is NOT processed by thumbs.js, so it keeps data-filemime + a thread href. */
   var VID_EXT = { "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogg" };
+  var VID_RE = /\.(mp4|webm|ogg)(?:\?|#|$)/i;
   var vidzoom = null;
-  function videoUrlFor(img, a) {
-    var mime = (a.getAttribute("data-filemime") || "").toLowerCase();
-    if (!/^video\//.test(mime)) { return null; }
-    if (a.classList.contains("imgLink")) { return a.getAttribute("href"); }   // href IS the video file
-    if (a.classList.contains("linkThumb")) {                                   // catalog: derive from thumb + mime
+  // Resolve the playable video URL for a hovered thumbnail <img>, or null if it isn't a video.
+  function videoUrlFor(img) {
+    var a = img.closest ? img.closest("a[href]") : null;
+    if (!a) { return null; }
+    var href = a.getAttribute("href") || "";
+    if (VID_RE.test(href)) {                                       // thread/index (incl. native-processed)
+      // .ogg/.webm can be audio; native setPlayer builds an <audio> sibling for those — skip them.
+      var box = a.parentNode;
+      if (box && box.getElementsByTagName && box.getElementsByTagName("audio").length) { return null; }
+      return { a: a, url: href };
+    }
+    if (a.classList.contains("linkThumb")) {                       // catalog: derive from thumb src + mime
+      var mime = (a.getAttribute("data-filemime") || "").toLowerCase();
       var ext = VID_EXT[mime];
       var m = (img.getAttribute("src") || "").match(/\/\.media\/t_([a-z0-9]+)$/i);
-      if (ext && m) { return "/.media/" + m[1] + "." + ext; }
+      if (/^video\//.test(mime) && ext && m) { return { a: a, url: "/.media/" + m[1] + "." + ext }; }
     }
     return null;
   }
@@ -252,29 +267,38 @@
     vidzoom.removeAttribute("src"); vidzoom.load();   // stop buffering the file
   }
   function onVidOver(e) {
-    var a = e.target && e.target.closest ? e.target.closest("a.imgLink, a.linkThumb") : null;
-    if (!a) { return; }
-    var img = a.getElementsByTagName("img")[0]; if (!img) { return; }
-    if (isExpanded(img, a)) { hideVidZoom(); return; }   // already playing full inline
-    var url = videoUrlFor(img, a); if (!url) { return; }
+    var img = e.target;
+    if (!img || img.tagName !== "IMG") { return; }     // only the thumbnail image, like image-zoom
+    var info = videoUrlFor(img); if (!info) { return; }
+    var a = info.a, url = info.url;
     if (!vidzoom) {
       vidzoom = document.createElement("video");
       vidzoom.id = "rchan-vidzoom";
       vidzoom.muted = true; vidzoom.loop = true; vidzoom.autoplay = true; vidzoom.playsInline = true;
       vidzoom.setAttribute("muted", ""); vidzoom.setAttribute("playsinline", "");
       document.body.appendChild(vidzoom);
+      // once dimensions are known, size to the video (capped to viewport) unless already sized from data-*
+      vidzoom.addEventListener("loadedmetadata", function () {
+        if (vidzoom.dataset.sized === "1" || !vidzoom.videoWidth) { return; }
+        var s2 = Math.min(window.innerWidth * 0.9 / vidzoom.videoWidth, window.innerHeight * 0.9 / vidzoom.videoHeight, 1);
+        vidzoom.style.width = Math.round(vidzoom.videoWidth * s2) + "px";
+        vidzoom.style.height = Math.round(vidzoom.videoHeight * s2) + "px";
+      });
     }
     if (vidzoom.getAttribute("src") !== url) { vidzoom.src = url; }
+    // Size immediately from data-file dims when the anchor still carries them (catalog / unprocessed);
+    // otherwise clear and let loadedmetadata size it. Either way it's capped by CSS max-width/height.
+    var nw = parseInt(a.getAttribute("data-filewidth"), 10) || 0, nh = parseInt(a.getAttribute("data-fileheight"), 10) || 0;
+    if (nw && nh) {
+      var s = Math.min(window.innerWidth * 0.9 / nw, window.innerHeight * 0.9 / nh, 1);
+      vidzoom.style.width = Math.round(nw * s) + "px"; vidzoom.style.height = Math.round(nh * s) + "px";
+      vidzoom.dataset.sized = "1";
+    } else { vidzoom.style.width = ""; vidzoom.style.height = ""; vidzoom.dataset.sized = "0"; }
     vidzoom.style.display = "block";
     var p = vidzoom.play(); if (p && p.catch) { p.catch(function () {}); }
     placeFloat(vidzoom, e);
   }
-  function onVidOut(e) {
-    var a = e.target && e.target.closest ? e.target.closest("a.imgLink, a.linkThumb") : null;
-    if (!a) { return; }
-    if (e.relatedTarget && a.contains && a.contains(e.relatedTarget)) { return; }  // still inside
-    hideVidZoom();
-  }
+  function onVidOut(e) { if (e.target && e.target.tagName === "IMG") { hideVidZoom(); } }
 
   /* ---------- Keyboard shortcuts ---------- */
   function typing(e) {
@@ -639,16 +663,9 @@
   var pending = false;
   function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); }, 80); }
   function init() {
-    buildNav();
-    buildCatalogTools();
+    // Bind interaction listeners FIRST, so a throw in any decorate/build step below
+    // can never leave hover-zoom / video-pop-out / tooltips unwired.
     document.addEventListener("mouseover", onCatHover, true);
-    decorateIcons(document);
-    decorateThumbs(document);
-    decorateYou(document);
-    markNewInThread();
-    markNewInCatalog();
-    scanRepliesToYou();
-    enhancePostForm();
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);
@@ -667,6 +684,10 @@
     document.addEventListener("scroll", hideTip, true);
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
+    // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
+    [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
+     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm
+    ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }
   // PWA: register the (cache-free) service worker so the site is installable.

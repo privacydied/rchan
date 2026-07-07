@@ -270,7 +270,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .coloredIcon[data-tooltip] { cursor: pointer; }
 
 /* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
-#rchan-cattools { text-align: center; margin: 10px 0 2px; font-size: 10pt; font-weight: 700; }
+#rchan-cattools { text-align: right; margin: 10px 8px 2px; font-size: 10pt; font-weight: 700; }
 #rchan-cattools label { margin: 0 9px; }
 #rchan-cattools select { margin-left: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
 #divTools { text-align: center; margin: 4px 0 2px; font-size: 10pt; }
@@ -319,15 +319,28 @@ body .catalogCell .labelSubject, body .catalogCell .divMessage {
   font-size: 10pt;
 }
 body .catalogCell .labelSubject { font-weight: 700; }
-/* size dropdown remaps to 4chan's modes (small/extended-small/large/extended-large) */
+/* Size dropdown (4chan's small/large modes; large = default) */
 .rchan-cat-s  .catalogCell   { width: 165px; max-height: 250px; }
 .rchan-cat-s  .linkThumb img { max-width: 150px; max-height: 150px; }
-.rchan-cat-m  .catalogCell   { width: 180px; max-height: 320px; }   /* default */
-.rchan-cat-m  .linkThumb img { max-width: 150px; max-height: 150px; }
 .rchan-cat-l  .catalogCell   { width: 270px; max-height: 410px; }
 .rchan-cat-l  .linkThumb img { max-width: 250px; max-height: 250px; }
-.rchan-cat-xl .catalogCell   { width: 360px; max-height: 500px; }
-.rchan-cat-xl .linkThumb img { max-width: 320px; max-height: 320px; }
+
+/* View dropdown: "Index" re-lays the SAME cells out as a vertical list
+   (thumb left, subject/snippet right) — pure CSS, so the active sort order
+   and hover previews keep working unchanged. */
+body.rchan-view-index #divThreads:has(.catalogCell) { text-align: left; padding: 10px 0; }
+body.rchan-view-index .catalogCell {
+  display: block; width: auto; max-width: 820px; max-height: none;
+  margin: 0 auto 8px; padding: 4px 6px; overflow: hidden;
+  background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1); text-align: left;
+}
+body.rchan-view-index .catalogCell .linkThumb { float: left; margin: 3px 12px 4px 3px; }
+body.rchan-view-index .catalogCell .linkThumb img { max-width: 100px; max-height: 100px; margin: 0; box-shadow: none; }
+body.rchan-view-index .catalogCell .threadStats { margin: 2px 0; line-height: normal; }
+body.rchan-view-index .catalogCell .labelSubject, body.rchan-view-index .catalogCell .divMessage { padding: 0; }
+body.rchan-view-index .catalogCell .divMessage { max-height: 8em; overflow: hidden; }
+.theme_dark body.rchan-view-index .catalogCell, body.theme_dark.rchan-view-index .catalogCell { background: #1f2126; border-color: #2c2f36; }
 
 /* keep big cards from blowing up narrow screens */
 @media (max-width: 640px) {

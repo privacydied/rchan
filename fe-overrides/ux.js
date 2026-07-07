@@ -323,28 +323,105 @@
     }
   }
 
-  /* ---------- Catalog toolbar: sort + card-size (persisted) + prefetch-on-hover ---------- */
-  var CAT_KEY = "rchan_catsize", CAT_SIZES = ["s", "m", "l", "xl"], CAT_NAMES = { s: "Small", m: "Medium", l: "Large", xl: "XL" };
-  var SORT_KEY = "rchan_catsort", SORT_MODES = ["bump", "new", "replies", "images"];
-  var SORT_NAMES = { bump: "Bump order", new: "Newest", replies: "Most replies", images: "Most images" };
+  /* ---------- Catalog toolbar: Index Sort + Size + View (persisted) + prefetch ----------
+     Sort keys come from /<board>/catalog.json, fetched ONCE and mapped by threadId
+     (lastBump, pinned, postCount, fileCount). "Last reply", "Last long reply" and
+     "Posts per minute" need reply timestamps/lengths + OP creation, which the
+     catalog payload does NOT expose — those modes lazily fetch /res/<id>.json once
+     per thread on first use (cached). "Creation date" uses threadId (monotonic).
+     Pinned threads always sort first. All modes descending, ties: newest first. */
+  var CAT_KEY = "rchan_catsize", CAT_SIZES = ["small", "large"], CAT_NAMES = { small: "Small", large: "Large" };
+  var CAT_CLASS = { small: "rchan-cat-s", large: "rchan-cat-l" };
+  var SORT_KEY = "rchan_catsort";
+  var SORT_MODES = ["bump", "lastreply", "longreply", "new", "replies", "images", "ppm"];
+  var SORT_NAMES = { bump: "Bump order", lastreply: "Last reply", longreply: "Last long reply",
+                     "new": "Creation date", replies: "Reply count", images: "File count", ppm: "Posts per minute" };
+  var VIEW_KEY = "rchan_catview", VIEW_MODES = ["catalog", "index"], VIEW_NAMES = { catalog: "Catalog", index: "Index" };
+  var LONG_REPLY_MIN = 400;   // chars — what counts as a "real" reply for Last long reply
   function applyCatSize(sz) {
-    if (CAT_SIZES.indexOf(sz) < 0) { sz = "m"; }
-    for (var i = 0; i < CAT_SIZES.length; i++) { document.body.classList.remove("rchan-cat-" + CAT_SIZES[i]); }
-    document.body.classList.add("rchan-cat-" + sz);
+    if (sz === "s" || sz === "m") { sz = "small"; }            // migrate old s/m/l/xl values
+    if (sz === "l" || sz === "xl" || CAT_SIZES.indexOf(sz) < 0) { sz = "large"; }
+    document.body.classList.remove("rchan-cat-s", "rchan-cat-m", "rchan-cat-l", "rchan-cat-xl");
+    document.body.classList.add(CAT_CLASS[sz]);
+    return sz;
   }
-  var catalogOrig = null;
+  function applyCatView(v) {
+    if (VIEW_MODES.indexOf(v) < 0) { v = "catalog"; }
+    document.body.classList.toggle("rchan-view-index", v === "index");
+    return v;
+  }
+  var catalogOrig = null, catMeta = null, catDetails = {};
   function catCells() { var t = document.getElementById("divThreads"); return t ? Array.prototype.slice.call(t.getElementsByClassName("catalogCell")) : []; }
   function catNum(cell, cls) { var e = cell.getElementsByClassName(cls)[0]; return e ? (parseInt((e.textContent || "").replace(/\D/g, ""), 10) || 0) : 0; }
   function catThreadId(cell) { var a = cell.getElementsByClassName("linkThumb")[0]; var m = a && (a.getAttribute("href") || "").match(/\/res\/(\d+)/); return m ? parseInt(m[1], 10) : 0; }
+  function loadCatMeta(done) {                                 // one catalog.json fetch per page load
+    if (catMeta) { if (done) { done(); } return; }
+    var b = getBoard(); if (!b) { return; }
+    fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
+      catMeta = {};
+      (list || []).forEach(function (t) {
+        catMeta[t.threadId] = { bump: Date.parse(t.lastBump) || 0, pinned: !!t.pinned,
+                                posts: t.postCount || 0, files: t.fileCount || 0 };
+      });
+      if (done) { done(); }
+    }).catch(function () { catMeta = {}; if (done) { done(); } });   // no JSON -> DOM-count fallbacks
+  }
+  function loadCatDetail(b, id) {                              // per-thread detail for the 3 deep modes
+    return fetch("/" + b + "/res/" + id + ".json").then(function (r) { return r.json(); }).then(function (d) {
+      var posts = d.posts || [];
+      var creation = Date.parse(d.creation) || 0;
+      var lastReply = posts.length ? (Date.parse(posts[posts.length - 1].creation) || 0) : creation;
+      var lastLong = creation;                                 // fallback: thread creation
+      for (var i = posts.length - 1; i >= 0; i--) {
+        if (((posts[i].message) || "").length >= LONG_REPLY_MIN) { lastLong = Date.parse(posts[i].creation) || 0; break; }
+      }
+      catDetails[id] = { lastReply: lastReply, lastLong: lastLong, creation: creation, replies: posts.length };
+    }).catch(function () { catDetails[id] = { lastReply: 0, lastLong: 0, creation: 0, replies: 0 }; });
+  }
   function sortCatalog(mode) {
     var t = document.getElementById("divThreads"); if (!t) { return; }
     var cells = catCells(); if (!cells.length) { return; }
     if (!catalogOrig) { catalogOrig = cells.slice(); }         // capture bump (server) order once
+    var needsDetail = mode === "lastreply" || mode === "longreply" || mode === "ppm";
+    if (needsDetail) {
+      var b = getBoard();
+      var missing = cells.map(catThreadId).filter(function (id) { return id && !catDetails[id]; });
+      if (missing.length) {                                    // fetch once, then re-enter
+        Promise.all(missing.map(function (id) { return loadCatDetail(b, id); }))
+          .then(function () { sortCatalog(mode); });
+        return;
+      }
+    }
+    function keyOf(cell) {
+      var id = catThreadId(cell);
+      var m = (catMeta && catMeta[id]) || null, d = catDetails[id] || null;
+      switch (mode) {
+        case "lastreply": return d ? d.lastReply : 0;
+        case "longreply": return d ? d.lastLong : 0;
+        case "new":       return id;                           // threadIds are monotonic = creation order
+        case "replies":   return m ? m.posts : catNum(cell, "labelReplies");
+        case "images":    return m ? m.files : catNum(cell, "labelImages");
+        case "ppm":
+          var reps = m ? m.posts : catNum(cell, "labelReplies");
+          var mins = d && d.creation ? Math.max(1, (Date.now() - d.creation) / 60000) : 0;
+          return mins ? reps / mins : 0;
+        default:          return m ? m.bump : 0;               // bump order
+      }
+    }
     var s;
-    if (mode === "new") { s = cells.slice().sort(function (a, b) { return catThreadId(b) - catThreadId(a); }); }
-    else if (mode === "replies") { s = cells.slice().sort(function (a, b) { return catNum(b, "labelReplies") - catNum(a, "labelReplies"); }); }
-    else if (mode === "images") { s = cells.slice().sort(function (a, b) { return catNum(b, "labelImages") - catNum(a, "labelImages"); }); }
-    else { s = catalogOrig.filter(function (c) { return c.parentNode === t; }); }
+    if (mode === "bump" && !(catMeta && Object.keys(catMeta).length)) {
+      s = catalogOrig.filter(function (c) { return c.parentNode === t; });   // server order fallback
+    } else {
+      s = cells.slice().sort(function (a, b2) {
+        var ia = catThreadId(a), ib = catThreadId(b2);
+        var pa = catMeta && catMeta[ia] && catMeta[ia].pinned ? 1 : 0;
+        var pb = catMeta && catMeta[ib] && catMeta[ib].pinned ? 1 : 0;
+        if (pa !== pb) { return pb - pa; }                     // pinned always on top
+        var ka = keyOf(a), kb = keyOf(b2);
+        if (kb !== ka) { return kb - ka; }                     // descending
+        return ib - ia;                                        // tie-break: newest thread first
+      });
+    }
     s.forEach(function (c) { t.appendChild(c); });             // appendChild moves existing nodes → reorders
   }
   function mkSelect(id, modes, names, cur, onChange) {
@@ -358,16 +435,21 @@
   }
   function buildCatalogTools() {
     if (!isCatalog()) { return; }
-    var curSize = localStorage.getItem(CAT_KEY) || "m"; applyCatSize(curSize);
-    var curSort = localStorage.getItem(SORT_KEY) || "bump"; if (curSort !== "bump") { sortCatalog(curSort); }
+    var curSize = applyCatSize(localStorage.getItem(CAT_KEY) || "large");
+    var curView = applyCatView(localStorage.getItem(VIEW_KEY) || "catalog");
+    var curSort = localStorage.getItem(SORT_KEY) || "bump";
+    if (SORT_MODES.indexOf(curSort) < 0) { curSort = "bump"; }
+    loadCatMeta(function () { if (curSort !== "bump") { sortCatalog(curSort); } });
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
     var s1 = mkSelect("rchan-catsort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); });
-    s1.insertBefore(document.createTextNode("Sort "), s1.firstChild);
+    s1.insertBefore(document.createTextNode("Index Sort "), s1.firstChild);
     var s2 = mkSelect("rchan-catsize", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); });
-    s2.insertBefore(document.createTextNode("Card size "), s2.firstChild);
-    bar.appendChild(s1); bar.appendChild(s2);
+    s2.insertBefore(document.createTextNode("Size "), s2.firstChild);
+    var s3 = mkSelect("rchan-catview", VIEW_MODES, VIEW_NAMES, curView, function (v) { localStorage.setItem(VIEW_KEY, v); applyCatView(v); });
+    s3.insertBefore(document.createTextNode("View "), s3.firstChild);
+    bar.appendChild(s1); bar.appendChild(s2); bar.appendChild(s3);
     threads.parentNode.insertBefore(bar, threads);
   }
   // prefetch a thread page when hovering its catalog cell (snappier open)

@@ -10,8 +10,16 @@
 html { font-size: 120%; }
 
 /* ---------- Typography & rhythm (all themes) ---------- */
+/* Inter (variable, self-hosted at /.rchan/inter.woff2 — CSP is same-origin-only) */
+@font-face {
+  font-family: "Inter";
+  src: url("/.rchan/inter.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 body {
-  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.45;
   -webkit-text-size-adjust: 100%;
 }
@@ -20,6 +28,10 @@ body {
 .title { font-family: Georgia, "Times New Roman", Times, serif; }
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
+/* file-info blocks (name / size / dims) in fixed-width type */
+.panelUploads, .opUploadPanel {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+}
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
 /* undo global.css's hard `hr { border-color: black }` (body hr outranks it;

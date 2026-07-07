@@ -22,14 +22,23 @@ body {
 .linkName, .labelName { font-weight: 600; }
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* undo global.css's hard `hr { border-color: black }` (body hr outranks it;
+   theme rules like .theme_cyber hr are more specific still and keep working) */
+body hr { border-color: currentColor; }
+/* undo posting.css's 80% shrink on post text/info — 100% = plain inheritance,
+   i.e. the same as the rule not existing (body prefix outranks the engine rule) */
+body .postInfo, body .opHead, body .divMessage, body .panelUploads, body .panelIp,
+  body .panelProxyIp, body .contentOmissionIndicator, body .labelOmission,
+  body .labelId, body .panelASN, body .panelBypassId {
+  font-size: 100%;
+}
 
 /* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
 .innerPost, .innerOP {
-  border-radius: 7px;
   padding: 7px 9px;
   transition: box-shadow .12s ease;
 }
-.innerPost { box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.innerPost { box-shadow: 2px 2px 0px rgba(0,0,0,.1); }
 .postCell { margin: 6px 0; }
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
 .postInfo { opacity: .95; }
@@ -95,6 +104,9 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* ---------- "(You)" — your own posts + quotes pointing at them ---------- */
 .rchan-you { box-shadow: inset 4px 0 0 #c8102e !important; }
+/* replies keep the ambient paper shadow alongside the (You) stripe
+   (box-shadows replace, not stack, so the combined rule is needed) */
+.innerPost.rchan-you { box-shadow: inset 4px 0 0 #c8102e, 2px 2px 0 rgba(0,0,0,.1) !important; }
 .theme_cream .rchan-you { background: #f4e9e3 !important; }
 .theme_dark .rchan-you { background: #2a2126 !important; }
 .quoteLink[data-you] { font-weight: 700; }
@@ -197,7 +209,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .galleryImage { max-width: 92vw; max-height: 86vh; border-radius: 6px; box-shadow: 0 10px 44px rgba(0,0,0,.6); }
 
 /* ---------- New-since-last-visit + replies-to-you ---------- */
-.postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043 !important; }
+.postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043, 2px 2px 0 rgba(0,0,0,.1) !important; }
 #rchan-newline {
   text-align: center; margin: 12px auto; font-size: .78em; font-weight: 700;
   color: #2ea043; text-transform: uppercase; letter-spacing: .04em;

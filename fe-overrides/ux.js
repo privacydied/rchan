@@ -698,12 +698,80 @@
       tog.textContent = c ? L.show : L.hide;
       tog.setAttribute("aria-expanded", c ? "false" : "true");
     };
-    tog.addEventListener("click", function () {
+    function slideToggle() {
       var collapse = !form.classList.contains("rchan-collapsed");   // visible now → collapse
       setCollapsed(collapse);
       try { collapse ? localStorage.setItem(COLLAPSE_KEY, "1") : localStorage.removeItem(COLLAPSE_KEY); } catch (e) {}
-    });
-    if (localStorage.getItem(COLLAPSE_KEY) === "1") {                // apply initial state w/o animating
+    }
+
+    /* On board/catalog pages (no native quick reply there — qr.js is thread-only)
+       the toggle opens the REAL posting form in a floating draggable/resizable
+       box instead of sliding it inline; an "Original Form" link underneath keeps
+       the classic slide-out behaviour. The form element itself is MOVED (not
+       cloned), so captcha, file tray and fmtbar keep working. */
+    var inThread = /\/res\//.test(location.pathname);
+    var qrBox = null, origLink = null;
+    function closeFloatForm() {
+      if (!qrBox) { return; }
+      qrBox.style.display = "none";
+      if (form.parentNode !== origLink.parentNode) {
+        origLink.parentNode.insertBefore(form, origLink.nextSibling);  // put it back under the links
+      }
+      setCollapsed(true);
+    }
+    function openFloatForm() {
+      if (!qrBox) {
+        qrBox = document.createElement("div"); qrBox.id = "rchan-qr";
+        var head = document.createElement("div"); head.id = "rchan-qr-header";
+        var ttl = document.createElement("span"); ttl.textContent = "New Thread";
+        var x = document.createElement("button"); x.type = "button"; x.id = "rchan-qr-close"; x.textContent = "✕"; x.title = "Close";
+        x.addEventListener("click", closeFloatForm);
+        head.appendChild(ttl); head.appendChild(x);
+        qrBox.appendChild(head);
+        var bodyDiv = document.createElement("div"); bodyDiv.id = "rchan-qr-body";
+        qrBox.appendChild(bodyDiv);
+        document.body.appendChild(qrBox);
+        (function () {                                            // drag by the header
+          var drag = false, sx = 0, sy = 0, ox = 0, oy = 0;
+          head.addEventListener("mousedown", function (e) {
+            if (e.target === x) { return; }
+            drag = true; sx = e.clientX; sy = e.clientY;
+            var r = qrBox.getBoundingClientRect(); ox = r.left; oy = r.top;
+            e.preventDefault();
+          });
+          document.addEventListener("mousemove", function (e) {
+            if (!drag) { return; }
+            qrBox.style.left = (ox + e.clientX - sx) + "px";
+            qrBox.style.top = (oy + e.clientY - sy) + "px";
+            qrBox.style.right = "auto";
+          });
+          document.addEventListener("mouseup", function () { drag = false; });
+        })();
+      }
+      document.getElementById("rchan-qr-body").appendChild(form); // move the real form in
+      form.classList.remove("rchan-collapsed");
+      qrBox.style.display = "block";
+      if (msg) { msg.focus(); }
+    }
+    if (!inThread) {
+      origLink = document.createElement("a");
+      origLink.id = "rchan-origform"; origLink.href = "#"; origLink.textContent = "Original Form";
+      form.parentNode.insertBefore(origLink, form);
+      origLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (qrBox && qrBox.style.display === "block") {           // pull it out of the float
+          qrBox.style.display = "none";
+          origLink.parentNode.insertBefore(form, origLink.nextSibling);
+          setCollapsed(false);
+          return;
+        }
+        slideToggle();
+      });
+      tog.addEventListener("click", openFloatForm);
+    } else {
+      tog.addEventListener("click", slideToggle);
+    }
+    if (localStorage.getItem(COLLAPSE_KEY) === "1" || !inThread) {   // apply initial state w/o animating
       form.style.transition = "none"; setCollapsed(true); void form.offsetHeight; form.style.transition = "";
     } else { setCollapsed(false); }
     if (msg) {

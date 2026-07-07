@@ -75,6 +75,7 @@ body .sideCatalogCell, body .small { font-size: x-small; }
   color: #393939;
 }
 #catalogId .title { font-family: inherit; font-size: 28px; }
+#labelBoard { font-size: 28px; font-family: inherit; }   /* "/board/" link in the catalog heading */
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
@@ -421,6 +422,33 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 }
 #rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #rchan-formtoggle { background: #262a31; color: #c9ccd1; border-color: #333; }
+
+/* Floating new-thread box (board/catalog pages — the real #postingForm is moved
+   into it; qr.js is thread-only). Same visual language as #quick-reply. */
+#rchan-qr {
+  position: fixed; top: 60px; right: 30px; z-index: 10005;
+  width: 400px; min-width: 340px; max-width: 96vw; max-height: 92vh;
+  resize: both; overflow: auto; display: none;
+  background: #E6E6DA; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+}
+#rchan-qr-header {
+  cursor: move; user-select: none;
+  background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
+  padding: 3px 8px; font-size: 10pt; font-weight: 700;
+  display: flex; align-items: center; justify-content: space-between;
+}
+#rchan-qr-close { border: 0; background: none; cursor: pointer; font-size: 13px; font-weight: 700; padding: 0 3px; }
+#rchan-qr-close:hover { color: #c8102e; }
+#rchan-qr-body { padding: 6px; }
+#rchan-qr #postingForm input[type=text], #rchan-qr #postingForm textarea { max-width: 100%; box-sizing: border-box; }
+.theme_dark #rchan-qr { background: #1f2126; border-color: #2c2f36; }
+.theme_dark #rchan-qr-header { background: #262a31; border-color: #2c2f36; }
+/* "Original Form" link under the toggle button (board/catalog pages) */
+#rchan-origform {
+  display: block; width: -moz-fit-content; width: fit-content;
+  margin: 0 auto 6px; font-size: x-small; text-decoration: underline; cursor: pointer;
+}
 
 /* slide the posting form open/closed (grid-rows 1fr<->0fr animates true auto height) */
 #postingForm.rchan-form {

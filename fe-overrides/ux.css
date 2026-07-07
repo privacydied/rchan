@@ -65,7 +65,7 @@ body .catalogCell .divMessage, body .catalogCell .labelSubject, body .threadStat
 body .catalogLabel, body .linkThumb, body .sideCatalogCell, body .small { font-size: x-small; }
 
 /* ---------- Board header (yotsuba: .boardTitle / .boardSubtitle) ---------- */
-.boardHeader { text-align: center; clear: both; margin-top: 28px; }
+.boardHeader { text-align: center; clear: both; margin-top: 70px; }
 .boardHeader p#labelName, #catalogId {
   font-family: Tahoma, sans-serif;
   font-size: 28px;
@@ -119,7 +119,7 @@ body .divMessage {
    goes on the text line ONLY — putting overflow:hidden on .panelUploads would
    create a BFC that traps the floated thumbnail and pushes the message below. */
 .panelUploads, .opUploadPanel {
-  font-family: "Roboto Mono", ui-monospace, "SF Mono", Consolas, Menlo, monospace;
+  font-family: "Courier New", Courier, monospace;
 }
 .uploadDetails {
   max-width: 600px;

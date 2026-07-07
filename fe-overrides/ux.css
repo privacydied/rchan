@@ -115,17 +115,12 @@ body .divMessage {
 .greenText { color: #5b8a2b; }
 .redText { color: #b5341f; }
 .quoteLink, .panelBacklinks a { color: #8a2b1f !important; text-decoration: underline; }
-/* file info: Roboto Mono kept by request. The nowrap/ellipsis (4chan .fileText)
-   goes on the text line ONLY — putting overflow:hidden on .panelUploads would
-   create a BFC that traps the floated thumbnail and pushes the message below. */
+/* file info in Courier. NOTE: no overflow/nowrap layers here — the engine
+   already ellipsizes long filenames (.originalNameLink caps at 155px and
+   expands to 100% on hover); clipping the parent broke that hover reveal,
+   and overflow:hidden on .panelUploads would trap the floated thumbnail. */
 .panelUploads, .opUploadPanel {
   font-family: "Courier New", Courier, monospace;
-}
-.uploadDetails {
-  max-width: 600px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 /* OP thumbnail floats beside the post (4chan: div.post div.file .fileThumb) */
 .innerOP .imgLink { margin: 3px 20px 5px 20px; }

@@ -77,6 +77,14 @@ function applyOverride(userData, parameters) {
 
   if (!parameters) { return; }
 
+  // (0) "No location" (noFlag) is staff-only: strip it from every request
+  // that doesn't pass the role gate, so normal posters can never hide
+  // their location flag (the form checkbox is hidden for them too, but
+  // this is the enforcement).
+  if (!allowed(userData)) {
+    delete parameters.noFlag;
+  }
+
   // (1) nobody gets to hand-craft the internal marker through the native field
   if (typeof parameters.flag === 'string'
       && parameters.flag.indexOf(MARKER) === 0) {

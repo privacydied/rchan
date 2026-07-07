@@ -471,6 +471,14 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 }
 #postingForm.rchan-form > * { min-height: 0; overflow: hidden; }
 #postingForm.rchan-collapsed { grid-template-rows: 0fr; opacity: 0; }
+/* "No location" checkbox is staff-only — hidden for everyone else in the main
+   form AND the quick reply (the flagoverride addon strips noFlag server-side
+   for non-staff; this is just the cosmetic half). ux.js adds .rchan-staff to
+   <body> once /account.js confirms an authorized role. */
+#noFlagDiv, #qrcheckboxNoFlag, label[for="qrcheckboxNoFlag"] { display: none; }
+body.rchan-staff #noFlagDiv, body.rchan-staff #qrcheckboxNoFlag,
+body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
+
 /* admin flag-override row (built only for authorized staff; server enforces) */
 #rchan-flagrow { margin: 4px 0; font-size: 10pt; font-weight: 700; }
 #rchan-flagrow select { font: inherit; font-weight: 400; margin-left: 4px; max-width: 220px; }

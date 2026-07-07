@@ -78,14 +78,17 @@
     }
     if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
       btn("✎", "Reply / post", function () {
-        var pf = document.getElementById("postingForm");                 // expand if collapsed
-        if (pf && pf.classList.contains("rchan-collapsed")) {
-          pf.classList.remove("rchan-collapsed");
-          var t = document.getElementById("rchan-formtoggle");
-          if (t) { t.textContent = formLabels().hide; t.setAttribute("aria-expanded", "true"); }
-          try { localStorage.removeItem("rchan_form_collapsed"); } catch (e) {}
+        var q = window.qr;
+        if (q && q.qrPanel) {                                            // thread: open the floating QR
+          q.qrPanel.style.display = "block";
+          if (q.qrPanel.getBoundingClientRect().top < 0) { q.qrPanel.style.top = "25px"; }
+          var b = document.getElementById("qrbody");
+          if (b) { b.focus(); }
+          return;
         }
-        var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
+        var t = document.getElementById("rchan-formtoggle");             // board/catalog: floating new-thread box
+        if (t) { t.click(); return; }
+        var m = document.querySelector("#fieldMessage, textarea[name=message]");
         if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
       });
     }
@@ -779,6 +782,7 @@
     fetch("/account.js?json=1").then(function (r) { return r.json(); }).then(function (acc) {
       if (!acc || acc.status !== "ok" || !acc.data) { return; }
       if (typeof acc.data.globalRole !== "number" || acc.data.globalRole > 1) { return; }
+      document.body.classList.add("rchan-staff");   // reveals staff-only controls (e.g. "No location")
       if (document.getElementById("rchan-flagoverride")) { return; }
       fetch("/.rchan/flags.json").then(function (r) { return r.json(); }).then(function (codes) {
         var names; try { names = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { names = null; }
@@ -896,27 +900,35 @@
       qrBox.style.display = "block";
       if (msg) { msg.focus(); }
     }
+    // "Original Form" link (all pages): slides the classic inline form out.
+    origLink = document.createElement("a");
+    origLink.id = "rchan-origform"; origLink.href = "#"; origLink.textContent = "Original Form";
+    form.parentNode.insertBefore(origLink, form);
+    origLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (qrBox && qrBox.style.display === "block") {           // pull it out of the float
+        qrBox.style.display = "none";
+        origLink.parentNode.insertBefore(form, origLink.nextSibling);
+        setCollapsed(false);
+        return;
+      }
+      slideToggle();
+    });
     if (!inThread) {
-      origLink = document.createElement("a");
-      origLink.id = "rchan-origform"; origLink.href = "#"; origLink.textContent = "Original Form";
-      form.parentNode.insertBefore(origLink, form);
-      origLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        if (qrBox && qrBox.style.display === "block") {           // pull it out of the float
-          qrBox.style.display = "none";
-          origLink.parentNode.insertBefore(form, origLink.nextSibling);
-          setCollapsed(false);
-          return;
-        }
-        slideToggle();
-      });
-      tog.addEventListener("click", openFloatForm);
+      tog.addEventListener("click", openFloatForm);             // our floating new-thread box
     } else {
-      tog.addEventListener("click", slideToggle);
+      tog.addEventListener("click", function () {               // native floating quick reply
+        var q = window.qr;
+        if (q && q.qrPanel) {
+          q.qrPanel.style.display = "block";                    // qr.showQr minus the ">>quote" insert
+          if (q.qrPanel.getBoundingClientRect().top < 0) { q.qrPanel.style.top = "25px"; }
+          var b = document.getElementById("qrbody");
+          if (b) { b.focus(); }
+        } else { slideToggle(); }                               // qr.js missing -> classic slide
+      });
     }
-    if (localStorage.getItem(COLLAPSE_KEY) === "1" || !inThread) {   // apply initial state w/o animating
-      form.style.transition = "none"; setCollapsed(true); void form.offsetHeight; form.style.transition = "";
-    } else { setCollapsed(false); }
+    // start collapsed everywhere: the button's primary action is the floating box
+    form.style.transition = "none"; setCollapsed(true); void form.offsetHeight; form.style.transition = "";
     if (msg) {
       msg.parentNode.insertBefore(buildFmtBar(msg), msg);
       if (input) {

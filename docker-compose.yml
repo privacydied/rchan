@@ -43,6 +43,8 @@ services:
       - ./fe-overrides/globalRules.html:/lynxchan/src/fe/static/pages/globalRules.html:ro
       # Captcha-gated contact page (reveals admin@rchan.xyz after solving a captcha).
       - ./fe-overrides/contact.html:/lynxchan/src/fe/static/pages/contact.html:ro
+      # geoflags addon: country flags next to the name (geoip-lite), enabled via addons + locationFlagMode
+      - ./fe-overrides/addons/geoflags.js:/lynxchan/src/be/addons/geoflags.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:

@@ -65,6 +65,10 @@ RUN git clone --depth 1 -b "${FE_REF}" "${FE_REPO}" src/fe \
 WORKDIR /lynxchan/src/be
 RUN npm install --unsafe-perm
 
+# geoip-lite: self-contained GeoIP data for the geoflags addon (country flags by IP).
+# Bundles its own dataset (postinstall), so no MaxMind license / compiled LynxChan DB needed.
+RUN npm install --unsafe-perm geoip-lite
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

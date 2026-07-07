@@ -226,6 +226,54 @@
   }
   function onOut(e) { if (e.target && e.target.tagName === "IMG") { hideZoom(); } }
 
+  /* ---------- Video: muted autoplay preview on hover ---------- */
+  var VID_EXT = { "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogg" };
+  function videoUrlFor(img, a) {
+    var mime = (a.getAttribute("data-filemime") || "").toLowerCase();
+    if (!/^video\//.test(mime)) { return null; }
+    if (a.classList.contains("imgLink")) { return a.getAttribute("href"); }   // href IS the video file
+    if (a.classList.contains("linkThumb")) {                                   // catalog: derive from thumb + mime
+      var ext = VID_EXT[mime];
+      var m = (img.getAttribute("src") || "").match(/\/\.media\/t_([a-z0-9]+)$/i);
+      if (ext && m) { return "/.media/" + m[1] + "." + ext; }
+    }
+    return null;
+  }
+  function startVidHover(a, img, url) {
+    if (a.getElementsByClassName("rchan-vidhover").length) { return; }
+    var v = document.createElement("video");
+    v.className = "rchan-vidhover";
+    v.src = url; v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    v.style.width = img.offsetWidth + "px"; v.style.height = img.offsetHeight + "px";
+    img.style.display = "none";
+    a.insertBefore(v, img.nextSibling);
+    var p = v.play(); if (p && p.catch) { p.catch(function () {}); }
+  }
+  function stopVidHover(a) {
+    var v = a.getElementsByClassName("rchan-vidhover")[0];
+    if (v) { try { v.pause(); } catch (e) {} v.remove(); }
+    var img = a.getElementsByTagName("img")[0]; if (img) { img.style.display = ""; }
+  }
+  function onVidOver(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a.imgLink, a.linkThumb") : null;
+    if (!a) { return; }
+    var img = a.getElementsByTagName("img")[0]; if (!img) { return; }
+    var url = videoUrlFor(img, a); if (!url) { return; }
+    startVidHover(a, img, url);
+  }
+  function onVidOut(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a.imgLink, a.linkThumb") : null;
+    if (!a) { return; }
+    if (e.relatedTarget && a.contains && a.contains(e.relatedTarget)) { return; }  // still inside
+    stopVidHover(a);
+  }
+  // restore the thumb before the native click-to-expand (thumbs.js) runs, so its full player works
+  function onVidClick(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a.imgLink") : null;
+    if (a) { stopVidHover(a); }
+  }
+
   /* ---------- Keyboard shortcuts ---------- */
   function typing(e) {
     var t = e.target, g = t && t.tagName;
@@ -602,6 +650,10 @@
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);
+    // video hover-to-play preview
+    document.addEventListener("mouseover", onVidOver, true);
+    document.addEventListener("mouseout", onVidOut, true);
+    document.addEventListener("click", onVidClick, true);
     // clicking a thumb expands it in place (thumb swapped out under a stationary cursor,
     // so no fresh mouseover fires) — drop the floating preview so it never sticks.
     document.addEventListener("click", hideZoom, true);

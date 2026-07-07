@@ -25,7 +25,19 @@ body {
 }
 .divMessage { line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; }
 .title, .labelSubject { letter-spacing: .01em; }
-.title { font-family: Georgia, "Times New Roman", Times, serif; }
+.title { font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 85%; }
+/* Board name: Helvetica Neue Black Extended look. The true Extended cut is a
+   commercial font that ships nowhere, so: Helvetica Neue at its Black weight
+   (macOS/iOS render it natively; others fall back to Inter 900 / Arial Black)
+   plus a gentle scaleX + tracking to fake the extended width. */
+.boardHeader p#labelName {
+  font-family: "Helvetica Neue", "HelveticaNeue", "Inter", "Arial Black", Arial, sans-serif;
+  font-weight: 900;
+  font-stretch: expanded;
+  letter-spacing: .03em;
+  transform: scaleX(1.12);
+  transform-origin: center;
+}
 .labelSubject { font-weight: 700; }
 .linkName, .labelName { font-weight: 600; }
 /* file-info blocks (name / size / dims) in fixed-width type */
@@ -44,6 +56,8 @@ body .postInfo, body .opHead, body .divMessage, body .panelUploads, body .panelI
   body .labelId, body .panelASN, body .panelBypassId {
   font-size: 100%;
 }
+/* …except file info, which goes smaller (after the undo above so it wins) */
+body .panelUploads, body .opUploadPanel { font-size: 75%; }
 
 /* ---------- Post cells: spacing, rounding, subtle depth (all themes) ---------- */
 .innerPost, .innerOP {

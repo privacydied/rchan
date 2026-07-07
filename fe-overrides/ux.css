@@ -217,7 +217,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   width: 40px; height: 40px; border: 0; cursor: pointer;
   font-size: 18px; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  background: #393939; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  background: #274a6b; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .82; transition: opacity .12s ease;
 }
 #rchan-nav button svg { display: block; }

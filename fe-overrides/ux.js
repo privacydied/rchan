@@ -381,6 +381,58 @@
     var l = document.createElement("link"); l.rel = "prefetch"; l.href = href; document.head.appendChild(l);
   }
 
+  /* ---------- Catalog: last-replies hover preview (native 4chan catalog style) ----------
+     Hovering a catalog cell shows the thread's last 5 replies in a floating panel,
+     fetched once from /<board>/res/<id>.json and cached. The panel is
+     pointer-events:none, so mouseout handling stays trivial. */
+  var catPrev = null, catPrevFor = null, catPrevCache = {};
+  function escHtml(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+  function hideCatPreview() { if (catPrev) { catPrev.style.display = "none"; } catPrevFor = null; }
+  function renderCatPreview(cell, data) {
+    if (!catPrev) { catPrev = document.createElement("div"); catPrev.id = "rchan-catprev"; document.body.appendChild(catPrev); }
+    var posts = (data.posts || []).slice(-5);
+    var html = "";
+    if (!posts.length) { html = '<div class="rchan-catprev-empty">No replies yet</div>'; }
+    for (var i = 0; i < posts.length; i++) {
+      var p = posts[i];
+      html += '<div class="rchan-catprev-post"><span class="rchan-catprev-name">' +
+        escHtml(p.name || "Anonymous") + '</span> <span class="rchan-catprev-id">No.' + escHtml(String(p.postId)) + '</span>' +
+        '<div class="rchan-catprev-msg">' + (p.markdown || "") + '</div></div>';   // markdown = engine-sanitised HTML
+    }
+    catPrev.innerHTML = html;
+    catPrev.style.display = "block";
+    var r = cell.getBoundingClientRect(), w = 360;
+    var x = r.right + 8, y = r.top;
+    if (x + w > window.innerWidth - 8) { x = Math.max(8, r.left - w - 8); }   // flip to the left edge
+    catPrev.style.left = x + "px";
+    catPrev.style.top = "0px";                                                 // measure at a stable position
+    var h = catPrev.offsetHeight;
+    if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
+    catPrev.style.top = y + "px";
+  }
+  function onCatPrevOver(e) {
+    if (!isCatalog()) { return; }
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell || catPrevFor === cell) { return; }
+    catPrevFor = cell;
+    var a = cell.querySelector("a.linkThumb");
+    var m = (a && a.getAttribute("href") || "").match(/^\/([^\/]+)\/res\/(\d+)/);
+    if (!m) { return; }
+    var url = "/" + m[1] + "/res/" + m[2] + ".json";
+    if (catPrevCache[url]) { renderCatPreview(cell, catPrevCache[url]); return; }
+    fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      catPrevCache[url] = d;
+      if (catPrevFor === cell) { renderCatPreview(cell, d); }
+    }).catch(function () {});
+  }
+  function onCatPrevOut(e) {
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell) { return; }
+    var to = e.relatedTarget;
+    if (to && cell.contains(to)) { return; }
+    hideCatPreview();
+  }
+
   /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
   var ICON_TITLES = {
     linkBack: "Return to board index", linkReturn: "Return to board index",
@@ -687,6 +739,10 @@
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
     document.addEventListener("mouseover", onCatHover, true);
+    // catalog last-replies hover preview
+    document.addEventListener("mouseover", onCatPrevOver, true);
+    document.addEventListener("mouseout", onCatPrevOut, true);
+    document.addEventListener("scroll", hideCatPreview, true);
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);

@@ -158,11 +158,15 @@ body nav, body #dynamicHeader {
   box-sizing: border-box;      /* engine sets width:100%; without this the 6px
                                   side padding overflows the viewport -> h-scrollbar */
   padding: 4px 6px 6px 6px;
-  line-height: 1.6;
   background: #E6E6DA;
   border-bottom: 1px solid #CFCFC4;
 }
-body #dynamicHeader a, body nav a { padding: 2px 4px; display: inline-block; }
+/* icon-only nav at ALL widths: the engine paints text labels via ::after
+   (#navLinkHome::after{content:'home'} etc.) and only blanks them in its
+   <=812px media query — blank them globally, plus the "[ / / ]" separators */
+body #navLinkSpan a::after, body #navOptionsSpan a::after { content: ''; }
+#navLinkSpan > span, #navOptionsSpan > span { display: none; }
+body #dynamicHeader a, body nav a { display: inline-block; }
 body #navLinkSpan, body #navBoardsSpan, body #navOptionsSpan { margin-right: 10px; }
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
@@ -233,6 +237,26 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   box-shadow: 4px 4px 0 rgba(0,0,0,.18); background: #0008;
 }
 
+/* ---------- Catalog last-replies hover preview (4chan-style) ---------- */
+#rchan-catprev {
+  position: fixed; z-index: 10003; width: 360px; pointer-events: none;
+  display: none; text-align: left; font-size: 10pt;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+  padding: 4px; max-height: 70vh; overflow: hidden;
+}
+.rchan-catprev-post {
+  background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
+  padding: 2px 6px; margin: 3px 0;
+}
+.rchan-catprev-name { color: #3a6b2e; font-weight: 700; }
+.rchan-catprev-id { color: #393939; font-size: x-small; }
+.rchan-catprev-msg { margin: 2px 0 1px; word-break: break-word; overflow-wrap: anywhere; max-height: 6em; overflow: hidden; }
+.rchan-catprev-empty { padding: 4px 6px; font-size: x-small; opacity: .8; }
+.theme_dark #rchan-catprev { background: #16171b; border-color: #2c2f36; }
+.theme_dark .rchan-catprev-post { background: #1f2126; border-color: #2c2f36; }
+.theme_dark .rchan-catprev-id { color: #c9ccd1; }
+
 /* ---------- Instant styled tooltip (icon labels) ---------- */
 #rchan-tip {
   position: fixed; z-index: 10001; display: none; pointer-events: none;
@@ -257,7 +281,9 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
    4chan threads are BARE inline-blocks on the page background — no card box,
    no border. The shadow sits on the THUMBNAIL (4chan: 0 0 5px blur; ours:
    square per the system). meta = 11px "R / I / P" line; teaser padded 15px. */
-body #divThreads { padding: 20px 0; text-align: center; }
+/* LynxChan reuses #divThreads on thread/board pages too (4chan's #threads is
+   catalog-only) — scope the centering to when it actually holds catalog cells */
+body #divThreads:has(.catalogCell) { padding: 20px 0; text-align: center; }
 body .catalogCell {
   background: transparent;
   border: none;

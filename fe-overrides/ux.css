@@ -2,6 +2,13 @@
    Loaded site-wide via the router. Colors are scoped per-theme so non-cream/dark
    themes keep their own palette; structure/spacing/mobile apply everywhere. */
 
+/* ---------- Global text scale ----------
+   LynxChan sizes almost all text in % (global.css sets body{font-size:85%}), so a single
+   bump of the ROOT font-size scales the whole site proportionally. LynxChan never sets an
+   html font-size, so this is uncontested (no !important needed). 120% of the 16px default
+   ≈ 19.2px root → ~16.3px base body text (was ~13.6px). Adjust this one number to taste. */
+html { font-size: 120%; }
+
 /* ---------- Typography & rhythm (all themes) ---------- */
 body {
   font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -296,7 +303,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
-  body { font-size: 16px; }
+  body { font-size: 18px; }   /* matches the global text bump; keep phones readable */
   /* bigger, full-width Quick Reply so it's usable on phones */
   #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }

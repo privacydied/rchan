@@ -336,7 +336,7 @@ body.rchan-view-index .catalogCell {
   box-shadow: 2px 2px 0 rgba(0,0,0,.1); text-align: left;
 }
 body.rchan-view-index .catalogCell .linkThumb { float: left; margin: 3px 12px 4px 3px; }
-body.rchan-view-index .catalogCell .linkThumb img { max-width: 100px; max-height: 100px; margin: 0; box-shadow: none; }
+body.rchan-view-index .catalogCell .linkThumb img { max-width: 150px; max-height: 150px; margin: 0; box-shadow: none; }
 body.rchan-view-index .catalogCell .threadStats { margin: 2px 0; line-height: normal; }
 body.rchan-view-index .catalogCell .labelSubject, body.rchan-view-index .catalogCell .divMessage { padding: 0; }
 body.rchan-view-index .catalogCell .divMessage { max-height: 8em; overflow: hidden; }

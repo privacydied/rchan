@@ -686,6 +686,37 @@ exports.setCatalogElements = function(boardData, language, threads, flagData) {
     document = document.replace('__head_children__', '');
   }
 
+  // --- rchan: Open Graph / Twitter tags for the catalog page. The board root
+  // 302s here (catalog-default landing), so shared board links resolve to this
+  // page — without tags, Discord/Twitter/Facebook show no preview at all. ---
+  try {
+    var cEsc = function(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    };
+    var cTitle = '/' + boardUri + '/ - ' + (boardData.boardName || boardUri);
+    var cOg = '<meta property="og:type" content="website">'
+        + '<meta property="og:site_name" content="rchan">'
+        + '<meta property="og:url" content="https://boards.rchan.xyz/'
+        + boardUri + '/catalog.html">'
+        + '<meta property="og:title" content="' + cEsc(cTitle) + '">'
+        + '<meta property="og:description" content="'
+        + cEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">'
+        + '<meta property="og:image" '
+        + 'content="https://boards.rchan.xyz/.static/logo.png">'
+        + '<meta name="twitter:card" content="summary">'
+        + '<meta name="twitter:title" content="' + cEsc(cTitle) + '">'
+        + '<meta name="twitter:description" content="'
+        + cEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">'
+        + '<meta name="twitter:image" '
+        + 'content="https://boards.rchan.xyz/.static/logo.png">';
+    document = document.replace('</head>', function() {
+      return cOg + '</head>';
+    });
+  } catch (cErr) {
+    // never let preview tags break catalog rendering
+  }
+
   return document.replace('__divThreads_children__', children);
 
 };

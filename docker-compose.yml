@@ -39,6 +39,10 @@ services:
       - ./fe-overrides/index.html:/lynxchan/src/fe/templates/pages/index.html:ro
       # Adds the "Cream" theme to the theme switcher (copy of PenumbraLynx themes.js).
       - ./fe-overrides/themes.js:/lynxchan/src/fe/static/js/themes.js:ro
+      # Quote hover-preview fix (copy of PenumbraLynx tooltips.js): its board/thread/post
+      # regex required ".html" in quote hrefs, which the router's clean-URL sub_filter
+      # strips — made optional so hover previews + backlinks work on clean URLs.
+      - ./fe-overrides/tooltips.js:/lynxchan/src/fe/static/js/tooltips.js:ro
       # Site-wide global rules page (copy of PenumbraLynx globalRules.html).
       - ./fe-overrides/globalRules.html:/lynxchan/src/fe/static/pages/globalRules.html:ro
       # Captcha-gated contact page (reveals admin@rchan.xyz after solving a captcha).

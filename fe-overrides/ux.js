@@ -1400,6 +1400,23 @@
       }
     }
   }
+  // On the catalog: dim threads you've already read (visited AND nothing new
+  // since — a visited thread with fresh replies is effectively unread again,
+  // so it keeps full strength alongside its "+N new" badge). Scanning the
+  // catalog becomes a diff against your own memory. Toggleable; re-evaluated
+  // on every refresh so flipping the setting applies live.
+  function markVisitedInCatalog() {
+    if (!isCatalog()) { return; }
+    var board = getBoard(); if (!board) { return; }
+    var on = setOn("visiteddim");
+    var all = seenAll(), cells = catCells();
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i], tid = catThreadId(cell);
+      var rec = tid && all[board + "/" + tid];
+      var dim = !!(on && rec && catNum(cell, "labelReplies") <= (rec.replies || 0));
+      cell.classList.toggle("rchan-visited", dim);
+    }
+  }
   // Replies to your (You) posts: a floating indicator that cycles through them.
   var youHits = [], youIdx = -1, youBtn = null;
   function scanRepliesToYou() {
@@ -3210,6 +3227,7 @@
     { k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
+    { k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
     { k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
@@ -3972,7 +3990,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -4027,7 +4045,7 @@
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
-     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
+     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },

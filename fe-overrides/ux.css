@@ -408,6 +408,10 @@ body .catalogCell .labelSubject { font-weight: 700; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
+/* ---------- Catalog: dim threads you've already read ---------- */
+.catalogCell.rchan-visited { opacity: .5; transition: opacity .15s ease; }
+.catalogCell.rchan-visited:hover { opacity: 1; }
+
 /* ---------- Empty board state: an invitation, not a void ---------- */
 #rchan-empty { text-align: center; margin: 70px auto 40px; max-width: 480px; }
 .rchan-empty-title {

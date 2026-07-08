@@ -1917,6 +1917,43 @@
     }
   }
 
+  /* ---------- GET celebration: dubs get checked ----------
+     Classic chan culture: repeating trailing digits (dubs/trips/quads…) and
+     round-number GETs earn a mark. Dubs stay subtle (gold underline on the
+     post No.); trips and better — and 000 GETs — get a small gold badge.
+     Play is retention on a small board. */
+  function decorateGets(root) {
+    var links = (root || document).getElementsByClassName("linkQuote");
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.getAttribute("data-get")) { continue; }
+      a.setAttribute("data-get", "1");
+      if (a.closest && a.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var num = (a.textContent || "").replace(/\D/g, "");
+      if (num.length < 2) { continue; }
+      var label = null, tier = 0;
+      var zeros = num.match(/0{3,}$/);
+      var reps = num.match(/(\d)\1+$/);
+      var repLen = reps ? reps[0].length : 0;
+      if (zeros && zeros[0].length >= 3) { label = "GET"; tier = 3; }
+      else if (repLen >= 5) { label = "quints"; tier = 3; }
+      else if (repLen === 4) { label = "quads"; tier = 3; }
+      else if (repLen === 3) { label = "trips"; tier = 2; }
+      else if (repLen === 2) { tier = 1; }               // dubs: underline only
+      if (!tier) { continue; }
+      a.classList.add("rchan-get");
+      if (tier === 1) {
+        a.classList.add("rchan-get-dubs");
+        a.setAttribute("data-tooltip", "dubs");
+        continue;
+      }
+      var b = document.createElement("span");
+      b.className = "rchan-getbadge";
+      b.textContent = label;
+      a.parentNode.insertBefore(b, a.nextSibling);
+    }
+  }
+
   /* ---------- Report shortcut: a visible lever on every post ----------
      The native flow (⋮ menu → Report) is invisible to people who don't
      already know it exists — and users can't help you moderate if they
@@ -2991,7 +3028,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -3046,7 +3083,8 @@
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
-     function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); }, buildActiveThreads
+     function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
+     function () { decorateGets(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

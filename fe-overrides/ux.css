@@ -655,6 +655,16 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 }
 .theme_dark #quick-reply td.small { color: #7fb0e0; }
 
+/* ---------- GET celebration (dubs get checked) ---------- */
+.linkQuote.rchan-get-dubs { text-decoration: underline dotted #f2b21e 2px; text-underline-offset: 2px; }
+.rchan-getbadge {
+  display: inline-block; margin-left: 4px; padding: 0 5px;
+  background: #f2b21e; color: #393939;
+  font-size: x-small; font-weight: 700; vertical-align: middle;
+  box-shadow: 1px 1px 0 rgba(0,0,0,.15);
+}
+.theme_dark .rchan-getbadge { background: #b8860b; color: #16171b; }
+
 /* ---------- Report shortcut flag (hover-revealed per post) ---------- */
 .rchan-reportbtn {
   border: 0; background: none; cursor: pointer; padding: 0 3px;

@@ -2975,6 +2975,25 @@
       pvUpdate();
     });
     bar.appendChild(pv);
+    // sage: the folklore, as a checkbox (threads only — saging a new thread is meaningless)
+    if (curThreadId()) {
+      var sageLab = document.createElement("label"); sageLab.className = "rchan-sagelab";
+      sageLab.setAttribute("data-tooltip", "Reply without bumping the thread (sets email to sage)");
+      var sage = document.createElement("input"); sage.type = "checkbox";
+      sage.setAttribute("aria-label", "Sage — reply without bumping the thread");
+      var emailSel = function () { return document.getElementById(msg.id === "qrbody" ? "qremail" : "fieldEmail"); };
+      var em0 = emailSel() || document.getElementById("fieldEmail");
+      sage.checked = !!(em0 && /^sage$/i.test((em0.value || "").trim()));
+      sage.addEventListener("change", function () {
+        var em = emailSel() || document.getElementById("fieldEmail");
+        if (!em) { return; }
+        if (sage.checked) { em.__presage = em.value; em.value = "sage"; }
+        else { em.value = (em.__presage && !/^sage$/i.test(em.__presage)) ? em.__presage : ""; }
+        em.dispatchEvent(new Event("input", { bubbles: true }));  // qr.registerSync mirrors the twin field
+      });
+      sageLab.appendChild(sage); sageLab.appendChild(document.createTextNode("sage"));
+      bar.appendChild(sageLab);
+    }
     var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
     var upd = function () {
       var n = msg.value.length, lim = msgLimit();
@@ -3651,6 +3670,7 @@
     ["b", "Jump to bottom"],
     ["c", "Toggle catalog ↔ index view"],
     ["r", "Focus the reply box"],
+    ["Ctrl+Enter", "Submit the reply"],
     ["f", "Filter posts in the thread"],
     ["Ctrl+K", "Command palette — boards, threads, actions"],
     ["?", "This cheat-sheet"],
@@ -4051,6 +4071,20 @@
     }
   }
 
+  // Ctrl/Cmd+Enter in a message box submits (through the native button, so
+  // captcha handling, cooldown disabling and callbacks all stay engine-owned)
+  function onSubmitKey(e) {
+    if (e.key !== "Enter" || (!e.ctrlKey && !e.metaKey) || e.altKey || e.shiftKey) { return; }
+    var t = e.target;
+    if (!t || t.tagName !== "TEXTAREA") { return; }
+    var btn = null;
+    if (t.id === "qrbody") { btn = document.getElementById("qrbutton"); }
+    else if (t.id === "fieldMessage" || t.getAttribute("name") === "message") { btn = document.getElementById("formButton"); }
+    if (!btn || btn.disabled) { return; }
+    e.preventDefault();
+    btn.click();
+  }
+
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
     if (pal && pal.style.display === "flex") { closePalette(); return; }
@@ -4302,6 +4336,7 @@
     document.addEventListener("keydown", onKey);
     document.addEventListener("keydown", onEscKey);
     document.addEventListener("keydown", onPaletteKey, true);   // Ctrl/Cmd+K, even while typing
+    document.addEventListener("keydown", onSubmitKey);          // Ctrl/Cmd+Enter submits the reply
     // arm the WebAudio context inside a real user gesture so later chimes can play
     document.addEventListener("pointerdown", armAudio, { once: true, capture: true });
     document.addEventListener("keydown", armAudio, { once: true, capture: true });

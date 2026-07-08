@@ -7,6 +7,7 @@
     var Native = window.WebSocket;
     if (!Native) { return; }
     function Patched(url, protocols) {
+      var track = false;
       try {
         var u = new URL(url, location.href);
         var wsish = (u.protocol === "ws:" || u.protocol === "wss:");
@@ -15,9 +16,18 @@
           u.port = "";
           u.pathname = "/.ws";
           url = u.toString();
+          track = true;                              // this is the thread live-update socket
         }
       } catch (e) {}
-      return protocols === undefined ? new Native(url) : new Native(url, protocols);
+      var sock = protocols === undefined ? new Native(url) : new Native(url, protocols);
+      if (track) {                                   // surface connection health (wsStateChange is hoisted)
+        try {
+          sock.addEventListener("open", function () { wsStateChange("live"); });
+          sock.addEventListener("close", function () { wsStateChange("down"); });
+          sock.addEventListener("error", function () { wsStateChange("down"); });
+        } catch (e2) {}
+      }
+      return sock;
     }
     Patched.prototype = Native.prototype;
     Patched.CONNECTING = Native.CONNECTING; Patched.OPEN = Native.OPEN;

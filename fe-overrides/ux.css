@@ -1335,6 +1335,23 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #rchan-newpill svg { display: block; flex: none; }
 #rchan-newpill:hover { filter: brightness(1.08); }
 
+/* ---------- Live-update health: status dot + "missed posts" pill ---------- */
+.rchan-wsdot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  vertical-align: baseline; cursor: default;
+}
+.rchan-wsdot.rchan-ws-live { background: #2ea043; animation: rchan-pulse 2.2s ease-in-out infinite; }
+.rchan-wsdot.rchan-ws-down { background: #d29a2b; animation: none; }
+#rchan-wspill {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: none; cursor: pointer;
+  border: 0; padding: 7px 14px; font: inherit; font-size: .833rem; font-weight: 700;
+  background: #d29a2b; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  align-items: center; gap: 6px;
+}
+#rchan-wspill svg { display: block; flex: none; }
+#rchan-wspill:hover { filter: brightness(1.08); }
+
 /* ---------- Board liveness pill ("N new — refresh" on index/catalog) ---------- */
 #rchan-boardpill {
   position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);

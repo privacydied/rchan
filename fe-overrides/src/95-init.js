@@ -66,7 +66,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,

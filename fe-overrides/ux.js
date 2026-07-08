@@ -13,6 +13,7 @@
     var Native = window.WebSocket;
     if (!Native) { return; }
     function Patched(url, protocols) {
+      var track = false;
       try {
         var u = new URL(url, location.href);
         var wsish = (u.protocol === "ws:" || u.protocol === "wss:");
@@ -21,9 +22,18 @@
           u.port = "";
           u.pathname = "/.ws";
           url = u.toString();
+          track = true;                              // this is the thread live-update socket
         }
       } catch (e) {}
-      return protocols === undefined ? new Native(url) : new Native(url, protocols);
+      var sock = protocols === undefined ? new Native(url) : new Native(url, protocols);
+      if (track) {                                   // surface connection health (wsStateChange is hoisted)
+        try {
+          sock.addEventListener("open", function () { wsStateChange("live"); });
+          sock.addEventListener("close", function () { wsStateChange("down"); });
+          sock.addEventListener("error", function () { wsStateChange("down"); });
+        } catch (e2) {}
+      }
+      return sock;
     }
     Patched.prototype = Native.prototype;
     Patched.CONNECTING = Native.CONNECTING; Patched.OPEN = Native.OPEN;
@@ -2304,6 +2314,62 @@
     });
   }
 
+  /* ---------- Live-update health: the thread says "live" — now it says "dead" too ----------
+     When the WebSocket drops (or the machine goes offline) the page silently
+     stopped being live: the user kept reading a frozen thread believing they
+     were current. The WS constructor patch (05-core) reports open/close/error
+     for the thread socket; here that becomes a status-line dot (green live /
+     amber paused), and on reconnect or coming back online we diff the thread
+     JSON against the DOM and offer a "missed N posts — refresh" pill. */
+  var wsState = null, wsPill = null;
+  function wsStateChange(s) {
+    if (wsState === s) { return; }
+    var was = wsState;
+    wsState = s;
+    try { updateThreadStat(); } catch (e) {}
+    if (s === "live") {
+      if (wsPill) { wsPill.style.display = "none"; }
+      if (was === "down") { checkMissedPosts(); }
+    }
+  }
+  function checkMissedPosts() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t) { return; }
+    fetch("/" + b + "/res/" + t + ".json").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d) { return; }
+      var domMax = 0, cells = document.getElementsByClassName("postCell");
+      for (var i = 0; i < cells.length; i++) {
+        var id = postIdOf(cells[i]);
+        if (id > domMax) { domMax = id; }
+      }
+      var missed = 0, posts = d.posts || [];
+      for (var j = 0; j < posts.length; j++) {
+        if ((posts[j].postId || 0) > domMax) { missed++; }
+      }
+      if (missed > 0) { showWsPill(missed); }
+    }).catch(function () {});
+  }
+  function showWsPill(n) {
+    if (!wsPill) {
+      wsPill = document.createElement("button");
+      wsPill.id = "rchan-wspill"; wsPill.type = "button";
+      wsPill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
+      wsPill.setAttribute("aria-label", "Posts arrived while disconnected — refresh");
+      wsPill.addEventListener("click", function () { location.reload(); });
+      document.body.appendChild(wsPill);
+    }
+    wsPill.lastChild.textContent = "Missed " + n + " post" + (n > 1 ? "s" : "") + " while disconnected — refresh";
+    wsPill.style.display = "inline-flex";
+  }
+  function initWsHealth() {
+    if (!curThreadId()) { return; }
+    window.addEventListener("offline", function () { if (wsState) { wsStateChange("down"); } });
+    window.addEventListener("online", function () {
+      // the socket may or may not resurrect itself — check what we missed either way
+      if (wsState) { checkMissedPosts(); }
+    });
+  }
+
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
      "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
      worth my scroll" answer, always visible. Counts come straight from the
@@ -2376,10 +2442,17 @@
       if (t > last) { last = t; }
     }
     var ago = last ? fmtAgo(last) : "";
-    var segs = [
+    var segs = [];
+    if (wsState) {                                   // connection dot leads the line
+      var liveTip = wsState === "live" ? "Live updates connected"
+                                       : "Live updates paused — new posts won't appear until it reconnects";
+      segs.push('<span class="rchan-wsdot ' + (wsState === "live" ? "rchan-ws-live" : "rchan-ws-down") +
+                '" data-tooltip="' + escHtml(liveTip) + '" aria-label="' + escHtml(liveTip) + '"></span>');
+    }
+    segs = segs.concat([
       tsSeg(String(replies), TS_SVG.reply, replies + (replies === 1 ? " reply" : " replies")),
       tsSeg(String(files), TS_SVG.file, files + (files === 1 ? " file" : " files"))
-    ];
+    ]);
     if (idCount) { segs.push(tsSeg(String(idCount), TS_SVG.id, idCount + (idCount === 1 ? " unique ID" : " unique IDs"))); }
     if (last) { segs.push(tsSeg(ago, TS_SVG.clock, "updated " + (ago === "now" ? "just now" : ago + " ago"))); }
     if (presenceCount) { segs.push(tsSeg(String(presenceCount), TS_SVG.anon, presenceCount + (presenceCount === 1 ? " anon here now" : " anons here now"))); }
@@ -5388,7 +5461,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,

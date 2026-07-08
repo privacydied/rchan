@@ -118,7 +118,10 @@ body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_crea
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
   letter-spacing: -.5px;
-  text-shadow: 0 1px 0 rgba(255,255,255,.65), 0 2px 5px rgba(0,0,0,.16);
+  /* letterpress: crisp white edge-catch below (no blur), warm ambient drop
+     below with more blur than offset. Warmed black so it reads as depth on
+     the ivory, not a grey sticker. */
+  text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(42,38,32,.15);
 }
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */

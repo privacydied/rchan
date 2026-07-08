@@ -1779,3 +1779,32 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   .imgLink img { max-width: 2.6in; height: auto; }
   #divThreads .postCell { content-visibility: visible; contain-intrinsic-size: none; }
 }
+
+/* ---------- Forced colors (Windows High Contrast) ----------
+   Nearly every control we ship is an SVG on a transparent background —
+   in forced-colors mode most vanished entirely, and the meaning carried
+   by state colors (watched-green, live-green, armed-red) was erased.
+   Give controls real borders/faces from the system palette, keep the
+   few semantic dots opted out so their color survives, and let focus
+   fall back to the system Highlight. */
+@media (forced-colors: active) {
+  #rchan-nav button, #rchan-findbtn, #rchan-expandbtn, #rchan-galbtn,
+  .rchan-catwatch, .rchan-fhash, .rchan-reportbtn, .rchan-convbtn,
+  .rchan-idfunnel, .rchan-idnamebtn, .rchan-chipedit, .rchan-qmod-btn,
+  .rchan-hist-x, .rchan-set-x, .rchan-gal-x, .rchan-gal-prev, .rchan-gal-next {
+    opacity: 1 !important;
+    border: 1px solid ButtonText !important;
+    background: ButtonFace !important;
+    color: ButtonText !important;
+  }
+  .rchan-wsdot, .rchan-sitedot, .rchan-newbadge, .rchan-deadbadge,
+  #rchan-youboxbtn > span, #rchan-repbadge {
+    forced-color-adjust: none;                   /* these colors ARE the information */
+  }
+  .rchan-kbcur > .innerPost, .rchan-kbcur > .innerOP, .catalogCell.rchan-kbcur {
+    outline: 3px solid Highlight !important;
+  }
+  .rchan-yb-unread { box-shadow: none; border-left: 4px solid Highlight; }
+  .rchan-pal-row.rchan-pal-sel { background: Highlight !important; color: HighlightText !important; box-shadow: none; }
+  body.rchan-ws .imgLink img, body.rchan-ws .linkThumb img { filter: blur(12px); } /* WS blur still applies */
+}

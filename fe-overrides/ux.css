@@ -386,7 +386,24 @@ body .catalogCell .labelSubject { font-weight: 700; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
-/* ---------- Watcher unread badge (native counter, restyled) ----------
+/* ---------- Empty board state: an invitation, not a void ---------- */
+#rchan-empty { text-align: center; margin: 70px auto 40px; max-width: 480px; }
+.rchan-empty-title {
+  font-family: Tahoma, sans-serif; font-size: 1.75rem; font-weight: 700;
+  letter-spacing: -2px; color: #393939;
+}
+.rchan-empty-sub { margin: 8px 0 18px; font-size: .833rem; opacity: .85; }
+.rchan-empty-cta {
+  padding: 8px 22px; cursor: pointer; font: inherit;
+  font-size: .833rem; font-weight: 700;
+  border: 1px solid #CFCFC4; background: #E6E6DA; color: #393939;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+}
+.rchan-empty-cta:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.theme_dark .rchan-empty-title { color: #c9ccd1; }
+.theme_dark .rchan-empty-cta { background: #262a31; color: #c9ccd1; border-color: #333; }
+
+/* ---------- Watcher unread badge (native counter, restyled) ---------- */
    watcher.js appends a <span> counter to #watcherButton and fills it only
    when watched threads have new replies — style the non-empty state as a
    red corner badge. */

@@ -1320,6 +1320,35 @@
     };
   }
 
+  /* ---------- Empty-state: a quiet board shouldn't read as a dead one ----------
+     Zero threads on a board/catalog renders a real invitation with a CTA
+     that opens the floating new-thread form, instead of engine whitespace.
+     Re-checked by refresh() so it clears itself when a thread appears. */
+  function syncEmptyState() {
+    var b = getBoard(), t = document.getElementById("divThreads");
+    if (!b || b.charAt(0) === "." || !t || curThreadId()) { return; }
+    if (!document.getElementById("postingForm")) { return; }     // can't post here (overboard etc.)
+    var has = t.getElementsByClassName(isCatalog() ? "catalogCell" : "opCell").length;
+    var el = document.getElementById("rchan-empty");
+    if (has) { if (el && el.parentNode) { el.parentNode.removeChild(el); } return; }
+    if (el) { return; }
+    var box = document.createElement("div"); box.id = "rchan-empty";
+    var ttl = document.createElement("div"); ttl.className = "rchan-empty-title";
+    ttl.textContent = "No threads yet";
+    var sub = document.createElement("div"); sub.className = "rchan-empty-sub";
+    sub.textContent = "/" + b + "/ is a blank canvas — be the one who starts the conversation.";
+    var cta = document.createElement("button"); cta.type = "button"; cta.className = "rchan-empty-cta";
+    cta.textContent = "＋ Create the first thread";
+    cta.addEventListener("click", function () {
+      var tog = document.getElementById("rchan-formtoggle");
+      if (tog) { tog.click(); return; }
+      var m = document.getElementById("fieldMessage");
+      if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
+    });
+    box.appendChild(ttl); box.appendChild(sub); box.appendChild(cta);
+    t.parentNode.insertBefore(box, t);
+  }
+
   /* ---------- Rotating board banners ----------
      LynxChan serves /randomBanner.js?boardUri=x (302 to a random uploaded
      banner, or to /defaultBanner.png when the board has none — in which
@@ -2432,7 +2461,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyExtraFilters(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -2486,7 +2515,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, buildActiveThreads
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

@@ -1062,6 +1062,9 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .theme_dark .rchan-qmod-btn { color: #e06c75; border-color: #e06c7566; }
 .theme_dark .rchan-qmod-btn.rchan-armed { background: #8f0c21; color: #fff; }
 
+/* own-post delete strip: same armed-confirm buttons, user-side */
+.rchan-owndel { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+
 /* ---------- Conversation view (isolate a quote chain) ---------- */
 #rchan-conv {
   position: fixed; top: 42px; left: 50%; transform: translateX(-50%);

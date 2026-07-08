@@ -2620,6 +2620,39 @@
     }
   }
 
+  /* ---------- Delete own post: one visible lever on your (You) posts ----------
+     LynxChan supports password deletion and the passwords are already stored
+     (postCommon saves postingPasswords[b/t/p] on every post) — but the native
+     flow is checkbox → scroll → password field → button, which nobody
+     discovers. Your own posts get the same armed-confirm button staff have;
+     it fires the NATIVE postingMenu.deleteSinglePost, which resolves the
+     stored password itself, removes the DOM on success, and offers a
+     password prompt if it ever mismatches. */
+  function decorateOwnDelete(root) {
+    if (!window.postingMenu || !postingMenu.deleteSinglePost) { return; }
+    if (document.body.classList.contains("rchan-staff")) { return; }   // staff already have quick-mod
+    var infos = (root || document).querySelectorAll(".innerPost .postInfo.title, .innerOP .opHead.title");
+    for (var i = 0; i < infos.length; i++) {
+      var info = infos[i];
+      if (info.getAttribute("data-owndel")) { continue; }
+      var inner = info.closest(".innerPost, .innerOP");
+      if (!inner || !inner.classList.contains("rchan-you")) { continue; }   // decorateYou runs first
+      info.setAttribute("data-owndel", "1");
+      if (info.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var cell = info.closest(".postCell, .opCell");
+      var ids = cell && qmodIds(cell);
+      if (!ids) { continue; }
+      var isOp = !ids.post;
+      var strip = document.createElement("span");
+      strip.className = "rchan-owndel";
+      strip.appendChild(qmodButton(isOp ? "del thread" : "del",
+        isOp ? "Delete your thread (uses your stored password)" : "Delete your post (uses your stored password)",
+        (function (d, ip2) {
+          return function () { postingMenu.deleteSinglePost(d.board, d.thread, d.post, null, null, null, ip2); };
+        })(ids, inner)));
+      info.appendChild(strip);
+    }
+  }
   /* ---------- Auto-filters: filename rules, stubs, recursive hiding ----------
      Extends the NATIVE filter machinery (settingsMenu.loadedFilters /
      localStorage.filterData, applied by hiding.js) rather than duplicating it:
@@ -4632,6 +4665,13 @@
         try { postingMenu.showReport(ids.board, ids.thread, ids.post); } catch (e) {}
       }));
     }
+    var innerYou = cell.querySelector(".innerPost, .innerOP");
+    if (ids && innerYou && innerYou.classList.contains("rchan-you") &&
+        window.postingMenu && postingMenu.deleteSinglePost) {
+      box.appendChild(sheetBtn(ids.post ? "Delete my post" : "Delete my thread", function () {
+        postingMenu.deleteSinglePost(ids.board, ids.thread, ids.post, null, null, null, innerYou);
+      }));
+    }
     if (ids && window.hiding && hiding.hidePost && hiding.hideThread) {
       var linkSelf = cell.querySelector(".linkSelf");
       if (linkSelf) {
@@ -4749,7 +4789,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -4818,7 +4858,7 @@
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
-     function () { decorateGets(document); }, buildActiveThreads,
+     function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,
      initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

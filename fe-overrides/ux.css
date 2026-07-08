@@ -283,6 +283,24 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 .theme_dark .pageLink, .theme_dark #divPages a { background: #1f2126; border-color: #2c2f36; }
 
+/* ---------- Homepage: "Your threads" chips ---------- */
+#rchan-yours { max-width: 720px; margin: 12px auto 0; }
+#rchan-yours-head {
+  font-size: .833rem; font-weight: 700; margin-bottom: 5px; text-align: center;
+}
+.rchan-yours-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.rchan-yours-chip {
+  display: inline-block; max-width: 260px; padding: 3px 10px; cursor: pointer;
+  background: #E6E6DA; color: #393939; border: 1px solid #CFCFC4;
+  font: inherit; font-size: x-small; font-weight: 700; text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rchan-yours-chip:hover { border-color: #c8102e; color: #c8102e; }
+.rchan-yours-chip.rchan-yours-unread { border-color: #2ea043; box-shadow: inset 3px 0 0 #2ea043; }
+.theme_dark .rchan-yours-chip { background: #262a31; color: #c9ccd1; border-color: #333; }
+.theme_dark .rchan-yours-chip:hover { border-color: #e06c75; color: #e06c75; }
+.theme_dark .rchan-yours-chip.rchan-yours-unread { border-color: #2ea043; }
+
 /* ---------- Site-wide presence ("N anons browsing now") ---------- */
 #rchan-sitestat {
   text-align: center; margin: 10px auto 2px;

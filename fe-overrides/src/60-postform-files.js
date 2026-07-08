@@ -1,3 +1,53 @@
+  /* ---------- Homepage: "Your threads" strip ----------
+     The front page showed global activity but nothing personal — your watched
+     threads with unread replies and your inbox count were sitting in
+     localStorage the whole time. Chips: inbox first (opens the panel),
+     unread watched threads next (green dot), then the rest by recency. */
+  function buildYourThreads() {
+    if (!/^\/(index\.html)?$/.test(location.pathname)) { return; }
+    if (document.getElementById("rchan-yours")) { return; }
+    var entries = [];
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      Object.keys(wd).forEach(function (b) {
+        Object.keys(wd[b] || {}).forEach(function (t) {
+          var rec = wd[b][t] || {};
+          entries.push({ b: b, t: t, label: rec.label,
+                         unread: (rec.lastReplied || 0) > (rec.lastSeen || 0),
+                         ts: rec.lastReplied || 0 });
+        });
+      });
+    } catch (e) {}
+    var inboxN = youboxUnread();
+    if (!entries.length && !inboxN) { return; }
+    entries.sort(function (a, b) { return (b.unread - a.unread) || (b.ts - a.ts); });
+    entries = entries.slice(0, 8);
+    var box = document.createElement("div"); box.id = "rchan-yours";
+    var head = document.createElement("div"); head.id = "rchan-yours-head";
+    head.textContent = "Your threads";
+    box.appendChild(head);
+    var wrap = document.createElement("div"); wrap.className = "rchan-yours-chips";
+    if (inboxN) {
+      var ib = document.createElement("button");
+      ib.type = "button"; ib.className = "rchan-yours-chip rchan-yours-unread";
+      ib.textContent = "✉ " + inboxN + " repl" + (inboxN > 1 ? "ies" : "y") + " to you";
+      ib.addEventListener("click", toggleYoubox);
+      wrap.appendChild(ib);
+    }
+    var unesc = document.createElement("textarea");    // labels were escHtml'd at write time
+    entries.forEach(function (e) {
+      var a = document.createElement("a");
+      a.className = "rchan-yours-chip" + (e.unread ? " rchan-yours-unread" : "");
+      a.href = "/" + e.b + "/res/" + e.t;
+      unesc.innerHTML = e.label || "";
+      a.textContent = (e.unread ? "● " : "") + "/" + e.b + "/ · " + (unesc.value || ("Thread " + e.t));
+      wrap.appendChild(a);
+    });
+    box.appendChild(wrap);
+    var anchor = document.getElementById("divBoards");
+    if (anchor) { anchor.parentNode.insertBefore(box, anchor); }
+  }
+
   /* ---------- Homepage: "Active threads" strip ----------
      Top threads by last bump across boards (boards list -> one catalog.json
      each, capped at 8 boards), rendered as cards under the board list. Makes

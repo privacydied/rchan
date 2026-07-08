@@ -1116,6 +1116,7 @@
       }).catch(function () {});
     });
   }
+  var HIST_SCROLL = "rchan_hist_scroll", histScrollT = null;
   function toggleHistPanel() {
     if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
     if (!histPanel) {
@@ -1134,9 +1135,17 @@
         if (histPanel.contains(t) || (t.closest && t.closest("#rchan-nav"))) { return; }
         histPanel.style.display = "none";
       }, true);
+      // remember scroll position (survives close/reopen and page navigations)
+      histPanel.addEventListener("scroll", function () {
+        clearTimeout(histScrollT);
+        histScrollT = setTimeout(function () {
+          try { sessionStorage.setItem(HIST_SCROLL, String(histPanel.scrollTop)); } catch (e) {}
+        }, 150);
+      });
     }
     renderHist();
     histPanel.style.display = "block";
+    try { histPanel.scrollTop = parseInt(sessionStorage.getItem(HIST_SCROLL), 10) || 0; } catch (e) {}
   }
 
   /* ---------- Captcha expiry feedback ----------

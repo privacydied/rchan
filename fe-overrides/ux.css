@@ -516,12 +516,14 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* ---------- Catalog last-replies hover preview (4chan-style) ---------- */
 #rchan-catprev {
-  position: fixed; z-index: 10003; width: 360px; pointer-events: none;
+  position: fixed; z-index: 10003; width: 360px; pointer-events: auto;
   display: none; text-align: left; font-size: .833rem;
-  background: #EEEEE4; border: 1px solid #CFCFC4;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
-  padding: 4px; max-height: 70vh; overflow: hidden;
+  background: #EEEEE4; border: 1px solid #CFCFC4; border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  padding: 4px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain;
+  opacity: 0; transition: opacity .15s ease;
 }
+#rchan-catprev.rchan-catprev-show { opacity: 1; }
 .rchan-catprev-post {
   background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
   padding: 2px 6px; margin: 3px 0;
@@ -612,6 +614,56 @@ body .catalogCell .labelSubject { font-weight: 700; }
 @media (max-width: 640px) {
   .rchan-cat-l .catalogCell, .rchan-cat-xl .catalogCell { width: 46vw; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
+}
+
+/* ================= Cream catalog: uniform grid + fixed-height cards ==========
+   The default catalog packs inline-block cells sized from content → ragged rows
+   and orphan gaps. Give the Cream themes a real grid with fixed-height cards:
+   thumb band → subject → teaser (fills + scrolls) → stat line pinned at bottom.
+   Nothing sizes from content. Scoped to the Cream themes via :is(). ========== */
+:is(body.theme_cream, html.rchan-warmdark body) #divThreads:has(.catalogCell) {
+  display: grid !important; gap: 16px; padding: 20px 16px !important; text-align: left;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: 360px;
+}
+:is(body.theme_cream, html.rchan-warmdark body).rchan-cat-s #divThreads:has(.catalogCell) {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); grid-auto-rows: 260px;
+}
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell {
+  display: flex !important; flex-direction: column; width: auto !important;
+  height: 100%; max-height: none !important; min-height: 0;
+  margin: 0 !important; padding: 0 !important; overflow: hidden;
+  border-radius: 6px; position: relative; text-align: left; cursor: pointer;
+}
+/* thumb band: fixed height, cover-cropped for uniform cards */
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > a.linkThumb {
+  order: 0; flex: none; display: block; width: 100%; height: 180px; overflow: hidden;
+}
+:is(body.theme_cream, html.rchan-warmdark body).rchan-cat-s .catalogCell > a.linkThumb { height: 120px; }
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > a.linkThumb img {
+  width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important;
+  min-width: 0 !important; min-height: 0 !important; object-fit: cover; display: block;
+  margin: 0 !important; box-shadow: none !important;
+}
+/* subject line (the <p> holding .labelSubject) */
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > p:not(.threadStats) {
+  order: 1; flex: none; margin: 0; padding: 6px 10px 0; line-height: 1.25;
+}
+/* teaser: fills the remaining space and scrolls in place (long OPs no longer clip) */
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > .divMessage {
+  order: 2; flex: 1 1 auto; min-height: 0; margin: 0; padding: 4px 10px 8px;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  font-size: .833rem; line-height: 1.42; text-align: left;
+}
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > .divMessage::-webkit-scrollbar { width: 6px; }
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > .divMessage::-webkit-scrollbar-track { background: transparent; }
+body.theme_cream .catalogCell > .divMessage { scrollbar-color: #CFCFC4 transparent; }
+body.theme_cream .catalogCell > .divMessage::-webkit-scrollbar-thumb { background: #CFCFC4; border-radius: 3px; }
+html.rchan-warmdark .catalogCell > .divMessage { scrollbar-color: #454542 transparent; }
+html.rchan-warmdark .catalogCell > .divMessage::-webkit-scrollbar-thumb { background: #454542; border-radius: 3px; }
+/* stat line pinned at the bottom (teaser's flex:1 pushes it down) */
+:is(body.theme_cream, html.rchan-warmdark body) .catalogCell > p.threadStats {
+  order: 3; flex: none; margin: 0 !important; padding: 5px 10px; line-height: 1.1;
+  border-top: 1px solid rgba(128,128,120,.28); font-size: .6875rem;
 }
 
 /* ---------- Work-safe mode: media blurred until hovered ---------- */

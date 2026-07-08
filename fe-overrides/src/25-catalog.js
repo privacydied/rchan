@@ -357,10 +357,23 @@
      pointer-events:none, so mouseout handling stays trivial. */
   var catPrev = null, catPrevFor = null, catPrevCache = {};
   function escHtml(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
-  function hideCatPreview() { if (catPrev) { catPrev.style.display = "none"; } catPrevFor = null; }
+  var catPrevHideT = null;
+  function cancelHideCatPreview() { if (catPrevHideT) { clearTimeout(catPrevHideT); catPrevHideT = null; } }
+  function scheduleHideCatPreview() { cancelHideCatPreview(); catPrevHideT = setTimeout(hideCatPreview, 160); }
+  function hideCatPreview() { cancelHideCatPreview(); if (catPrev) { catPrev.classList.remove("rchan-catprev-show"); catPrev.style.display = "none"; } catPrevFor = null; }
+  function bindCatPrevHover() {   // hover bridge: staying over the popup keeps it open
+    catPrev.addEventListener("mouseenter", cancelHideCatPreview);
+    catPrev.addEventListener("mouseleave", scheduleHideCatPreview);
+  }
+  // only PAGE scroll dismisses; scrolls inside the popup or a teaser are ignored
+  function onScrollMaybeHideCatPrev(e) {
+    var t = e.target;
+    if (t && t.nodeType === 1 && t.closest && (t.closest("#rchan-catprev") || t.closest(".catalogCell > .divMessage"))) { return; }
+    hideCatPreview();
+  }
   var TOUCH_ONLY = !!(window.matchMedia && matchMedia("(hover: none)").matches);
   function renderCatPreview(cell, data) {
-    if (!catPrev) { catPrev = document.createElement("div"); catPrev.id = "rchan-catprev"; document.body.appendChild(catPrev); }
+    if (!catPrev) { catPrev = document.createElement("div"); catPrev.id = "rchan-catprev"; document.body.appendChild(catPrev); bindCatPrevHover(); }
     var posts = (data.posts || []).slice(-5);
     var html = "";
     if (!posts.length) { html = '<div class="rchan-catprev-empty">No replies yet</div>'; }
@@ -374,18 +387,30 @@
     catPrev.style.display = "block";
     if (window.innerWidth < 480) {                 // phones: bottom sheet instead of side panel
       catPrev.classList.add("rchan-catprev-sheet");
-      catPrev.style.left = ""; catPrev.style.top = "";
+      catPrev.style.left = ""; catPrev.style.top = ""; catPrev.style.width = "";
+      catPrev.classList.add("rchan-catprev-show");
       return;
     }
     catPrev.classList.remove("rchan-catprev-sheet");
-    var r = cell.getBoundingClientRect(), w = 360;
-    var x = r.right + 8, y = r.top;
-    if (x + w > window.innerWidth - 8) { x = Math.max(8, r.left - w - 8); }   // flip to the left edge
-    catPrev.style.left = x + "px";
-    catPrev.style.top = "0px";                                                 // measure at a stable position
+    // anchor BELOW the cell, aligned to its left edge, at the cell's width; right-
+    // align if it would overflow the right edge; flip ABOVE if it clips the bottom.
+    var r = cell.getBoundingClientRect(), m = 8;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var w = Math.min(Math.max(Math.round(r.width), 240), vw - 2 * m);
+    catPrev.style.width = w + "px";
+    var left = r.left;
+    if (left + w > vw - m) { left = r.right - w; }              // flip to right-align
+    left = Math.max(m, Math.min(left, vw - w - m));
+    catPrev.style.left = left + "px";
+    catPrev.style.top = "0px";                                  // measure at a stable spot
     var h = catPrev.offsetHeight;
-    if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
-    catPrev.style.top = y + "px";
+    var top = r.bottom + 4;
+    if (top + h > vh - m) {                                     // would clip below → open above
+      var above = r.top - 4 - h;
+      top = above >= m ? above : Math.max(m, vh - h - m);
+    }
+    catPrev.style.top = top + "px";
+    catPrev.classList.add("rchan-catprev-show");
   }
   function showCatPreviewFor(cell) {                 // shared by hover, tap, keyboard and the sheet
     catPrevFor = cell;
@@ -406,15 +431,32 @@
     if (TOUCH_ONLY && !fromTap) { return; }
     if (!isCatalog()) { return; }
     var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
-    if (!cell || catPrevFor === cell) { return; }
+    if (!cell) { return; }
+    cancelHideCatPreview();                          // re-entering cancels a pending dismiss
+    if (catPrevFor === cell) { return; }
     showCatPreviewFor(cell);
   }
   function onCatPrevOut(e) {
     var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
     if (!cell) { return; }
     var to = e.relatedTarget;
-    if (to && cell.contains(to)) { return; }
-    hideCatPreview();
+    if (to && (cell.contains(to) || (catPrev && catPrev.contains(to)))) { return; }  // into cell or popup: stay
+    scheduleHideCatPreview();                        // grace period bridges the gap to the popup
+  }
+  // Cream catalog: the whole card opens the thread — except the scrollable teaser,
+  // links, and the watch button (those handle themselves). Desktop click parity
+  // with the thumb link so title/stat-line are also live targets.
+  function onCatCellOpen(e) {
+    if (!isCatalog()) { return; }
+    if (!(document.body.classList.contains("theme_cream") || document.documentElement.classList.contains("rchan-warmdark"))) { return; }
+    var t = e.target;
+    if (!t || !t.closest) { return; }
+    var cell = t.closest(".catalogCell");
+    if (!cell) { return; }
+    if (t.closest("a, button, .divMessage")) { return; }   // links / buttons / teaser self-handle
+    var a = cell.querySelector("a.linkThumb");
+    var href = a && a.getAttribute("href");
+    if (href) { window.location.href = href; }
   }
   // Touch devices have no hover: first tap on a catalog thumb shows the
   // last-replies preview, second tap (same cell) navigates into the thread.

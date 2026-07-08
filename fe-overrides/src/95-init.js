@@ -56,7 +56,8 @@
     // catalog last-replies hover preview
     document.addEventListener("mouseover", onCatPrevOver, true);
     document.addEventListener("mouseout", onCatPrevOut, true);
-    document.addEventListener("scroll", hideCatPreview, true);
+    document.addEventListener("scroll", onScrollMaybeHideCatPrev, true);
+    document.addEventListener("click", onCatCellOpen);
     document.addEventListener("mouseover", onOver, true);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseout", onOut, true);

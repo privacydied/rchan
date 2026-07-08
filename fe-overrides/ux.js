@@ -60,8 +60,12 @@
   function toggleCatalog() {
     var b = getBoard();
     if (!b || b.charAt(0) === ".") { return; }
-    // "?index" bypasses the router's board-root -> catalog redirect (see nginx default.conf)
-    location.href = isCatalog() ? ("/" + b + "/?index") : ("/" + b + "/catalog");
+    var toIndex = isCatalog();
+    // remember the choice as the preferred board landing view: the router's
+    // board-root -> catalog redirect reads this cookie and steps aside for
+    // "index" (see nginx default.conf). "?index" still bypasses it in-page.
+    try { document.cookie = "rchan_view=" + (toIndex ? "index" : "catalog") + "; path=/; max-age=31536000; SameSite=Lax"; } catch (e) {}
+    location.href = toIndex ? ("/" + b + "/?index") : ("/" + b + "/catalog");
   }
 
   /* ---------- Floating nav buttons (top / catalog-toggle / bottom) ---------- */

@@ -514,6 +514,40 @@ body .floatingMenu, body .hideMenu, body .extraMenu, body #watchedMenu {
 }
 .watchedNotification::before { color: #e06c75 !important; }
 
+/* ---------- Watched-threads menu: design-system pass ----------
+   (structure: #watchedMenu > label(title) + #closeWatcherMenuButton + hr +
+   wrappers > .watchedCell > .watchedCellLabel(a + notification) + close) */
+body #watchedMenu {
+  padding: 0; min-width: 260px; max-width: 340px; max-height: 60vh; overflow: auto;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); font-size: 10pt;
+}
+body #watchedMenu > label {
+  display: block; cursor: move; user-select: none;
+  position: sticky; top: 0; z-index: 1;
+  background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
+  padding: 3px 26px 3px 8px; font-weight: 700;
+}
+body #watchedMenu > hr { display: none; }
+body #closeWatcherMenuButton {
+  position: absolute; top: 4px; right: 6px; z-index: 2; cursor: pointer;
+}
+body #watchedMenu .watchedCell {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 4px 8px; border-bottom: 1px solid #CFCFC466;
+}
+body #watchedMenu .watchedCell:hover { background: rgba(200,16,46,.08); }
+body #watchedMenu .watchedCellLabel {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body #watchedMenu .watchedNotification { margin-left: 4px; font-weight: 700; }
+body #watchedMenu .watchedCellCloseButton { flex: none; cursor: pointer; opacity: .6; }
+body #watchedMenu .watchedCellCloseButton:hover { opacity: 1; color: #c8102e !important; }
+.theme_dark body #watchedMenu, body.theme_dark #watchedMenu { background: #16171b; border-color: #2c2f36; }
+.theme_dark #watchedMenu > label { background: #262a31 !important; border-color: #2c2f36; }
+.theme_dark #watchedMenu .watchedCell { border-color: #2c2f3666; }
+.theme_dark #watchedMenu .watchedCell:hover { background: rgba(224,108,117,.1); }
+
 /* ---------- Quick Reply (qr.js #quick-reply) ----------
    The engine's threadPage.css pins width:300px and loads after this sheet,
    so sizing needs the body prefix. resize:both + overflow:auto = native

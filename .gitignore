@@ -21,6 +21,3 @@ node_modules/
 package.json
 package-lock.json
 ux.min.js
-
-# Licensed/proprietary fonts — served + mounted, but not committed (redistribution)
-fe-overrides/hn-*.woff2

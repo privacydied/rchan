@@ -156,9 +156,16 @@
     }
     toastBox.textContent = msg;
     toastBox.classList.toggle("rchan-toast-err", !!isErr);
+    toastBox.classList.remove("rchan-toast-ok");
     toastBox.style.display = "block";
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastBox.style.display = "none"; }, 7000);
+  }
+  function okToast(msg) {              // green success variant (shorter-lived)
+    toast(msg, false);
+    toastBox.classList.add("rchan-toast-ok");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastBox.style.display = "none"; }, 3500);
   }
   var cdTimer = null;
   function startCooldown(secs) {
@@ -277,7 +284,10 @@
         try {
           if (re.test(x.__u || "")) {
             var r = JSON.parse(x.responseText);
-            if (r && r.status === "ok" && r.data != null) { addYou(r.data); }
+            if (r && r.status === "ok" && r.data != null) {
+              addYou(r.data);
+              okToast(/newThread/.test(x.__u) ? "Thread created" : "Reply posted");
+            }
           }
         } catch (e) {}
       });
@@ -291,7 +301,10 @@
         if (re.test(url)) {
           p.then(function (res) {
             res.clone().json().then(function (r) {
-              if (r && r.status === "ok" && r.data != null) { addYou(r.data); }
+              if (r && r.status === "ok" && r.data != null) {
+                addYou(r.data);
+                okToast(/newThread/.test(url) ? "Thread created" : "Reply posted");
+              }
             }).catch(function () {});
           }).catch(function () {});
         }
@@ -914,6 +927,7 @@
     if (!newPill) {
       newPill = document.createElement("button");
       newPill.id = "rchan-newpill"; newPill.type = "button";
+      newPill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg><span></span>';
       newPill.addEventListener("click", function () {
         var t = document.getElementById("rchan-newline") || newPill.__target;
         if (t) { try { t.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
@@ -922,8 +936,8 @@
       document.body.appendChild(newPill);
     }
     newPill.__target = target;
-    newPill.textContent = "▼ " + pillTotal + " new post" + (pillTotal > 1 ? "s" : "");
-    newPill.style.display = "block";
+    newPill.lastChild.textContent = pillTotal + " new post" + (pillTotal > 1 ? "s" : "");
+    newPill.style.display = "inline-flex";
     if (window.IntersectionObserver) {
       if (pillIO) { pillIO.disconnect(); }
       pillIO = new IntersectionObserver(function (entries) {

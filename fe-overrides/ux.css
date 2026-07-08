@@ -798,6 +798,8 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   border: 1px solid rgba(0,0,0,.15); box-shadow: 4px 4px 0 rgba(0,0,0,.18);
 }
 #rchan-toast.rchan-toast-err { background: #c8102e; color: #fff; }
+#rchan-toast.rchan-toast-ok { background: #2ea043; color: #fff; }
+.theme_dark #rchan-toast.rchan-toast-ok { background: #1f6f32; }
 .theme_dark #rchan-toast { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
 .theme_dark #rchan-toast.rchan-toast-err { background: #8f0c21; }
 
@@ -811,7 +813,9 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   z-index: 9999; display: none; cursor: pointer;
   border: 0; padding: 7px 14px; font: inherit; font-size: 10pt; font-weight: 700;
   background: #2ea043; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  align-items: center; gap: 6px;   /* svg icon + text (shown as inline-flex) */
 }
+#rchan-newpill svg { display: block; flex: none; }
 #rchan-newpill:hover { filter: brightness(1.08); }
 
 /* ---------- Inline quote expansion ---------- */

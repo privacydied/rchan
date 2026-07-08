@@ -2604,9 +2604,9 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
    inherited for free; html.rchan-warmdark (a marker on <html>, set by
    ux.js and safe from the native themeLoader's body.className rewrites)
    re-tints the cool grey dark palette to a neutral #1F1F1E ground, keeping
-   a faint warm-cream ink + muted clay accent for the Cream identity.
+   a faint warm-cream ink + sage-green accent for the Cream identity.
    Token map:  bg #1F1F1E · well #161615 · panel #2A2A28 · panel-2 #363634 ·
-   border #454542 · ink #E8E6DF · clay #CE8E6E.
+   border #454542 · ink #E8E6DF · sage #A6C185.
    ========================================================================== */
 html.rchan-warmdark body.theme_dark,
 html.rchan-warmdark .theme_dark { background: #1F1F1E !important; color: #E8E6DF !important; }
@@ -2674,21 +2674,21 @@ html.rchan-warmdark .rchan-pal-row, html.rchan-warmdark .rchan-set-news {
 }
 
 /* text + accents */
-html.rchan-warmdark a { color: #CE8E6E !important; }
-html.rchan-warmdark a:hover { color: #E2A488 !important; }
+html.rchan-warmdark a { color: #A6C185 !important; }
+html.rchan-warmdark a:hover { color: #BED49F !important; }
 html.rchan-warmdark .greenText { color: #9CC96F !important; }
 html.rchan-warmdark .redText { color: #E38A6E !important; }
 html.rchan-warmdark .labelSubject { color: #E6C88A !important; }
 html.rchan-warmdark .linkName, html.rchan-warmdark .labelName { color: #C6BE9A !important; }
 html.rchan-warmdark .linkQuote, html.rchan-warmdark .linkSelf { color: #E8E6DF !important; }
-html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: #CE8E6E !important; }
+html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: #A6C185 !important; }
 html.rchan-warmdark .rchan-catprev-id { color: #E8E6DF !important; }
-/* controls that were blue in the cool-dark base → muted clay */
+/* controls that were blue in the cool-dark base → sage green */
 html.rchan-warmdark .coloredIcon, html.rchan-warmdark .watchButton, html.rchan-warmdark #favouriteButton,
 html.rchan-warmdark #sideCatalogRefreshButton, html.rchan-warmdark #rchan-findbtn,
 html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark .rchan-convbtn,
 html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rchan-warmdark .rchan-hist-clear,
-html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #CE8E6E !important; }
+html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #A6C185 !important; }
 
 /* body copy: mirror Cream's Arial 10pt (warm-cream ink on the neutral dark, no shadow) */
 html.rchan-warmdark .divMessage {

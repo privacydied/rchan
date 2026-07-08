@@ -1222,13 +1222,13 @@
         else { h = (r - g) / d + 4; }
         h = Math.round(h * 60); if (h < 0) { h += 360; }
       }
-      var l = (max + min) / 2;
-      var s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
-      s = Math.min(s, 0.30);                               // cap saturation: earthy, not neon
-      l = Math.min(Math.max(l, 0.58), 0.74);               // soft mid-light band
+      // Only the HUE is per-ID; each theme renders it at its own muted
+      // saturation/lightness via CSS (see body .labelId / .theme_dark
+      // .labelId), so pills sit on-palette in cream AND dark. The CSS
+      // !important also beats the engine's inline neon background-color.
       el.classList.add("rchan-idpill");
-      el.style.backgroundColor = "hsl(" + h + ", " + Math.round(s * 100) + "%, " + Math.round(l * 100) + "%)";
-      el.style.color = "#393939";                          // always readable on the muted band
+      el.style.setProperty("--idh", h);
+      el.style.backgroundColor = "";                       // drop the engine's inline neon
     }
   }
   /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the

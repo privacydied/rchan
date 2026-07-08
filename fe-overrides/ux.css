@@ -178,7 +178,9 @@ body nav span, body nav a, body #dynamicHeader span, body #dynamicHeader a { mar
    pinned RIGHTMOST, settings just inside it. DOM order is navLinkSpan,
    navBoardsSpan, navOptionsSpan — flex `order` swaps them without touching
    the engine markup (its float:left/right rules are ignored under flex). */
-body nav, body #dynamicHeader { display: flex !important; flex-wrap: wrap; align-items: center; }
+/* left:0 — the engine's nav is position:fixed with no `left`, so it inherits
+   the body's 5px side padding as a phantom left offset */
+body nav, body #dynamicHeader { display: flex !important; flex-wrap: wrap; align-items: center; left: 0; }
 body #navBoardsSpan { order: 0; margin-right: auto !important; }
 body #navOptionsSpan { order: 1; margin-right: 8px; }
 body #navLinkSpan { order: 2; }
@@ -391,6 +393,18 @@ body .labelId {
   text-shadow: none; border-radius: 0;
   display: inline-block; padding: 0 5px; line-height: 1.5;
   font-size: x-small; font-weight: 700; cursor: pointer;
+}
+/* Pill colour: hue comes per-ID from ux.js (--idh custom property); each
+   theme renders it at its own muted sat/lightness so the SAME hue identity
+   sits on-palette in cream and dark. !important beats the engine's inline
+   background-color:#<id>. */
+body .labelId.rchan-idpill {
+  background-color: hsl(var(--idh, 0), 28%, 66%) !important;
+  color: #393939 !important;
+}
+.theme_dark .labelId.rchan-idpill {
+  background-color: hsl(var(--idh, 0), 22%, 34%) !important;
+  color: #c9ccd1 !important;
 }
 /* Click-to-highlight is native (posting.processIdLabel swaps the cell class
    innerPost -> markedPost) but markedPost was painted IDENTICALLY to a normal

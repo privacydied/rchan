@@ -321,6 +321,59 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 @keyframes rchan-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 @media (max-width: 640px) { #rchan-sitestat-nav { display: none; } }
 
+/* ---------- Back office: login / account / management pages ----------
+   Every reader surface got the design system; these were still raw engine
+   chrome (and unreadable in dark). All of them share #settingsFieldset
+   (login also wraps it in #settingsWrapper), so one keyed pass covers
+   login, registration, recovery, account, board + global management. */
+#settingsWrapper { max-width: 640px; margin: 26px auto; padding: 0 10px; }
+#settingsFieldset {
+  max-width: 640px; margin: 26px auto; display: block;
+  border: 1px solid #CFCFC4; background: #E6E6DA;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); padding: 14px 18px 18px;
+}
+#settingsWrapper #settingsFieldset { margin: 0 0 18px; max-width: none; }
+#settingsFieldset legend {
+  font-weight: 700; font-size: .9rem; padding: 2px 12px;
+  background: #DCDCCF; border: 1px solid #CFCFC4;
+}
+#settingsFieldset form {
+  margin: 10px 0; padding: 10px 0 4px;
+  border-top: 1px dashed #CFCFC4;
+}
+#settingsFieldset form:first-of-type { border-top: 0; }
+#settingsFieldset input[type=text], #settingsFieldset input[type=password],
+#settingsFieldset input[type=email], #settingsFieldset input[type=number],
+#settingsFieldset select, #settingsFieldset textarea {
+  box-sizing: border-box; margin: 4px 0; padding: 6px 8px; max-width: 100%;
+  border: 1px solid #CFCFC4; background: #fff; color: #393939;
+}
+#settingsFieldset input.loginField, #settingsFieldset input.registerField,
+#settingsFieldset input.recoverField { display: block; width: 100%; }
+#settingsFieldset button, #settingsFieldset input[type=submit] {
+  cursor: pointer; padding: 5px 16px; margin: 6px 4px 6px 0;
+  border: 1px solid #CFCFC4; background: #DCDCCF; color: #393939;
+  font: inherit; font-size: .833rem; font-weight: 700;
+}
+#settingsFieldset button:hover, #settingsFieldset input[type=submit]:hover {
+  background: #c8102e; color: #fff; border-color: #c8102e;
+}
+#settingsFieldset .captchaImage { background: #fff; border: 1px solid #CFCFC4; display: block; margin: 6px 0; }
+#settingsFieldset a { text-decoration: underline; }
+#settingsFieldset hr { border: 0; border-top: 1px solid #CFCFC4; }
+.theme_dark #settingsFieldset { background: #1f2126; border-color: #2c2f36; color: #c9ccd1; }
+.theme_dark #settingsFieldset legend { background: #262a31; border-color: #2c2f36; color: #c9ccd1; }
+.theme_dark #settingsFieldset form { border-color: #2c2f36; }
+.theme_dark #settingsFieldset input[type=text], .theme_dark #settingsFieldset input[type=password],
+.theme_dark #settingsFieldset input[type=email], .theme_dark #settingsFieldset input[type=number],
+.theme_dark #settingsFieldset select, .theme_dark #settingsFieldset textarea {
+  background: #0f1013; color: #d7dae0; border-color: #2c2f36;
+}
+.theme_dark #settingsFieldset button, .theme_dark #settingsFieldset input[type=submit] {
+  background: #262a31; color: #c9ccd1; border-color: #333;
+}
+.theme_dark #settingsFieldset hr { border-color: #2c2f36; }
+
 /* ---------- Front page: board list as cards ---------- */
 #divBoards.topBoards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 #divBoards.topBoards a {

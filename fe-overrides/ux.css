@@ -111,6 +111,15 @@ body #catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
+/* cream: board/catalog title in bold serif with a tasteful raised depth shadow
+   (light top highlight + soft drop = the "lifted off the page" look). */
+body.theme_cream .boardHeader p#labelName,
+body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_cream #labelBoard {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  text-shadow: 0 1px 0 rgba(255,255,255,.65), 0 2px 5px rgba(0,0,0,.16);
+}
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
 .postCell { margin: 4px 0; }
@@ -141,8 +150,6 @@ body .divMessage {
 }
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
 .linkName, .labelName { color: #3a6b2e; font-weight: 700; }
-/* cream: poster name in Georgia serif */
-body.theme_cream .labelName, body.theme_cream .linkName { font-family: Georgia, "Times New Roman", serif; }
 .labelSubject { color: #0d5b73; font-weight: 700; }
 .linkQuote, .linkSelf { color: #393939; }
 .linkQuote:hover, .linkSelf:hover { color: #c8102e !important; }

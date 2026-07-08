@@ -799,7 +799,9 @@
   };
   var CLASS_TITLES = {                          // labelled by class (these have no usable id)
     watchButton: "Watch this thread",
-    linkQuote: "Reply — quotes this post"       // clicking a post No. opens Quick Reply with >>N
+    linkQuote: "Reply — quotes this post",      // clicking a post No. opens Quick Reply with >>N
+    nameLink: "Open file",                      // words replaced by SVG icons in ux.css
+    hideFileButton: "Hide / show this file"
   };
   function humanizeId(id) {
     var s = id.replace(/^(link|nav)/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -811,7 +813,7 @@
     return el.id ? humanizeId(el.id) : "";
   }
   function decorateIcons(root) {
-    var icons = (root || document).querySelectorAll(".coloredIcon, #favouriteButton, .watchButton, .linkQuote");
+    var icons = (root || document).querySelectorAll(".coloredIcon, #favouriteButton, .watchButton, .linkQuote, .nameLink, .hideFileButton");
     for (var i = 0; i < icons.length; i++) {
       var a = icons[i];
       if (a.getAttribute("data-tip")) { continue; }

@@ -465,6 +465,33 @@ body.theme_dark .markedPost {
   box-shadow: inset 4px 0 0 #f2b21e !important;
 }
 
+/* ---------- File row controls: words -> SVG icons ----------
+   posting.css paints these via ::after text ('Open file' / '(Hide file)' /
+   '(Show file)'). Replace with currentColor mask icons — external-link,
+   eye-off, eye — so they inherit the coloredIcon blue + red hover. */
+body .nameLink::after, body .hideFileButton::after {
+  content: '' !important;
+  display: inline-block; width: 14px; height: 14px;
+  background-color: currentColor;
+  vertical-align: -2px;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-position: center; mask-position: center;
+}
+body .nameLink::after {   /* open file: external-link */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z'/%3E%3C/svg%3E");
+}
+body .hideFileButton { margin-left: 4px; cursor: pointer; }
+body .hideFileButton::after {   /* hide file: eye-off */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 7a5 5 0 0 1 5 5c0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2.71 3.16 1.29 4.57l2.53 2.53A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l3.4 3.4 1.41-1.41L2.71 3.16zM12 17a5 5 0 0 1-5-5c0-.77.18-1.5.49-2.14l1.57 1.57L9 12a3 3 0 0 0 3 3l.57-.06 1.57 1.57c-.64.31-1.37.49-2.14.49z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 7a5 5 0 0 1 5 5c0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 23 12c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2.71 3.16 1.29 4.57l2.53 2.53A11.8 11.8 0 0 0 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l3.4 3.4 1.41-1.41L2.71 3.16zM12 17a5 5 0 0 1-5-5c0-.77.18-1.5.49-2.14l1.57 1.57L9 12a3 3 0 0 0 3 3l.57-.06 1.57 1.57c-.64.31-1.37.49-2.14.49z'/%3E%3C/svg%3E");
+}
+body .hideFileButton.hiddenFile::after {   /* file hidden: eye = show again */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'/%3E%3C/svg%3E");
+}
+
 /* ---------- Reverse image search links (file rows) ---------- */
 .rchan-ris { font-size: x-small; margin-left: 6px; opacity: .85; white-space: nowrap; }
 .rchan-ris:hover { opacity: 1; }

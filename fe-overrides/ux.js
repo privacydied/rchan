@@ -2514,6 +2514,247 @@
       chip.appendChild(x); tray.appendChild(chip);
     });
   }
+  /* ---------- File privacy: EXIF strip + filename anonymize + rotate/crop ----------
+     Every upload funnels through postCommon.addSelectedFile (picker, drop,
+     paste) — wrap it once:
+     - "Strip image metadata" (default ON): decode → canvas → re-encode, so
+       EXIF/GPS never leaves the device. JPEG/PNG/WebP only (a canvas pass
+       would flatten GIF animation); browsers bake EXIF orientation in while
+       drawing, so stripped photos can't render sideways.
+     - "Anonymize filenames" (opt-in): timestamp names, 4chan-style.
+     - Each selected-file chip gets a ✎ that opens a rotate/crop editor;
+       Apply removes the old file through the chip's own native remove
+       button and re-adds the edited one, so main form + QR clones stay
+       in sync via the engine's own rendering. */
+  var STRIP_TYPES = { "image/jpeg": 1, "image/png": 1, "image/webp": 1 };
+  var TYPE_EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif",
+                   "video/mp4": "mp4", "video/webm": "webm", "audio/mpeg": "mp3", "audio/ogg": "ogg", "application/pdf": "pdf" };
+  function anonName(file) {
+    var ext = TYPE_EXT[(file.type || "").toLowerCase()] ||
+              ((file.name || "").match(/\.([a-z0-9]{1,5})$/i) || [])[1] || "bin";
+    return String(Date.now()) + String(Math.floor(Math.random() * 900) + 100) + "." + ext.toLowerCase();
+  }
+  function loadBitmap(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { res({ img: img, url: url }); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error("decode failed")); };
+      img.src = url;
+    });
+  }
+  function reencodeImage(file) {                          // -> Promise<File> with metadata gone
+    return loadBitmap(file).then(function (b) {
+      return new Promise(function (res, rej) {
+        try {
+          var w = b.img.naturalWidth, h = b.img.naturalHeight;
+          if (!w || !h || w * h > 50e6) { URL.revokeObjectURL(b.url); rej(new Error("too large")); return; }
+          var c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          c.getContext("2d").drawImage(b.img, 0, 0);
+          URL.revokeObjectURL(b.url);
+          c.toBlob(function (blob) {
+            if (!blob || blob.size > MAX_FILE) { rej(new Error("encode failed")); return; }
+            res(new File([blob], file.name, { type: file.type }));
+          }, file.type, file.type === "image/jpeg" ? 0.92 : undefined);
+        } catch (e) { URL.revokeObjectURL(b.url); rej(e); }
+      });
+    });
+  }
+  function hookFilePrivacy() {
+    if (!window.postCommon || !postCommon.addSelectedFile || postCommon.__rchanPriv) { return; }
+    postCommon.__rchanPriv = true;
+    var orig = postCommon.addSelectedFile;
+    postCommon.addSelectedFile = function (file) {
+      try {
+        var strip = setOn("stripexif") && file && STRIP_TYPES[(file.type || "").toLowerCase()];
+        var anon = setOn("anonname", false) && file && typeof File === "function";
+        if (!strip && !anon) { return orig.call(postCommon, file); }
+        var self = this;
+        var finish = function (f) {
+          if (anon) { try { f = new File([f], anonName(f), { type: f.type }); } catch (e) {} }
+          orig.call(postCommon, f);
+        };
+        if (!strip) { finish(file); return; }
+        reencodeImage(file).then(finish, function () {
+          toast("Couldn't strip metadata from " + file.name + " — uploading as-is", true);
+          finish(file);
+        });
+      } catch (e) { return orig.call(postCommon, file); }
+    };
+  }
+  // --- Rotate/crop editor over a selected file chip ---
+  var edPanel = null, edState = null;   // { file, chip, img, url, rot, crop, scale }
+  function edWorkCanvas() {             // full-res, rotation applied
+    var img = edState.img, rot = edState.rot;
+    var w = img.naturalWidth, h = img.naturalHeight;
+    var c = document.createElement("canvas");
+    if (rot % 2) { c.width = h; c.height = w; } else { c.width = w; c.height = h; }
+    var x = c.getContext("2d");
+    x.translate(c.width / 2, c.height / 2);
+    x.rotate(rot * Math.PI / 2);
+    x.drawImage(img, -w / 2, -h / 2);
+    return c;
+  }
+  function edRender() {
+    var work = edWorkCanvas();
+    var disp = edPanel.querySelector("canvas");
+    var maxW = Math.min(window.innerWidth * 0.86, 720), maxH = window.innerHeight * 0.55;
+    var s = Math.min(maxW / work.width, maxH / work.height, 1);
+    disp.width = Math.max(1, Math.round(work.width * s));
+    disp.height = Math.max(1, Math.round(work.height * s));
+    disp.getContext("2d").drawImage(work, 0, 0, disp.width, disp.height);
+    edState.scale = s;
+    edState.work = work;
+    edDrawCrop();
+  }
+  function edDrawCrop() {
+    var disp = edPanel.querySelector("canvas");
+    var box = edPanel.querySelector(".rchan-ed-crop");
+    var cr = edState.crop;
+    if (!cr || cr.w < 4 || cr.h < 4) { box.style.display = "none"; return; }
+    var r = disp.getBoundingClientRect(), host = box.parentNode.getBoundingClientRect();
+    box.style.display = "block";
+    box.style.left = (r.left - host.left + cr.x) + "px";
+    box.style.top = (r.top - host.top + cr.y) + "px";
+    box.style.width = cr.w + "px"; box.style.height = cr.h + "px";
+  }
+  function edClose() {
+    if (edPanel) { edPanel.style.display = "none"; }
+    if (edState && edState.url) { URL.revokeObjectURL(edState.url); }
+    edState = null;
+  }
+  function edApply() {
+    if (!edState) { return; }
+    var out = edState.work;
+    var cr = edState.crop, s = edState.scale;
+    if (cr && cr.w >= 4 && cr.h >= 4) {
+      var sx = Math.max(0, Math.round(cr.x / s)), sy = Math.max(0, Math.round(cr.y / s));
+      var sw = Math.min(out.width - sx, Math.round(cr.w / s)), sh = Math.min(out.height - sy, Math.round(cr.h / s));
+      if (sw > 0 && sh > 0) {
+        var c2 = document.createElement("canvas"); c2.width = sw; c2.height = sh;
+        c2.getContext("2d").drawImage(out, sx, sy, sw, sh, 0, 0, sw, sh);
+        out = c2;
+      }
+    }
+    var file = edState.file, chip = edState.chip;
+    var type = STRIP_TYPES[(file.type || "").toLowerCase()] ? file.type : "image/png";
+    out.toBlob(function (blob) {
+      if (!blob) { toast("Couldn't export the edited image", true); return; }
+      try {
+        var f2 = new File([blob], file.name, { type: type });
+        // native removal (splices selectedFiles + drops the QR clone), then re-add
+        var rm = chip.getElementsByClassName("removeButton")[0];
+        if (rm) { rm.onclick(); }
+        var orig2 = postCommon.addSelectedFile;
+        orig2.call(postCommon, f2);
+        okToast("Image edited");
+      } catch (e) { toast("Couldn't replace the file", true); }
+      edClose();
+    }, type, type === "image/jpeg" ? 0.92 : undefined);
+  }
+  function edButton(label, fn) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = label;
+    b.addEventListener("click", function (e) { e.preventDefault(); fn(); });
+    return b;
+  }
+  function openEditor(file, chip) {
+    if (!edPanel) {
+      edPanel = document.createElement("div"); edPanel.id = "rchan-imgedit";
+      edPanel.setAttribute("role", "dialog"); edPanel.setAttribute("aria-label", "Edit image");
+      var box = document.createElement("div"); box.className = "rchan-ed-box";
+      var head = document.createElement("div"); head.className = "rchan-set-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Edit image";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.setAttribute("aria-label", "Close editor");
+      x.addEventListener("click", edClose);
+      head.appendChild(ttl); head.appendChild(x);
+      box.appendChild(head);
+      var stage = document.createElement("div"); stage.className = "rchan-ed-stage";
+      var cv = document.createElement("canvas");
+      var cropBox = document.createElement("div"); cropBox.className = "rchan-ed-crop";
+      stage.appendChild(cv); stage.appendChild(cropBox);
+      box.appendChild(stage);
+      var hint = document.createElement("div"); hint.className = "rchan-set-desc rchan-ed-hint";
+      hint.textContent = "Drag on the image to crop · rotate with the buttons";
+      box.appendChild(hint);
+      var bar = document.createElement("div"); bar.className = "rchan-ed-bar";
+      bar.appendChild(edButton("⟲ Rotate left", function () { if (edState) { edState.rot = (edState.rot + 3) % 4; edState.crop = null; edRender(); } }));
+      bar.appendChild(edButton("⟳ Rotate right", function () { if (edState) { edState.rot = (edState.rot + 1) % 4; edState.crop = null; edRender(); } }));
+      bar.appendChild(edButton("Clear crop", function () { if (edState) { edState.crop = null; edDrawCrop(); } }));
+      var apply = edButton("Apply", edApply); apply.className = "rchan-ed-apply";
+      bar.appendChild(apply);
+      bar.appendChild(edButton("Cancel", edClose));
+      box.appendChild(bar);
+      edPanel.appendChild(box);
+      edPanel.addEventListener("click", function (e) { if (e.target === edPanel) { edClose(); } });
+      document.body.appendChild(edPanel);
+      // crop drag (pointer events cover mouse + touch)
+      var drag = null;
+      cv.style.touchAction = "none";
+      cv.addEventListener("pointerdown", function (e) {
+        if (!edState) { return; }
+        var r = cv.getBoundingClientRect();
+        drag = { x: e.clientX - r.left, y: e.clientY - r.top };
+        edState.crop = { x: drag.x, y: drag.y, w: 0, h: 0 };
+        try { cv.setPointerCapture(e.pointerId); } catch (e2) {}
+        e.preventDefault();
+      });
+      cv.addEventListener("pointermove", function (e) {
+        if (!drag || !edState) { return; }
+        var r = cv.getBoundingClientRect();
+        var px = Math.max(0, Math.min(cv.width, e.clientX - r.left));
+        var py = Math.max(0, Math.min(cv.height, e.clientY - r.top));
+        edState.crop = {
+          x: Math.min(drag.x, px), y: Math.min(drag.y, py),
+          w: Math.abs(px - drag.x), h: Math.abs(py - drag.y)
+        };
+        edDrawCrop();
+      });
+      var endDrag = function () { drag = null; };
+      cv.addEventListener("pointerup", endDrag);
+      cv.addEventListener("pointercancel", endDrag);
+    }
+    loadBitmap(file).then(function (b) {
+      edState = { file: file, chip: chip, img: b.img, url: b.url, rot: 0, crop: null, scale: 1 };
+      edPanel.style.display = "flex";
+      edRender();
+    }).catch(function () { toast("Couldn't open that image", true); });
+  }
+  function chipFile(chip) {                      // chip -> its File via position among siblings
+    var host = chip.parentNode;
+    if (!host || !window.postCommon || !postCommon.selectedFiles) { return null; }
+    var cells = host.getElementsByClassName("selectedCell");
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i] === chip) { return postCommon.selectedFiles[i] || null; }
+    }
+    return null;
+  }
+  function decorateSelectedCells(root) {
+    if (!window.postCommon || !postCommon.selectedFiles) { return; }
+    var chips = (root || document).getElementsByClassName("selectedCell");
+    for (var i = 0; i < chips.length; i++) {
+      var chip = chips[i];
+      if (chip.getAttribute("data-edit")) { continue; }
+      chip.setAttribute("data-edit", "1");
+      var f = chipFile(chip);
+      if (!f || !/^image\/(jpeg|png|webp)$/.test((f.type || "").toLowerCase())) { continue; }
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rchan-chipedit";
+      b.innerHTML = SVG_PEN;
+      b.setAttribute("data-tooltip", "Rotate / crop before upload");
+      b.setAttribute("aria-label", "Edit " + f.name + " before upload");
+      b.addEventListener("click", (function (chip2) {
+        return function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var cur = chipFile(chip2);              // re-resolve: list may have shifted
+          if (cur) { openEditor(cur, chip2); }
+        };
+      })(chip));
+      chip.appendChild(b);
+    }
+  }
+
   function wrapSel(ta, pre, post) {
     var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value, sel = v.slice(s, e);
     ta.value = v.slice(0, s) + pre + sel + post + v.slice(e);
@@ -2894,6 +3135,8 @@
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
+    { k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
+    { k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },
     { t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
@@ -3342,6 +3585,7 @@
 
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
+    if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
     if (convRoot) { closeConv(); return; }
@@ -3543,7 +3787,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -3599,7 +3843,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,

@@ -1237,6 +1237,41 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   width: auto; max-height: 45vh;
 }
 
+/* ---------- File privacy: chip edit button + rotate/crop editor ---------- */
+.selectedCell { position: relative; }
+.rchan-chipedit {
+  border: 0; background: none; cursor: pointer; padding: 2px 4px;
+  color: #274a6b; vertical-align: middle;
+}
+.rchan-chipedit:hover { color: #c8102e; }
+.rchan-chipedit svg { display: inline-block; vertical-align: middle; width: 13px; height: 13px; }
+.theme_dark .rchan-chipedit { color: #9fc4e8; }
+#rchan-imgedit {
+  position: fixed; inset: 0; z-index: 10014; display: none;
+  align-items: center; justify-content: center; background: rgba(0,0,0,.55);
+}
+.rchan-ed-box {
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); max-width: 94vw;
+}
+.rchan-ed-stage { position: relative; padding: 10px; text-align: center; }
+.rchan-ed-stage canvas { display: block; margin: 0 auto; cursor: crosshair; background: #fff; }
+.rchan-ed-crop {
+  position: absolute; display: none; pointer-events: none;
+  border: 2px dashed #c8102e; background: rgba(200,16,46,.12);
+}
+.rchan-ed-hint { text-align: center; padding: 0 10px 4px; }
+.rchan-ed-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 6px 10px 10px; }
+.rchan-ed-bar button {
+  cursor: pointer; padding: 5px 12px; border: 1px solid #CFCFC4;
+  background: #E6E6DA; color: #393939; font: inherit; font-size: .833rem; font-weight: 700;
+}
+.rchan-ed-bar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.rchan-ed-bar .rchan-ed-apply { background: #2ea043; color: #fff; border-color: #2ea043; }
+.theme_dark .rchan-ed-box { background: #1f2126; border-color: #2c2f36; }
+.theme_dark .rchan-ed-bar button { background: #262a31; color: #c9ccd1; border-color: #333; }
+.theme_dark .rchan-ed-stage canvas { background: #0f1013; }
+
 /* ---------- Long-press action sheet (touch) ---------- */
 #rchan-sheet {
   position: fixed; inset: 0; z-index: 10012; display: none;

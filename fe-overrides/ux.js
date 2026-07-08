@@ -1313,7 +1313,17 @@
     }
   }
   function seenAll() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch (e) { return {}; } }
-  function seenSave(o) { try { localStorage.setItem(SEEN_KEY, JSON.stringify(o)); } catch (e) {} }
+  var SEEN_MAX = 400;                                    // one record per thread ever visited — cap it
+  function seenSave(o) {
+    try {
+      var keys = Object.keys(o);
+      if (keys.length > SEEN_MAX) {                      // evict: legacy no-ts entries first, then oldest
+        keys.sort(function (a, b) { return (o[a].ts || 0) - (o[b].ts || 0); });
+        for (var i = 0; i < keys.length - SEEN_MAX; i++) { delete o[keys[i]]; }
+      }
+      localStorage.setItem(SEEN_KEY, JSON.stringify(o));
+    } catch (e) {}
+  }
   function curThreadId() {
     var t = document.getElementById("threadIdentifier");
     if (t && t.value) { return t.value; }
@@ -1402,7 +1412,7 @@
       d.textContent = newCount + " new post" + (newCount > 1 ? "s" : "") + " since last visit";
       firstNew.parentNode.insertBefore(d, firstNew);
     }
-    all[key] = { maxId: curMax, replies: posts.length };
+    all[key] = { maxId: curMax, replies: posts.length, ts: Date.now() };
     seenSave(all);
     if (newCount > 0) {
       if (document.hidden) { bumpTitleUnread(newCount); }
@@ -3794,27 +3804,52 @@
      second device adds to it instead of clobbering it. */
   var EXPORT_NATIVE = ["filterData", "hidingData", "watchedData", "relativeTime",
                        "localTime", "selectedTheme", "noAutoLoop", "deletionPassword", "postingPasswords", "customCSS"];
-  function exportData() {
+  function backupPayload() {                            // -> JSON string, or null on storage failure
     var out = {};
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         if (k && k.indexOf("rchan_once_") === 0) { continue; }   // ephemeral cross-tab stamps
+        if (k === "rchan_watchdead") { continue; }               // ephemeral strike counters
         if (k && k.indexOf("rchan_") === 0) { out[k] = localStorage.getItem(k); }
       }
       EXPORT_NATIVE.forEach(function (k2) {
         var v = localStorage.getItem(k2);
         if (v !== null) { out[k2] = v; }
       });
-    } catch (e) { toast("Couldn't read local data", true); return; }
-    var blob = new Blob([JSON.stringify({ rchanBackup: 1, exported: new Date().toISOString(), data: out })],
-                        { type: "application/json" });
+    } catch (e) { return null; }
+    return JSON.stringify({ rchanBackup: 1, exported: new Date().toISOString(), data: out });
+  }
+  function stampBackedUp() { try { localStorage.setItem("rchan_lastbackup", String(Date.now())); } catch (e) {} }
+  function exportData() {
+    var payload = backupPayload();
+    if (!payload) { toast("Couldn't read local data", true); return; }
+    var blob = new Blob([payload], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "rchan-backup-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a); a.click(); a.parentNode.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    stampBackedUp();
     okToast("Backup downloaded");
+  }
+  // String transport: on phones, downloading and re-uploading a JSON file is
+  // genuinely painful — copy/paste the same payload instead.
+  function copyIdentity() {
+    var payload = backupPayload();
+    if (!payload) { toast("Couldn't read local data", true); return; }
+    var done = function () { stampBackedUp(); okToast("Identity copied — paste it on the other device"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(payload).then(done, function () {
+        window.prompt("Copy your identity string:", payload); stampBackedUp();
+      });
+    } else {
+      window.prompt("Copy your identity string:", payload); stampBackedUp();
+    }
+  }
+  function pasteIdentity() {
+    var s = window.prompt("Paste your rchan identity string:");
+    if (s && s.trim()) { applyBackupString(s.trim()); }
   }
   function mergeJson(k, oldRaw, newRaw) {
     try {
@@ -3864,24 +3899,41 @@
     } catch (e) {}
     return newRaw;                                     // scalars / mismatch: imported wins
   }
+  function applyBackupString(txt) {
+    try {
+      var parsed = JSON.parse(txt);
+      if (!parsed || parsed.rchanBackup !== 1 || !parsed.data) { toast("Not an rchan backup", true); return; }
+      var d = parsed.data, n = 0;
+      Object.keys(d).forEach(function (k) {
+        if (k.indexOf("rchan_") !== 0 && EXPORT_NATIVE.indexOf(k) < 0) { return; }   // whitelist only
+        if (typeof d[k] !== "string") { return; }
+        var cur = localStorage.getItem(k);
+        try { localStorage.setItem(k, cur === null ? d[k] : mergeJson(k, cur, d[k])); n++; } catch (e) {}
+      });
+      okToast("Restored " + n + " entries — reloading");
+      setTimeout(function () { location.reload(); }, 900);
+    } catch (e) { toast("Couldn't read that backup", true); }
+  }
   function importData(file) {
     var fr = new FileReader();
-    fr.onload = function () {
-      try {
-        var parsed = JSON.parse(fr.result);
-        if (!parsed || parsed.rchanBackup !== 1 || !parsed.data) { toast("Not an rchan backup file", true); return; }
-        var d = parsed.data, n = 0;
-        Object.keys(d).forEach(function (k) {
-          if (k.indexOf("rchan_") !== 0 && EXPORT_NATIVE.indexOf(k) < 0) { return; }   // whitelist only
-          if (typeof d[k] !== "string") { return; }
-          var cur = localStorage.getItem(k);
-          try { localStorage.setItem(k, cur === null ? d[k] : mergeJson(k, cur, d[k])); n++; } catch (e) {}
-        });
-        okToast("Restored " + n + " entries — reloading");
-        setTimeout(function () { location.reload(); }, 900);
-      } catch (e) { toast("Couldn't read that backup file", true); }
-    };
+    fr.onload = function () { applyBackupString(fr.result); };
     fr.readAsText(file);
+  }
+  // Everything the user is lives in this browser's localStorage; one cleared
+  // cache erases months of identity silently. Nudge gently: after two weeks
+  // with no backup ever, or a month since the last one — at most weekly.
+  function initBackupNudge() {
+    try {
+      var now = Date.now();
+      var first = parseInt(localStorage.getItem("rchan_firstseen"), 10) || 0;
+      if (!first) { localStorage.setItem("rchan_firstseen", String(now)); return; }
+      var lastB = parseInt(localStorage.getItem("rchan_lastbackup"), 10) || 0;
+      var lastN = parseInt(localStorage.getItem("rchan_nudge"), 10) || 0;
+      var due = lastB ? (now - lastB > 30 * 86400e3) : (now - first > 14 * 86400e3);
+      if (!due || now - lastN < 7 * 86400e3) { return; }
+      localStorage.setItem("rchan_nudge", String(now));
+      toastAction("Your (You)s, filters and watched threads live only in this browser", "Back up", exportData);
+    } catch (e) {}
   }
 
   /* ---------- Auto theme: follow the OS light/dark preference ----------
@@ -4039,6 +4091,8 @@
       });
       foot.appendChild(setFootLink("Restore", function () { restoreInput.click(); }));
       foot.appendChild(restoreInput);
+      foot.appendChild(setFootLink("Copy identity", copyIdentity));
+      foot.appendChild(setFootLink("Paste identity", pasteIdentity));
       setPanel.appendChild(foot);
       document.body.appendChild(setPanel);
       document.addEventListener("click", function (ev) {          // click-away closes
@@ -4859,7 +4913,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint, pruneOnceStamps
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint, initBackupNudge, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

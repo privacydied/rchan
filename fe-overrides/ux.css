@@ -160,7 +160,7 @@ body .divMessage {
 body.theme_cream .divMessage {
   font-family: "New York Small", Georgia, serif;
   font-weight: 400;
-  font-size: 15.5px;
+  font-size: 10pt;
   line-height: 1.68;
   color: #2A2620;                       /* warm charcoal, not #000 */
 }
@@ -2711,10 +2711,10 @@ html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rch
 html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #A6C185 !important; }
 
 /* body copy: New York Small at Medium (500) — light-on-dark optical
-   compensation makes 500 the right body weight on the dark ground. 15.5px. */
+   compensation makes 500 the right body weight on the dark ground. 10pt. */
 html.rchan-warmdark .divMessage {
   font-family: "New York Small", Georgia, serif; font-weight: 500;
-  font-size: 15.5px; line-height: 1.68; color: #E8E6DF !important;
+  font-size: 10pt; line-height: 1.68; color: #E8E6DF !important;
 }
 /* greentext/quotes read as quoted PROSE, not code: EXACTLY the body register,
    differing in COLOUR only. The engine sets a font on .greenText that beat the

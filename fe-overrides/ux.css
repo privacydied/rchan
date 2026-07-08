@@ -292,6 +292,15 @@ body.theme_cream #themeSelector, html.rchan-warmdark #themeSelector {
   height: 28px; padding: 0 8px; margin-left: 12px; box-sizing: border-box;
   align-self: center; border-radius: 4px; font-size: 12px; line-height: 1;
 }
+/* light cream: give the select the theme's surface + border (dark gets its
+   colours from the warmdark `select` rule); style the option list on both. */
+body.theme_cream #themeSelector {
+  background: #E6E6DA; color: #393939; border: 1px solid #CFCFC4; cursor: pointer;
+}
+body.theme_cream #themeSelector:hover { background: #DCDCCF; border-color: #b7b7a8; }
+body.theme_cream #themeSelector option { background: #E6E6DA; color: #393939; }
+html.rchan-warmdark #themeSelector { cursor: pointer; }
+html.rchan-warmdark #themeSelector option { background: #2A2A28; color: #E8E6DF; }
 /* uniform hover target: soft surface behind the box */
 body.theme_cream #navLinkSpan > a.coloredIcon:hover, body.theme_cream #rchan-galbtn:hover,
 body.theme_cream #rchan-expandbtn:hover, body.theme_cream #rchan-findbtn:hover { background: #DCDCCF; }

@@ -3,12 +3,47 @@
      threads with unread replies and your inbox count were sitting in
      localStorage the whole time. Chips: inbox first (opens the panel),
      unread watched threads next (green dot), then the rest by recency. */
-  function buildYourThreads() {
-    if (!/^\/(index\.html)?$/.test(location.pathname)) { return; }
+  // The user's watched/inbox state lives in localStorage under the BOARD origin.
+  // When this same page is served at the apex (rchan.xyz) it's a different origin
+  // with empty storage, so read the board origin's storage through a tiny broker
+  // page loaded in a hidden iframe (postMessage). On the board origin itself it's
+  // a direct synchronous read. Whitelisted, read-only — see the bridge in nginx.
+  var BOARDS_ORIGIN = "https://boards.rchan.xyz";
+  function onBoardsOrigin() { return location.origin === BOARDS_ORIGIN; }
+  function boardsStorage(keys, cb) {
+    if (onBoardsOrigin()) {
+      var v = {};
+      keys.forEach(function (k) { try { v[k] = localStorage.getItem(k); } catch (e) {} });
+      cb(v); return;
+    }
+    var frame = document.createElement("iframe");
+    frame.style.display = "none"; frame.setAttribute("aria-hidden", "true");
+    frame.src = BOARDS_ORIGIN + "/.rchan/bridge.html";
+    var done = false, timer = null;
+    function finish(values) {
+      if (done) { return; }
+      done = true; clearTimeout(timer);
+      window.removeEventListener("message", onMsg);
+      if (frame.parentNode) { frame.parentNode.removeChild(frame); }
+      cb(values);
+    }
+    function onMsg(e) {
+      if (e.origin !== BOARDS_ORIGIN || !e.data || e.data.__rchanBridge !== 1 || !e.data.values) { return; }
+      finish(e.data.values);
+    }
+    window.addEventListener("message", onMsg);
+    frame.addEventListener("load", function () {
+      try { frame.contentWindow.postMessage({ __rchanBridge: 1, req: keys }, BOARDS_ORIGIN); } catch (e) {}
+    });
+    timer = setTimeout(function () { finish({}); }, 4000);
+    document.body.appendChild(frame);
+  }
+  function renderYourThreads(watchedRaw, youboxRaw) {
     if (document.getElementById("rchan-yours")) { return; }
+    var base = onBoardsOrigin() ? "" : BOARDS_ORIGIN;   // apex chips point at the board host
     var entries = [];
     try {
-      var wd = JSON.parse(localStorage.watchedData || "{}");
+      var wd = JSON.parse(watchedRaw || "{}");
       Object.keys(wd).forEach(function (b) {
         Object.keys(wd[b] || {}).forEach(function (t) {
           var rec = wd[b][t] || {};
@@ -18,7 +53,11 @@
         });
       });
     } catch (e) {}
-    var inboxN = youboxUnread();
+    var inboxN = 0;
+    try {
+      var yb = JSON.parse(youboxRaw || "{}");
+      Object.keys(yb).forEach(function (k) { if (yb[k] && !yb[k].r) { inboxN++; } });
+    } catch (e2) {}
     if (!entries.length && !inboxN) { return; }
     entries.sort(function (a, b) { return (b.unread - a.unread) || (b.ts - a.ts); });
     entries = entries.slice(0, 8);
@@ -28,17 +67,25 @@
     box.appendChild(head);
     var wrap = document.createElement("div"); wrap.className = "rchan-yours-chips";
     if (inboxN) {
-      var ib = document.createElement("button");
-      ib.type = "button"; ib.className = "rchan-yours-chip rchan-yours-unread";
-      ib.textContent = "✉ " + inboxN + " repl" + (inboxN > 1 ? "ies" : "y") + " to you";
-      ib.addEventListener("click", toggleYoubox);
-      wrap.appendChild(ib);
+      var ibText = "✉ " + inboxN + " repl" + (inboxN > 1 ? "ies" : "y") + " to you";
+      if (onBoardsOrigin()) {                          // local inbox panel is available here
+        var ib = document.createElement("button");
+        ib.type = "button"; ib.className = "rchan-yours-chip rchan-yours-unread";
+        ib.textContent = ibText;
+        ib.addEventListener("click", toggleYoubox);
+        wrap.appendChild(ib);
+      } else {                                         // apex: the inbox lives on the board host
+        var iba = document.createElement("a");
+        iba.className = "rchan-yours-chip rchan-yours-unread";
+        iba.href = base + "/"; iba.textContent = ibText;
+        wrap.appendChild(iba);
+      }
     }
     var unesc = document.createElement("textarea");    // labels were escHtml'd at write time
     entries.forEach(function (e) {
       var a = document.createElement("a");
       a.className = "rchan-yours-chip" + (e.unread ? " rchan-yours-unread" : "");
-      a.href = "/" + e.b + "/res/" + e.t;
+      a.href = base + "/" + e.b + "/res/" + e.t;
       unesc.innerHTML = e.label || "";
       a.textContent = (e.unread ? "● " : "") + "/" + e.b + "/ · " + (unesc.value || ("Thread " + e.t));
       wrap.appendChild(a);
@@ -46,6 +93,14 @@
     box.appendChild(wrap);
     var anchor = document.getElementById("divBoards");
     if (anchor) { anchor.parentNode.insertBefore(box, anchor); }
+  }
+  function buildYourThreads() {
+    if (!/^\/(index\.html)?$/.test(location.pathname)) { return; }
+    if (document.getElementById("rchan-yours") || buildYourThreads.__done) { return; }
+    buildYourThreads.__done = true;                    // async on the apex — build once
+    boardsStorage(["watchedData", YOUBOX_KEY], function (v) {
+      renderYourThreads(v.watchedData, v[YOUBOX_KEY]);
+    });
   }
 
   /* ---------- Homepage: "Active threads" strip ----------

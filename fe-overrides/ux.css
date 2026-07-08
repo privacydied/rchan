@@ -2599,16 +2599,17 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
 }
 
 /* ==========================================================================
-   CREAM (DARK)  — warm-brown dark variant (selectable: "Cream (Dark)")
+   CREAM (DARK)  — neutral dark variant (selectable: "Cream (Dark)")
    It rides on the native "dark" theme, so every dark-styled surface is
    inherited for free; html.rchan-warmdark (a marker on <html>, set by
    ux.js and safe from the native themeLoader's body.className rewrites)
-   re-tints the cool grey dark palette to warm browns over a #1F1409 ground.
-   Warm token map:  bg #1F1409 · well #170F06 · panel #2A1D0F ·
-   panel-2 #3A2913 · border #4C3920 · text #E9DDC7 · gold #E0B36A.
+   re-tints the cool grey dark palette to a neutral #1F1F1E ground, keeping
+   a faint warm-cream ink + muted gold accent for the Cream identity.
+   Token map:  bg #1F1F1E · well #161615 · panel #2A2A28 · panel-2 #363634 ·
+   border #454542 · ink #E8E6DF · gold #D9B87A.
    ========================================================================== */
 html.rchan-warmdark body.theme_dark,
-html.rchan-warmdark .theme_dark { background: #1F1409 !important; color: #E9DDC7 !important; }
+html.rchan-warmdark .theme_dark { background: #1F1F1E !important; color: #E8E6DF !important; }
 
 /* deepest wells */
 html.rchan-warmdark #rchan-tip, html.rchan-warmdark #rchan-toast,
@@ -2620,7 +2621,7 @@ html.rchan-warmdark #rchan-youbox, html.rchan-warmdark #rchan-reports,
 html.rchan-warmdark #rchan-find, html.rchan-warmdark #rchan-conv,
 html.rchan-warmdark #rchan-set, html.rchan-warmdark .rchan-keys-box,
 html.rchan-warmdark .rchan-preview, html.rchan-warmdark .rchan-sheet-box .rchan-sheet-cancel {
-  background: #170F06 !important; border-color: #4C3920 !important;
+  background: #161615 !important; border-color: #454542 !important;
 }
 
 /* panels: cells, nav, forms, menus, popovers, inputs */
@@ -2640,7 +2641,7 @@ html.rchan-warmdark #rchan-qr, html.rchan-warmdark .modalInnerPanel,
 html.rchan-warmdark .quoteTooltip, html.rchan-warmdark .quoteTooltip .innerPost,
 html.rchan-warmdark .quoteTooltip .innerOP, html.rchan-warmdark .rchan-filechip,
 html.rchan-warmdark input, html.rchan-warmdark textarea, html.rchan-warmdark select {
-  background: #2A1D0F !important; color: #E9DDC7 !important; border-color: #4C3920 !important;
+  background: #2A2A28 !important; color: #E8E6DF !important; border-color: #454542 !important;
 }
 html.rchan-warmdark .innerOP { background: transparent !important; }
 
@@ -2658,49 +2659,49 @@ html.rchan-warmdark .rchan-set-head, html.rchan-warmdark .rchan-set-group summar
 html.rchan-warmdark .rchan-filter-form button, html.rchan-warmdark .rchan-css-save,
 html.rchan-warmdark .rchan-ed-bar button, html.rchan-warmdark .rchan-sheet-box button,
 html.rchan-warmdark #rchan-ptrind, html.rchan-warmdark #watchedMenu > label {
-  background: #3A2913 !important; color: #E9DDC7 !important; border-color: #4C3920 !important;
+  background: #363634 !important; color: #E8E6DF !important; border-color: #454542 !important;
 }
 
 /* borders */
 html.rchan-warmdark #rchan-banner, html.rchan-warmdark #settingsFieldset form,
 html.rchan-warmdark #settingsFieldset hr, html.rchan-warmdark .rchan-set-sub {
-  border-color: #4C3920 !important;
+  border-color: #454542 !important;
 }
 html.rchan-warmdark .rchan-hist-row, html.rchan-warmdark .rchan-set-row,
 html.rchan-warmdark .rchan-filter-row, html.rchan-warmdark #watchedMenu .watchedCell,
 html.rchan-warmdark .rchan-pal-row, html.rchan-warmdark .rchan-set-news {
-  border-color: #4C392066 !important;
+  border-color: #45454266 !important;
 }
 
 /* text + accents */
-html.rchan-warmdark a { color: #E0B36A !important; }
-html.rchan-warmdark a:hover { color: #F3D097 !important; }
+html.rchan-warmdark a { color: #D9B87A !important; }
+html.rchan-warmdark a:hover { color: #EFD3A0 !important; }
 html.rchan-warmdark .greenText { color: #9CC96F !important; }
 html.rchan-warmdark .redText { color: #E38A6E !important; }
-html.rchan-warmdark .labelSubject { color: #E6C07B !important; }
-html.rchan-warmdark .linkName, html.rchan-warmdark .labelName { color: #C9B57C !important; }
-html.rchan-warmdark .linkQuote, html.rchan-warmdark .linkSelf { color: #E9DDC7 !important; }
-html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: #E0B36A !important; }
-html.rchan-warmdark .rchan-catprev-id { color: #E9DDC7 !important; }
-/* controls that were blue in cool-dark → gold */
+html.rchan-warmdark .labelSubject { color: #E6C88A !important; }
+html.rchan-warmdark .linkName, html.rchan-warmdark .labelName { color: #C6BE9A !important; }
+html.rchan-warmdark .linkQuote, html.rchan-warmdark .linkSelf { color: #E8E6DF !important; }
+html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: #D9B87A !important; }
+html.rchan-warmdark .rchan-catprev-id { color: #E8E6DF !important; }
+/* controls that were blue in the cool-dark base → muted gold */
 html.rchan-warmdark .coloredIcon, html.rchan-warmdark .watchButton, html.rchan-warmdark #favouriteButton,
 html.rchan-warmdark #sideCatalogRefreshButton, html.rchan-warmdark #rchan-findbtn,
 html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark .rchan-convbtn,
 html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rchan-warmdark .rchan-hist-clear,
-html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #E0B36A !important; }
+html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #D9B87A !important; }
 
-/* body copy: mirror Cream's Arial 10pt (warm ink on the brown, no shadow) */
+/* body copy: mirror Cream's Arial 10pt (warm-cream ink on the neutral dark, no shadow) */
 html.rchan-warmdark .divMessage {
-  font-family: arial, helvetica, sans-serif; font-size: 10pt; line-height: 1.65; color: #E9DDC7 !important;
+  font-family: arial, helvetica, sans-serif; font-size: 10pt; line-height: 1.65; color: #E8E6DF !important;
 }
 /* board/catalog title: keep Cream's bold serif, flipped to an embossed-on-dark
    shadow (dark crisp catch below — the sibling of Cream's light letterpress). */
 html.rchan-warmdark .boardHeader p#labelName, html.rchan-warmdark #catalogId,
 html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
   font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -.5px;
-  color: #EFE4CE !important; text-shadow: 0 1px 1px rgba(0,0,0,.5);
+  color: #EFEDE6 !important; text-shadow: 0 1px 1px rgba(0,0,0,.5);
 }
-html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E9DDC7 !important; }
+html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
 
 /* ---------- Forced colors (Windows High Contrast) ----------
    Nearly every control we ship is an SVG on a transparent background —

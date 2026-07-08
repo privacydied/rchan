@@ -316,10 +316,6 @@
     if (threadFlags) {
       if (threadFlags.autoSage) { segs.push(tsChip("bump limit", "Bump limit reached — replies no longer bump this thread", true)); }
       if (threadFlags.cyclic) { segs.push(tsChip("cyclic", "Cyclic thread — oldest replies rotate out")); }
-      var lastPage = threadFlags.page === threadFlags.maxPage && threadFlags.maxPage >= 9;
-      segs.push(tsChip("p." + threadFlags.page + "/" + threadFlags.maxPage,
-        lastPage ? "On the board's last page — will prune soon" : "Catalog page " + threadFlags.page + " of " + threadFlags.maxPage,
-        lastPage));
     }
     var html = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
     el.innerHTML = html;

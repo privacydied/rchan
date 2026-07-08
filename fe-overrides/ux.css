@@ -155,13 +155,11 @@ body .divMessage {
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-/* cream: body copy in New York Small (Apple's body-optical serif). Regular (400)
-   on the light ground; no shadow (a serif at reading size needs none). */
+/* cream: body copy in Arial 10pt (titles stay serif; body reads as plain sans). */
 body.theme_cream .divMessage {
-  font-family: "New York Small", Georgia, serif;
-  font-weight: 400;
+  font-family: arial, helvetica, sans-serif;
   font-size: 10pt;
-  line-height: 1.68;
+  line-height: 1.5;
   color: #2A2620;                       /* warm charcoal, not #000 */
 }
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
@@ -257,6 +255,51 @@ body #navLinkSpan { order: 2; }
 #rchan-threadstat .rchan-ts-seg { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
 #rchan-threadstat .rchan-ts-seg svg { display: block; flex: none; opacity: .7; }
 #rchan-threadstat .rchan-ts-dot { margin: 0 6px; opacity: .55; }
+
+/* ================= Cream navbar: normalized fixed-box flex ==================
+   The right cluster (galbtn/expandbtn/findbtn + #navLinkSpan icons + theme
+   <select>) had mismatched sizes, spacing and baseline drift. Give the bar one
+   ~40px flex row (gap owns ALL spacing), and make every icon/button an identical
+   28x28 centered box, glyphs normalised to ~16px. Scoped to the Cream themes;
+   Brutalist/Academia keep their own nav treatments. =========================== */
+body.theme_cream nav, body.theme_cream #dynamicHeader,
+html.rchan-warmdark nav, html.rchan-warmdark #dynamicHeader {
+  min-height: 40px; align-items: center !important; gap: 6px;
+}
+body.theme_cream, html.rchan-warmdark body { margin-top: 42px; }  /* clear the 40px bar */
+/* the icon container is a flex row; gap owns spacing between its items */
+body.theme_cream #navLinkSpan, html.rchan-warmdark #navLinkSpan {
+  display: inline-flex !important; align-items: center; gap: 6px;
+}
+/* every clickable in the right cluster → identical 28x28 centered box */
+body.theme_cream #navLinkSpan > a.coloredIcon,
+body.theme_cream #rchan-galbtn, body.theme_cream #rchan-expandbtn, body.theme_cream #rchan-findbtn,
+html.rchan-warmdark #navLinkSpan > a.coloredIcon,
+html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-findbtn {
+  display: inline-flex !important; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0 !important; margin: 0 !important;
+  box-sizing: border-box; border-radius: 4px; align-self: center; line-height: 1;
+}
+/* glyphs unified to ~16px within their 28px boxes (font-icons + svgs) */
+body.theme_cream #navLinkSpan > a.coloredIcon,
+html.rchan-warmdark #navLinkSpan > a.coloredIcon { font-size: 16px; }
+body.theme_cream #rchan-galbtn svg, body.theme_cream #rchan-expandbtn svg, body.theme_cream #rchan-findbtn svg,
+html.rchan-warmdark #rchan-galbtn svg, html.rchan-warmdark #rchan-expandbtn svg, html.rchan-warmdark #rchan-findbtn svg {
+  width: 16px !important; height: 16px !important; display: block;
+}
+/* theme <select>: match the box height, set slightly apart from the icons */
+body.theme_cream #themeSelector, html.rchan-warmdark #themeSelector {
+  height: 28px; padding: 0 8px; margin-left: 12px; box-sizing: border-box;
+  align-self: center; border-radius: 4px; font-size: 12px; line-height: 1;
+}
+/* uniform hover target: soft surface behind the box */
+body.theme_cream #navLinkSpan > a.coloredIcon:hover, body.theme_cream #rchan-galbtn:hover,
+body.theme_cream #rchan-expandbtn:hover, body.theme_cream #rchan-findbtn:hover { background: #DCDCCF; }
+html.rchan-warmdark #navLinkSpan > a.coloredIcon:hover, html.rchan-warmdark #rchan-galbtn:hover,
+html.rchan-warmdark #rchan-expandbtn:hover, html.rchan-warmdark #rchan-findbtn:hover { background: #363634; }
+/* status counters: one flex item, vertically centered, quiet */
+body.theme_cream #rchan-threadstat, html.rchan-warmdark #rchan-threadstat { align-self: center; font-size: 11px; }
+
 /* mobile twin of the status line: in-flow strip under the OP (see mobile block) */
 #rchan-mstats {
   display: none; flex-wrap: wrap; align-items: center; gap: 2px 0;
@@ -1819,8 +1862,11 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
   padding: 3px 11px;
   border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer; font: inherit;
   font-size: .833rem; font-weight: 700;
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  /* long, slow rollover — the lift eases in over ~0.6s */
+  transition: box-shadow .6s cubic-bezier(.22,.61,.36,1), background-color .18s ease, color .18s ease, border-color .18s ease;
 }
-#rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+#rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
 .theme_dark #rchan-formtoggle { background: #262a31; color: #c9ccd1; border-color: #333; }
 
 /* Floating new-thread box (board/catalog pages — the real #postingForm is moved
@@ -2713,11 +2759,10 @@ html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small {
 html.rchan-warmdark #rchan-nav button { background: #A6C185 !important; color: #1F1F1E !important; }
 html.rchan-warmdark #rchan-nav button.rchan-on { background: #BED49F !important; }
 
-/* body copy: New York Small at Medium (500) — light-on-dark optical
-   compensation makes 500 the right body weight on the dark ground. 10pt. */
+/* body copy: Arial 10pt (titles stay serif; body reads as plain sans). */
 html.rchan-warmdark .divMessage {
-  font-family: "New York Small", Georgia, serif; font-weight: 500;
-  font-size: 10pt; line-height: 1.68; color: #E8E6DF !important;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 10pt; line-height: 1.5; color: #E8E6DF !important;
 }
 /* greentext/quotes read as quoted PROSE, not code: EXACTLY the body register,
    differing in COLOUR only. The engine sets a font on .greenText that beat the

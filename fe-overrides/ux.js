@@ -2929,18 +2929,70 @@
     });
     bar.appendChild(pv);
     var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
-    var upd = function () { count.textContent = msg.value.length + " chars"; pvUpdate(); };
+    var upd = function () {
+      var n = msg.value.length, lim = msgLimit();
+      count.textContent = lim ? n + " / " + lim : n + " chars";
+      count.classList.toggle("rchan-charwarn", !!(lim && n > lim * 0.9));
+      pvUpdate();
+    };
     msg.addEventListener("input", upd); upd();
     return bar;
+  }
+  // Board message limit: the engine renders it as #labelMessageLength ("4096")
+  function msgLimit() {
+    var lab = document.getElementById("labelMessageLength");
+    var n = lab ? parseInt((lab.textContent || "").replace(/\D/g, ""), 10) : 0;
+    if (!n) {
+      var f = document.getElementById("fieldMessage");
+      if (f && f.maxLength > 0) { n = f.maxLength; }
+    }
+    return n || 0;
   }
   // Quick Reply is built lazily by qr.js (innerHTML); the MutationObserver-driven
   // refresh() lands here once #qrbody exists. wrapSel/prefixLines dispatch an
   // "input" event, which qr.js's registerSync mirrors into #fieldMessage.
+  // Staff flag-override twin inside the Quick Reply. The XHR hook only reads
+  // the MAIN #rchan-flagoverride select, so the twin just mirrors into it
+  // (both ways) — QR users get the same control without a second code path.
+  // Separate from enhanceQuickReply's data-fmt guard: the main select is built
+  // asynchronously (after /account.js confirms the role), usually later.
+  function buildQrFlagOverride() {
+    var main = document.getElementById("rchan-flagoverride");
+    var body = document.getElementById("qrbody");
+    if (!main || !body || document.getElementById("rchan-flagoverride-qr")) { return; }
+    var row = document.createElement("div"); row.id = "rchan-qr-flagrow"; row.className = "rchan-flagrow";
+    row.appendChild(document.createTextNode("Flag "));
+    var sel = main.cloneNode(true);
+    sel.id = "rchan-flagoverride-qr"; sel.removeAttribute("name");
+    sel.value = main.value;
+    sel.addEventListener("change", function () {
+      main.value = sel.value;
+      main.dispatchEvent(new Event("change"));           // runs the native-combobox sync
+      var nat = document.getElementById("flagCombobox"), natQr = document.getElementById("qrFlagCombobox");
+      if (nat && natQr) { natQr.value = nat.value; }     // keep the QR's board-flag combo honest too
+    });
+    main.addEventListener("change", function () { sel.value = main.value; });
+    row.appendChild(sel);
+    var bar = body.parentNode.querySelector(".rchan-fmtbar");
+    body.parentNode.insertBefore(row, bar || body);
+  }
   function enhanceQuickReply() {
+    buildQrFlagOverride();
     var ta = document.getElementById("qrbody");
     if (!ta || ta.getAttribute("data-fmt")) { return; }
     ta.setAttribute("data-fmt", "1");
     ta.parentNode.insertBefore(buildFmtBar(ta), ta);
+    // board flags are a visible identity choice on the main form but the QR
+    // buries them in the collapsed "Extra" section — promote the row up next
+    // to the rest of the visible fields
+    var qrFlags = document.getElementById("qrFlagsDiv");
+    if (qrFlags) {
+      var tr = qrFlags.closest("tr");
+      var moreRow = document.getElementById("qrFormMore");
+      if (tr && moreRow && tr.parentNode && tr.parentNode.id === "qrExtra") {
+        moreRow.parentNode.insertBefore(tr, moreRow);
+      }
+    }
     // paste an image straight into the QR textarea
     ta.addEventListener("paste", function (e) {
       var add = collectPastedFiles(e);

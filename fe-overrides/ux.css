@@ -876,9 +876,12 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
 body.rchan-staff #noFlagDiv, body.rchan-staff #qrcheckboxNoFlag,
 body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 
-/* admin flag-override row (built only for authorized staff; server enforces) */
-#rchan-flagrow { margin: 4px 0; font-size: .833rem; font-weight: 700; }
-#rchan-flagrow select { font: inherit; font-weight: 400; margin-left: 4px; max-width: 220px; }
+/* admin flag-override row (built only for authorized staff; server enforces)
+   — .rchan-flagrow is the Quick Reply twin of the same control */
+#rchan-flagrow, .rchan-flagrow { margin: 4px 0; font-size: .833rem; font-weight: 700; }
+#rchan-flagrow select, .rchan-flagrow select { font: inherit; font-weight: 400; margin-left: 4px; max-width: 220px; }
+/* char counter turns red within 10% of the board's message limit */
+.rchan-charwarn { color: #c8102e; font-weight: 700; }
 .rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
 /* scoped under #postingForm/#quick-reply to beat the engine's "#postingForm button
    {width:8em;font-size:125%}" (that rule is for the Post submit button). */

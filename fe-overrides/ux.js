@@ -3552,6 +3552,7 @@
     ["c", "Toggle catalog ↔ index view"],
     ["r", "Focus the reply box"],
     ["f", "Filter posts in the thread"],
+    ["Ctrl+K", "Command palette — boards, threads, actions"],
     ["?", "This cheat-sheet"],
     ["Esc", "Close panels · collapse the expanded image"]
   ];
@@ -3786,8 +3787,173 @@
     if (natLink) { natLink.onclick = function () { toggleGallery(); return false; }; }
   }
 
+  /* ---------- Command palette (Ctrl+K / Cmd+K) ----------
+     One keystroke, every destination: boards, watched threads (unread
+     flagged), recent threads, the threads on the open catalog, and the
+     site's own actions (settings, gallery, filter, backup…). Fuzzy match:
+     substring beats subsequence, earlier beats later. ↑/↓ + Enter or click. */
+  var pal = null, palInput = null, palListEl = null, palSel = 0, palResults = [], palBoards = null;
+  function fuzzyScore(q, s) {
+    if (!q) { return 1; }
+    s = s.toLowerCase();
+    var idx = s.indexOf(q);
+    if (idx > -1) { return 1000 - Math.min(idx, 500); }
+    var qi = 0, score = 0, last = -2;
+    for (var i = 0; i < s.length && qi < q.length; i++) {
+      if (s.charAt(i) === q.charAt(qi)) {
+        score += (last === i - 1) ? 3 : 1;
+        last = i; qi++;
+      }
+    }
+    return qi === q.length ? score : 0;
+  }
+  function palUnescape(s) { var d = document.createElement("textarea"); d.innerHTML = s || ""; return d.value; }
+  function palGo(entry) {
+    closePalette();
+    if (entry.fn) { entry.fn(); return; }
+    if (entry.url) { location.href = entry.url; }
+  }
+  function palSources() {
+    var out = [];
+    function add(kind, title, sub, urlOrFn) {
+      var e = { kind: kind, title: title, sub: sub || "" };
+      if (typeof urlOrFn === "function") { e.fn = urlOrFn; } else { e.url = urlOrFn; }
+      e.hay = (title + " " + e.sub).toLowerCase();
+      out.push(e);
+    }
+    // actions (context-aware)
+    add("action", "Site settings", "toggles, filters, custom CSS", toggleSetPanel);
+    add("action", "Keyboard shortcuts", "the ? cheat-sheet", toggleKeysOverlay);
+    if (document.querySelector("a.imgLink, a.linkThumb")) {
+      add("action", "Gallery mode", "every file on this page (g)", function () { openGallery(); });
+    }
+    if (getBoard() && !curThreadId()) {
+      add("action", isCatalog() ? "Switch to index view" : "Switch to catalog view", "this board (c)", toggleCatalog);
+    }
+    if (curThreadId()) {
+      add("action", "Filter posts in this thread", "find bar (f)", function () { toggleFind(); });
+      add("action", "Expand all images", "this thread (e per post)", function () { setExpandAll(!expandAllOn); });
+    }
+    add("action", "Recent threads panel", "history (🕘)", toggleHistPanel);
+    add("action", "Backup my rchan data", "download a merge-safe JSON", exportData);
+    add("action", "Home", "front page", "/");
+    add("action", "Overboard", "all boards, one stream", "/overboard/");
+    // watched threads (unread first-class)
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      Object.keys(wd).forEach(function (b) {
+        Object.keys(wd[b] || {}).forEach(function (t) {
+          var rec = wd[b][t] || {};
+          var unread = (rec.lastReplied || 0) > (rec.lastSeen || 0);
+          add("watched", "/" + b + "/ · " + (palUnescape(rec.label) || ("Thread " + t)),
+              unread ? "● new replies" : "watched", "/" + b + "/res/" + t);
+        });
+      });
+    } catch (e) {}
+    // recent threads
+    histLoad().forEach(function (h) {
+      add("recent", "/" + h.b + "/ · " + (h.s || ("Thread " + h.t)), fmtAgo(h.ts) + " ago", "/" + h.b + "/res/" + h.t);
+    });
+    // boards
+    (palBoards || []).forEach(function (b) {
+      add("board", "/" + b.boardUri + "/ — " + (b.boardName || b.boardUri), b.boardDescription || "", "/" + b.boardUri + "/");
+    });
+    // threads on the open catalog
+    if (isCatalog()) {
+      catCells().forEach(function (cell) {
+        var a = cell.querySelector("a.linkThumb");
+        var href = a && a.getAttribute("href");
+        if (!href) { return; }
+        var subj = cell.querySelector(".labelSubject");
+        var msg = cell.querySelector(".divMessage");
+        var label = (subj && subj.textContent.trim()) ||
+                    (msg && msg.textContent.replace(/\s+/g, " ").trim().slice(0, 60)) ||
+                    ("Thread " + catThreadId(cell));
+        add("thread", label, "on this catalog", href);
+      });
+    }
+    return out;
+  }
+  function palRender() {
+    var q = (palInput.value || "").trim().toLowerCase();
+    var src = pal.__sources || [];
+    var scored = [];
+    for (var i = 0; i < src.length; i++) {
+      var sc = fuzzyScore(q, src[i].hay);
+      if (sc > 0) { scored.push({ e: src[i], s: sc, i: i }); }
+    }
+    if (q) { scored.sort(function (a, b) { return b.s - a.s || a.i - b.i; }); }
+    palResults = scored.slice(0, 14).map(function (r) { return r.e; });
+    palSel = Math.max(0, Math.min(palSel, palResults.length - 1));
+    palListEl.innerHTML = "";
+    if (!palResults.length) {
+      var none = document.createElement("div"); none.className = "rchan-pal-none";
+      none.textContent = "Nothing matches";
+      palListEl.appendChild(none);
+      return;
+    }
+    palResults.forEach(function (e, idx) {
+      var row = document.createElement("div");
+      row.className = "rchan-pal-row" + (idx === palSel ? " rchan-pal-sel" : "");
+      var kind = document.createElement("span"); kind.className = "rchan-pal-kind rchan-pal-" + e.kind;
+      kind.textContent = e.kind;
+      var ttl = document.createElement("span"); ttl.className = "rchan-pal-title"; ttl.textContent = e.title;
+      var sub = document.createElement("span"); sub.className = "rchan-pal-sub"; sub.textContent = e.sub;
+      row.appendChild(kind); row.appendChild(ttl); row.appendChild(sub);
+      row.addEventListener("mouseenter", function () { palSel = idx; palPaint(); });
+      row.addEventListener("click", function () { palGo(e); });
+      palListEl.appendChild(row);
+    });
+  }
+  function palPaint() {                          // reselect without a full rebuild
+    var rows = palListEl.getElementsByClassName("rchan-pal-row");
+    for (var i = 0; i < rows.length; i++) { rows[i].classList.toggle("rchan-pal-sel", i === palSel); }
+  }
+  function closePalette() { if (pal) { pal.style.display = "none"; } }
+  function openPalette() {
+    if (!pal) {
+      pal = document.createElement("div"); pal.id = "rchan-palette";
+      pal.setAttribute("role", "dialog"); pal.setAttribute("aria-label", "Command palette");
+      var box = document.createElement("div"); box.className = "rchan-pal-box";
+      palInput = document.createElement("input");
+      palInput.type = "text"; palInput.placeholder = "Jump to a board, thread, or action…";
+      palInput.setAttribute("aria-label", "Search boards, threads and actions");
+      palListEl = document.createElement("div"); palListEl.className = "rchan-pal-list";
+      box.appendChild(palInput); box.appendChild(palListEl);
+      pal.appendChild(box);
+      pal.addEventListener("click", function (e) { if (e.target === pal) { closePalette(); } });
+      palInput.addEventListener("input", function () { palSel = 0; palRender(); });
+      palInput.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { closePalette(); e.stopPropagation(); }
+        else if (e.key === "ArrowDown") { palSel = Math.min(palResults.length - 1, palSel + 1); palPaint(); e.preventDefault(); }
+        else if (e.key === "ArrowUp") { palSel = Math.max(0, palSel - 1); palPaint(); e.preventDefault(); }
+        else if (e.key === "Enter") { if (palResults[palSel]) { palGo(palResults[palSel]); } e.preventDefault(); }
+      });
+      document.body.appendChild(pal);
+    }
+    pal.__sources = palSources();
+    if (palBoards === null) {                    // one boards fetch per page, merged in when it lands
+      palBoards = [];                            // don't refetch on every open
+      fetch("/boards.js?json=1").then(function (r) { return r.json(); }).then(function (res) {
+        palBoards = (res && res.data && res.data.boards) || [];
+        if (pal.style.display === "flex") { pal.__sources = palSources(); palRender(); }
+      }).catch(function () {});
+    }
+    pal.style.display = "flex";
+    palInput.value = ""; palSel = 0;
+    palRender();
+    palInput.focus();
+  }
+  function onPaletteKey(e) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === "k" || e.key === "K")) {
+      e.preventDefault(); e.stopPropagation();
+      if (pal && pal.style.display === "flex") { closePalette(); } else { openPalette(); }
+    }
+  }
+
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
+    if (pal && pal.style.display === "flex") { closePalette(); return; }
     if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
@@ -4027,6 +4193,7 @@
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
     document.addEventListener("keydown", onEscKey);
+    document.addEventListener("keydown", onPaletteKey, true);   // Ctrl/Cmd+K, even while typing
     // arm the WebAudio context inside a real user gesture so later chimes can play
     document.addEventListener("pointerdown", armAudio, { once: true, capture: true });
     document.addEventListener("keydown", armAudio, { once: true, capture: true });

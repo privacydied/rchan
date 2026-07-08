@@ -1120,6 +1120,50 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .theme_dark .rchan-set-row { border-color: #2c2f3666; }
 .theme_dark .rchan-set-row:hover { background: rgba(224,108,117,.08); }
 
+/* ---------- Command palette (Ctrl+K) ---------- */
+#rchan-palette {
+  position: fixed; inset: 0; z-index: 10016; display: none;
+  align-items: flex-start; justify-content: center;
+  background: rgba(0,0,0,.4); padding-top: 12vh;
+}
+.rchan-pal-box {
+  width: 560px; max-width: 92vw; max-height: 70vh;
+  display: flex; flex-direction: column;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+}
+.rchan-pal-box input {
+  border: 0; border-bottom: 1px solid #CFCFC4; background: #fff; color: #393939;
+  font: inherit; font-size: .9rem; padding: 10px 12px; outline-offset: -2px;
+}
+.rchan-pal-list { overflow-y: auto; }
+.rchan-pal-row {
+  display: flex; align-items: baseline; gap: 8px; cursor: pointer;
+  padding: 7px 10px; border-bottom: 1px solid #CFCFC466; font-size: .833rem;
+}
+.rchan-pal-row.rchan-pal-sel { background: #DCDCCF; box-shadow: inset 3px 0 0 #c8102e; }
+.rchan-pal-kind {
+  flex: none; min-width: 52px; text-align: center;
+  font-size: x-small; font-weight: 700; text-transform: uppercase;
+  padding: 1px 5px; background: #CFCFC4; color: #393939;
+}
+.rchan-pal-watched { background: #2ea043; color: #fff; }
+.rchan-pal-action { background: #274a6b; color: #fff; }
+.rchan-pal-title { flex: none; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.rchan-pal-sub { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .7; font-size: x-small; }
+.rchan-pal-none { padding: 12px; text-align: center; opacity: .7; font-size: .833rem; }
+.theme_dark .rchan-pal-box { background: #1f2126; border-color: #2c2f36; }
+.theme_dark .rchan-pal-box input { background: #16171b; color: #c9ccd1; border-color: #2c2f36; }
+.theme_dark .rchan-pal-row { border-color: #2c2f3666; }
+.theme_dark .rchan-pal-row.rchan-pal-sel { background: #262a31; }
+.theme_dark .rchan-pal-kind { background: #2c2f36; color: #c9ccd1; }
+.theme_dark .rchan-pal-watched { background: #2ea043; color: #fff; }
+.theme_dark .rchan-pal-action { background: #274a6b; color: #fff; }
+@media (max-width: 640px) {
+  #rchan-palette { padding-top: 4vh; }
+  .rchan-pal-title { max-width: 48%; }
+}
+
 /* ---------- "?" keyboard cheat-sheet overlay ---------- */
 #rchan-keys {
   position: fixed; inset: 0; z-index: 10011; display: none;

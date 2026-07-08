@@ -155,7 +155,7 @@ body .divMessage {
    only body-size shadow that doesn't blur reading text (no blur, no dark). */
 body.theme_cream .divMessage {
   font-family: arial, helvetica, sans-serif;
-  font-size: 10px;
+  font-size: 10pt;   /* = 13.33px — matches 4chan's yotsuba body (pt, not px) */
   line-height: 1.65;
   color: #2A2620;                       /* warm charcoal, not #000 */
   text-shadow: 0 1px 0 rgba(255,255,255,.35);

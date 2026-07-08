@@ -1431,6 +1431,24 @@
     };
   }
 
+  /* ---------- Per-board accent identity ----------
+     Every board renders identically; a stable per-board hue (hash of the
+     URI, same trick as the ID pills) tints the board title so each board
+     reads as a *place*. One custom property; CSS keeps the saturation and
+     lightness on-palette per theme. Toggleable in site settings. */
+  function applyBoardAccent() {
+    var rootEl = document.documentElement;
+    var b = getBoard();
+    if (!b || b.charAt(0) === "." || !setOn("accent")) {
+      rootEl.classList.remove("rchan-accented");
+      return;
+    }
+    var h = 0;
+    for (var i = 0; i < b.length; i++) { h = (h * 31 + b.charCodeAt(i)) >>> 0; }
+    rootEl.style.setProperty("--bah", h % 360);
+    rootEl.classList.add("rchan-accented");
+  }
+
   /* ---------- Empty-state: a quiet board shouldn't read as a dead one ----------
      Zero threads on a board/catalog renders a real invitation with a CTA
      that opens the floating new-thread form, instead of engine whitespace.
@@ -2765,6 +2783,9 @@
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { t: "Board accent colors", d: "Each board tints its title with its own stable hue",
+      get: function () { return setOn("accent"); },
+      set: function (on) { setPut("accent", on); applyBoardAccent(); } },
     { t: "Loop videos", d: "Restart videos when they end (native players)",
       get: function () { try { return !JSON.parse(localStorage.noAutoLoop || "false"); } catch (e) { return true; } },
       set: function (on) {
@@ -3082,7 +3103,7 @@
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });

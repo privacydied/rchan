@@ -77,6 +77,21 @@ body .sideCatalogCell, body .small { font-size: x-small; }
 #rchan-bannerwrap + .boardHeader { margin-top: 8px; }
 body #rchan-bannerwrap + #catalogId { margin-top: .4em; }
 
+/* ---------- Per-board accent (hue set as --bah on <html> by ux.js) ----------
+   Only the HUE is per-board; saturation/lightness stay on-palette per theme,
+   so every board keeps the design system while reading as its own place. */
+.rchan-accented .boardHeader p#labelName,
+.rchan-accented #catalogId, .rchan-accented #catalogId .title, .rchan-accented #labelBoard,
+.rchan-accented .rchan-empty-title { color: hsl(var(--bah, 210), 34%, 32%); }
+.rchan-accented body.theme_dark .boardHeader p#labelName,
+.rchan-accented body.theme_dark #catalogId, .rchan-accented body.theme_dark #catalogId .title,
+.rchan-accented body.theme_dark #labelBoard,
+.rchan-accented body.theme_dark .rchan-empty-title { color: hsl(var(--bah, 210), 26%, 72%); }
+.rchan-accented #rchan-formtoggle:hover, .rchan-accented .rchan-empty-cta:hover {
+  background: hsl(var(--bah, 210), 42%, 36%); border-color: hsl(var(--bah, 210), 42%, 36%); color: #fff;
+}
+.rchan-accented #rchan-banner { border-bottom: 3px solid hsl(var(--bah, 210), 38%, 45%); }
+
 /* ---------- Board header (yotsuba: .boardTitle / .boardSubtitle) ---------- */
 .boardHeader { text-align: center; clear: both; margin-top: 70px; }
 .boardHeader p#labelName, #catalogId {

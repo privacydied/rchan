@@ -24,6 +24,7 @@ var url = require('url');
 exports.engineVersion = '2.3';
 
 var WINDOW_MS = 90 * 1000;      // a viewer counts for 90s after their last ping
+var TYPING_MS = 15 * 1000;      // a typist counts for 15s after their last typing ping
 var col = null;
 
 function collection() {
@@ -71,18 +72,32 @@ exports.formRequest = function(req, res) {
 
     var c = collection();
 
-    c.updateOne({ _id : board + '-' + thread + '-' + sid },
-        { $set : { b : board, t : thread, ts : new Date() } },
-        { upsert : true }).then(function() {
+    // typing=1 stamps a short-lived "typing" timestamp on the heartbeat;
+    // anything else clears it (stopped typing / cleared the box).
+    var docId = board + '-' + thread + '-' + sid;
+    var update = { $set : { b : board, t : thread, ts : new Date() } };
 
-      return c.countDocuments({
+    if (String(q.typing || '') === '1') {
+      update.$set.ty = new Date();
+    } else {
+      update.$unset = { ty : '' };
+    }
+
+    c.updateOne({ _id : docId }, update, { upsert : true }).then(function() {
+
+      return Promise.all([ c.countDocuments({
         b : board,
         t : thread,
         ts : { $gt : new Date(Date.now() - WINDOW_MS) }
-      });
+      }), c.countDocuments({
+        b : board,
+        t : thread,
+        _id : { $ne : docId },        // your own typing isn't news to you
+        ty : { $gt : new Date(Date.now() - TYPING_MS) }
+      }) ]);
 
-    }).then(function(n) {
-      reply(res, 200, { status : 'ok', count : n });
+    }).then(function(counts) {
+      reply(res, 200, { status : 'ok', count : counts[0], typing : counts[1] });
     })['catch'](function(e) {
       reply(res, 500, { status : 'error', data : String(e) });
     });

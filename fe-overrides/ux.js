@@ -2021,7 +2021,8 @@
      Heartbeat ping to the presence addon every 45s while the tab is visible;
      the response is how many distinct session ids pinged this thread in the
      last 90s. The count folds into updateThreadStat's line. */
-  var presenceCount = 0;
+  var presenceCount = 0, presenceTyping = 0, lastTypedAt = 0;
+  function isTypingNow() { return Date.now() - lastTypedAt < 8000; }
   function presenceSid() {
     try {
       var s = sessionStorage.getItem("rchan_sid");
@@ -2036,11 +2037,12 @@
     var b = getBoard(), t = curThreadId();
     if (!b || !t || document.hidden) { return; }
     fetch("/addon.js/presence?boardUri=" + encodeURIComponent(b) + "&threadId=" +
-          encodeURIComponent(t) + "&sid=" + presenceSid())
+          encodeURIComponent(t) + "&sid=" + presenceSid() + (isTypingNow() ? "&typing=1" : ""))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.status === "ok" && typeof d.count === "number") {
           presenceCount = d.count;
+          presenceTyping = typeof d.typing === "number" ? d.typing : 0;
           updateThreadStat();
         }
       }).catch(function () {});
@@ -2052,6 +2054,17 @@
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden) { pingPresence(); }
     });
+    // typing: stamp activity from either message box; while active, ping on a
+    // faster 8s cadence so "N typing…" appears (and expires) responsively —
+    // the server's typing window is 15s
+    document.addEventListener("input", function (e) {
+      var t2 = e.target;
+      if (!t2 || (t2.id !== "qrbody" && t2.id !== "fieldMessage")) { return; }
+      var was = isTypingNow();
+      lastTypedAt = (t2.value || "").trim() ? Date.now() : 0;
+      if (!was && isTypingNow()) { pingPresence(); }   // rising edge: announce now
+    });
+    setInterval(function () { if (isTypingNow()) { pingPresence(); } }, 8000);
   }
 
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
@@ -2073,7 +2086,8 @@
     file: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
     id: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.22-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>',
     clock: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg>',
-    anon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
+    anon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+    pen: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
   };
   function tsSeg(text, svg, label) {
     return '<span class="rchan-ts-seg" data-tooltip="' + escHtml(label) + '" aria-label="' +
@@ -2110,6 +2124,7 @@
     if (idCount) { segs.push(tsSeg(String(idCount), TS_SVG.id, idCount + (idCount === 1 ? " unique ID" : " unique IDs"))); }
     if (last) { segs.push(tsSeg(ago, TS_SVG.clock, "updated " + (ago === "now" ? "just now" : ago + " ago"))); }
     if (presenceCount) { segs.push(tsSeg(String(presenceCount), TS_SVG.anon, presenceCount + (presenceCount === 1 ? " anon here now" : " anons here now"))); }
+    if (presenceTyping) { segs.push(tsSeg(String(presenceTyping), TS_SVG.pen, presenceTyping + (presenceTyping === 1 ? " anon typing…" : " anons typing…"))); }
     el.innerHTML = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
   }
 

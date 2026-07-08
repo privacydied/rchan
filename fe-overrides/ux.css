@@ -331,6 +331,13 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 #divTools { text-align: center; margin: 4px 0 2px; font-size: .833rem; }
 #divTools input[type=text] { padding: 3px 8px; margin: 0 4px; }
 #divTools #catalogRefreshButton { padding: 3px 10px; cursor: pointer; margin: 0 4px; font: inherit; }
+/* deep search: reply-level board search toggle + status */
+#rchan-deeplab {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 6px;
+  font-size: x-small; font-weight: 700; cursor: pointer; vertical-align: middle;
+}
+#rchan-deepnote { font-size: x-small; opacity: .8; margin-left: 8px; }
+.rchan-deephide { display: none !important; }
 .theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
 
 /* ---------- Catalog grid: 4chan catalog_yotsuba_b_new.705.css, exact ----------

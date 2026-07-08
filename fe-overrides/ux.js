@@ -814,6 +814,86 @@
     }));
     threads.parentNode.insertBefore(bar, threads);
   }
+  /* ---------- Deep search: reply-level search across the whole board ----------
+     Native catalog search only sees OP subject/message. On a small board the
+     client can afford what big boards need servers for: fetch every
+     res/<id>.json once (cached for the page's life) and match the term
+     against EVERY reply's name/message/filenames. Wraps catalog.search, so
+     the native input listener drives both paths; with deep on, matching
+     hides/shows the existing DOM cells (sort order + badges survive). */
+  var DEEP_KEY = "rchan_deepsearch", deepCache = {}, deepNote = null;
+  function deepEnabled() { try { return localStorage.getItem(DEEP_KEY) === "1"; } catch (e) { return false; } }
+  function deepText(d) {
+    var parts = [];
+    function one(p) {
+      parts.push(p.subject || "", p.name || "", p.message || "");
+      (p.files || []).forEach(function (f) { parts.push(f.originalName || ""); });
+    }
+    one(d);
+    (d.posts || []).forEach(one);
+    return parts.join(" ").toLowerCase();
+  }
+  function ensureDeepData(ids, done) {
+    var b = getBoard();
+    var missing = ids.filter(function (id) { return id && deepCache[id] == null; });
+    if (!missing.length) { done(); return; }
+    if (deepNote) { deepNote.textContent = "fetching " + missing.length + " thread" + (missing.length > 1 ? "s" : "") + "…"; }
+    Promise.all(missing.map(function (id) {
+      return fetch("/" + b + "/res/" + id + ".json")
+        .then(function (r) { return r.json(); })
+        .then(function (d) { deepCache[id] = deepText(d); })
+        .catch(function () { deepCache[id] = ""; });
+    })).then(done);
+  }
+  function applyDeepSearch() {                          // true = deep handled this search
+    var field = document.getElementById("catalogSearchField");
+    if (!field) { return false; }
+    var term = field.value.trim().toLowerCase();
+    var cells = catCells();
+    if (!deepEnabled() || !term) {
+      for (var i = 0; i < cells.length; i++) { cells[i].classList.remove("rchan-deephide"); }
+      if (deepNote) { deepNote.textContent = ""; }
+      return false;
+    }
+    ensureDeepData(cells.map(catThreadId), function () {
+      var shown = 0;
+      cells.forEach(function (cell) {
+        var hit = (deepCache[catThreadId(cell)] || "").indexOf(term) > -1;
+        cell.classList.toggle("rchan-deephide", !hit);
+        if (hit) { shown++; }
+      });
+      if (deepNote) { deepNote.textContent = shown + "/" + cells.length + " threads match"; }
+    });
+    return true;
+  }
+  function hookDeepSearch() {
+    if (!isCatalog()) { return; }
+    var field = document.getElementById("catalogSearchField");
+    if (!field || document.getElementById("rchan-deeplab")) { return; }
+    var lab = document.createElement("label"); lab.id = "rchan-deeplab";
+    lab.setAttribute("data-tooltip", "Search inside every thread's replies, not just OPs");
+    var cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = deepEnabled();
+    cb.setAttribute("aria-label", "Deep search: match inside replies too");
+    lab.appendChild(cb); lab.appendChild(document.createTextNode("deep"));
+    deepNote = document.createElement("span"); deepNote.id = "rchan-deepnote";
+    field.parentNode.insertBefore(lab, field.nextSibling);
+    lab.parentNode.insertBefore(deepNote, lab.nextSibling);
+    cb.addEventListener("change", function () {
+      try { localStorage.setItem(DEEP_KEY, cb.checked ? "1" : "0"); } catch (e) {}
+      if (!applyDeepSearch() && window.catalog && catalog.search) {
+        try { catalog.search(); } catch (e2) {}
+      }
+    });
+    if (window.catalog && catalog.search && !catalog.__rchanDeep) {
+      catalog.__rchanDeep = true;
+      var orig = catalog.search;
+      catalog.search = function () {
+        if (applyDeepSearch()) { return; }              // deep handled it
+        return orig.apply(this, arguments);
+      };
+    }
+  }
+
   // prefetch a thread page when hovering its catalog cell (snappier open)
   var prefetched = {};
   function onCatHover(e) {
@@ -2840,7 +2920,7 @@
       }
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
-    [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
+    [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,

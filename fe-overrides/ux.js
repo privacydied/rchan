@@ -1758,6 +1758,78 @@
     }
   }
 
+  /* ---------- Staff quick-mod: one-click actions on post hover ----------
+     The native ⋮ menu buries delete/ban under menu → modal → submit. For
+     staff (body.rchan-staff, the same globalRole<=1 gate as the flag
+     override — server enforces regardless) each post header gets a
+     hover-revealed strip: del / ban+del / ip⌫ (wipe IP in thread). First
+     click ARMS the button ("sure?", 2.5s), second click fires through the
+     NATIVE postingMenu functions, so DOM cleanup and error handling stay
+     engine-consistent. Errors surface via the alert→toast bridge. */
+  function qmodIds(cell) {
+    var checkbox = cell.querySelector(".deletionCheckBox");
+    if (checkbox && checkbox.name) {
+      var p = checkbox.name.split("-");
+      return { board: p[0], thread: p[1], post: p[2] };            // post undefined for the OP
+    }
+    return null;
+  }
+  function qmodButton(label, title, fn) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "rchan-qmod-btn"; b.textContent = label;
+    b.setAttribute("data-tooltip", title); b.setAttribute("aria-label", title);
+    var armT = null;
+    b.addEventListener("click", function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (b.classList.contains("rchan-armed")) {
+        clearTimeout(armT);
+        b.classList.remove("rchan-armed"); b.textContent = label;
+        fn();
+        return;
+      }
+      b.classList.add("rchan-armed"); b.textContent = "sure?";
+      armT = setTimeout(function () {
+        b.classList.remove("rchan-armed"); b.textContent = label;
+      }, 2500);
+    });
+    return b;
+  }
+  function decorateQuickMod(root) {
+    if (!document.body.classList.contains("rchan-staff") || !window.postingMenu ||
+        !postingMenu.deleteSinglePost) { return; }
+    var infos = (root || document).querySelectorAll(".innerPost .postInfo.title, .innerOP .opHead.title");
+    for (var i = 0; i < infos.length; i++) {
+      var info = infos[i];
+      if (info.getAttribute("data-qmod")) { continue; }
+      info.setAttribute("data-qmod", "1");
+      if (info.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var cell = info.closest(".postCell, .opCell");
+      var ids = cell && qmodIds(cell);
+      if (!ids) { continue; }
+      var innerPart = cell.querySelector(".innerPost, .innerOP");
+      var strip = document.createElement("span");
+      strip.className = "rchan-qmod";
+      strip.appendChild(qmodButton("del", "Delete this post", (function (d, ip2) {
+        return function () { postingMenu.deleteSinglePost(d.board, d.thread, d.post, null, null, null, ip2); };
+      })(ids, innerPart)));
+      strip.appendChild(qmodButton("ban+del", "Ban the poster's IP and delete the post", (function (d, ip2) {
+        return function () {
+          // defaults: IP ban, permanent, delete the post; ban captcha is skipped
+          // for globalRole<4 (postingMenu.applySingleBan handles the rest)
+          var dummy = document.createElement("div");
+          postingMenu.applySingleBan("", 1, "rule violation (quick-mod)", "", 0, "", false, false,
+              d.board, d.thread, d.post, ip2, dummy);
+        };
+      })(ids, innerPart)));
+      strip.appendChild(qmodButton("ip⌫", "Delete every post by this IP in this thread", (function (d, ip2) {
+        return function () {
+          postingMenu.deleteSinglePost(d.board, d.thread, d.post, true, null, null, ip2, null, true);
+        };
+      })(ids, innerPart)));
+      info.appendChild(strip);
+    }
+  }
+
   /* ---------- Auto-filters: filename rules, stubs, recursive hiding ----------
      Extends the NATIVE filter machinery (settingsMenu.loadedFilters /
      localStorage.filterData, applied by hiding.js) rather than duplicating it:
@@ -2260,6 +2332,8 @@
       if (!acc || acc.status !== "ok" || !acc.data) { return; }
       if (typeof acc.data.globalRole !== "number" || acc.data.globalRole > 1) { return; }
       document.body.classList.add("rchan-staff");   // reveals staff-only controls (e.g. "No location")
+      try { refresh(); } catch (e0) {}              // class flip is an attribute change — the childList observer won't fire
+      try { decorateQuickMod(document); } catch (e1) {}
       if (document.getElementById("rchan-flagoverride")) { return; }
       fetch("/.rchan/flags.json").then(function (r) { return r.json(); }).then(function (codes) {
         var names; try { names = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { names = null; }
@@ -2715,7 +2789,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateQuickMod(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {

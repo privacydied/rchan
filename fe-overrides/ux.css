@@ -854,6 +854,21 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-idfunnel:hover { opacity: 1; color: #c8102e; }
 .rchan-idfunnel svg { display: inline-block; vertical-align: middle; }
 
+/* ---------- Staff quick-mod strip (hover-revealed, armed confirm) ---------- */
+.rchan-qmod { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+.rchan-qmod-btn {
+  cursor: pointer; padding: 0 6px; line-height: 1.5;
+  font-family: inherit; font-size: x-small; font-weight: 700;
+  color: #c8102e; background: transparent; border: 1px solid #c8102e66;
+  opacity: 0; transition: opacity .1s ease;
+}
+.innerPost:hover .rchan-qmod-btn, .innerOP:hover .rchan-qmod-btn,
+.rchan-qmod-btn:focus-visible, .rchan-qmod-btn.rchan-armed { opacity: 1; }
+.rchan-qmod-btn:hover { background: #c8102e14; }
+.rchan-qmod-btn.rchan-armed { background: #c8102e; color: #fff; border-color: #c8102e; }
+.theme_dark .rchan-qmod-btn { color: #e06c75; border-color: #e06c7566; }
+.theme_dark .rchan-qmod-btn.rchan-armed { background: #8f0c21; color: #fff; }
+
 /* ---------- Conversation view (isolate a quote chain) ---------- */
 #rchan-conv {
   position: fixed; top: 42px; left: 50%; transform: translateX(-50%);

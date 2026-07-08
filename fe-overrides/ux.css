@@ -74,7 +74,10 @@ body .sideCatalogCell, body .small { font-size: x-small; }
   margin-top: 0;
   color: #393939;
 }
-#catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader on board/thread pages */
+/* body prefix: the engine's catalog.css loads after us and sets
+   `#catalogId { margin: 1.5em 0 1em 0 }` at equal specificity — without the
+   prefix this rule (and the old 70px one) never applied. */
+body #catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader on board/thread pages */
 #catalogId .title { font-family: inherit; font-size: 28px; }
 #labelBoard { font-size: 28px; font-family: inherit; }   /* "/board/" link in the catalog heading */
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }
@@ -381,7 +384,11 @@ body.rchan-view-index .catalogCell .divMessage { max-height: 8em; overflow: hidd
 .theme_dark .quoteTooltip, .theme_dark .quoteTooltip .innerPost, .theme_dark .quoteTooltip .innerOP { background: #1f2126 !important; border-color: #2c2f36; }
 
 /* ---------- Poster ID pills ---------- */
-.labelId.rchan-idpill {
+/* posting.css (loads after us) paints .labelId white with a BLACK text-shadow
+   outline + 5px radius — unreadable with our luminance-picked black text on
+   light pills, and off-system. body prefix outranks it. */
+body .labelId {
+  text-shadow: none; border-radius: 0;
   display: inline-block; padding: 0 5px; line-height: 1.5;
   font-size: x-small; font-weight: 700; cursor: pointer;
 }

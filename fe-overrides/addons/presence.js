@@ -65,12 +65,37 @@ exports.formRequest = function(req, res) {
     var thread = String(q.threadId || '');
     var sid = String(q.sid || '');
 
-    if (!/^[a-zA-Z0-9]{1,32}$/.test(board) || !/^\d{1,12}$/.test(thread)
-        || !/^[a-z0-9]{8,40}$/i.test(sid)) {
+    if (!/^[a-z0-9]{8,40}$/i.test(sid)) {
       return reply(res, 400, { status : 'error', data : 'bad parameters' });
     }
 
     var c = collection();
+
+    // site-wide scope: ?site=1&sid=… from ANY page — "N anons browsing now".
+    // Same heartbeat mechanics, pseudo-board '@site' (no real board can have
+    // an @ in its uri), same TTL sweep.
+    if (String(q.site || '') === '1') {
+
+      return c.updateOne({ _id : 'site-' + sid },
+          { $set : { b : '@site', t : '0', ts : new Date() } },
+          { upsert : true }).then(function() {
+
+        return c.countDocuments({
+          b : '@site',
+          ts : { $gt : new Date(Date.now() - WINDOW_MS) }
+        });
+
+      }).then(function(n) {
+        reply(res, 200, { status : 'ok', count : n });
+      })['catch'](function(e) {
+        reply(res, 500, { status : 'error', data : String(e) });
+      });
+
+    }
+
+    if (!/^[a-zA-Z0-9]{1,32}$/.test(board) || !/^\d{1,12}$/.test(thread)) {
+      return reply(res, 400, { status : 'error', data : 'bad parameters' });
+    }
 
     // typing=1 stamps a short-lived "typing" timestamp on the heartbeat;
     // anything else clears it (stopped typing / cleared the box).

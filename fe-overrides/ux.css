@@ -256,6 +256,24 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 .theme_dark .pageLink, .theme_dark #divPages a { background: #1f2126; border-color: #2c2f36; }
 
+/* ---------- Site-wide presence ("N anons browsing now") ---------- */
+#rchan-sitestat {
+  text-align: center; margin: 10px auto 2px;
+  font-size: .833rem; font-weight: 700; opacity: .85;
+}
+#rchan-sitestat-nav {
+  order: 0; margin-right: auto; padding: 0 18px;
+  font-size: x-small; font-weight: 700; opacity: .85;
+  white-space: nowrap; align-self: center;
+}
+.rchan-sitedot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #2ea043; vertical-align: baseline; margin-right: 2px;
+  animation: rchan-pulse 2.2s ease-in-out infinite;
+}
+@keyframes rchan-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (max-width: 640px) { #rchan-sitestat-nav { display: none; } }
+
 /* ---------- Front page: board list as cards ---------- */
 #divBoards.topBoards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 #divBoards.topBoards a {

@@ -2220,6 +2220,58 @@
     setInterval(function () { if (isTypingNow()) { pingPresence(); } }, 8000);
   }
 
+  /* ---------- Site-wide presence: "N anons browsing now" ----------
+     Typing presence made threads feel alive; the front page and board pages
+     were still corpses. Every page heartbeats a site-scope ping (same addon,
+     pseudo-board '@site'); the homepage gets a pulsing-dot line above the
+     board list, board index/catalog pages show it in the nav. Thread pages
+     already have their own richer per-thread presence. */
+  var sitePresenceCount = 0;
+  function renderSitePresence() {
+    var n = sitePresenceCount;
+    if (!n) { return; }
+    var txt = n + (n === 1 ? " anon" : " anons") + " browsing now";
+    if (/^\/(index\.html)?$/.test(location.pathname)) {
+      var el = document.getElementById("rchan-sitestat");
+      if (!el) {
+        var anchor = document.getElementById("rchan-active") || document.getElementById("divBoards");
+        if (!anchor) { return; }
+        el = document.createElement("div"); el.id = "rchan-sitestat";
+        anchor.parentNode.insertBefore(el, anchor);
+      }
+      el.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span> ' + escHtml(txt);
+      return;
+    }
+    if (getBoard() && !curThreadId()) {
+      var nav = document.querySelector("nav, #dynamicHeader");
+      if (!nav) { return; }
+      var el2 = document.getElementById("rchan-sitestat-nav");
+      if (!el2) {
+        el2 = document.createElement("span"); el2.id = "rchan-sitestat-nav";
+        nav.insertBefore(el2, document.getElementById("navOptionsSpan") || null);
+      }
+      el2.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span> ' + escHtml(txt);
+    }
+  }
+  function pingSitePresence() {
+    if (document.hidden) { return; }
+    fetch("/addon.js/presence?site=1&sid=" + presenceSid())
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.status === "ok" && typeof d.count === "number") {
+          sitePresenceCount = d.count;
+          renderSitePresence();
+        }
+      }).catch(function () {});
+  }
+  function initSitePresence() {
+    pingSitePresence();
+    setInterval(pingSitePresence, 60000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) { pingSitePresence(); }
+    });
+  }
+
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
      "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
      worth my scroll" answer, always visible. Counts come straight from the
@@ -5029,7 +5081,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,

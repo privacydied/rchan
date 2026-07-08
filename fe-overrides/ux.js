@@ -785,7 +785,8 @@
       catMeta = {};
       (list || []).forEach(function (t) {
         catMeta[t.threadId] = { bump: Date.parse(t.lastBump) || 0, pinned: !!t.pinned,
-                                posts: t.postCount || 0, files: t.fileCount || 0 };
+                                posts: t.postCount || 0, files: t.fileCount || 0,
+                                autoSage: !!t.autoSage, cyclic: !!t.cyclic, page: t.page || 1 };
       });
       if (done) { done(); }
     }).catch(function () { catMeta = {}; if (done) { done(); } });   // no JSON -> DOM-count fallbacks
@@ -865,7 +866,10 @@
     var curSize = applyCatSize(localStorage.getItem(CAT_KEY) || "large");
     var curSort = localStorage.getItem(SORT_KEY) || "bump";
     if (SORT_MODES.indexOf(curSort) < 0) { curSort = "bump"; }
-    loadCatMeta(function () { if (curSort !== "bump") { sortCatalog(curSort); } });
+    loadCatMeta(function () {
+      if (curSort !== "bump") { sortCatalog(curSort); }
+      decorateCatalogFlags();
+    });
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
@@ -881,6 +885,31 @@
       location.href = "/" + b + "/?index";
     }));
     threads.parentNode.insertBefore(bar, threads);
+  }
+  /* ---------- Thread lifecycle chips: catalog side ----------
+     The mechanics that decide a thread's fate were invisible — regulars
+     learned about bump limit and cyclic rotation by being burned. The
+     catalog payload carries autoSage/cyclic; chip them on the cards. */
+  function decorateCatalogFlags() {
+    if (!isCatalog() || !catMeta) { return; }
+    catCells().forEach(function (cell) {
+      if (cell.getAttribute("data-flagchip")) { return; }
+      var m = catMeta[catThreadId(cell)];
+      if (!m) { return; }
+      cell.setAttribute("data-flagchip", "1");
+      if (!m.autoSage && !m.cyclic) { return; }
+      var stats = cell.getElementsByClassName("threadStats")[0] || cell;
+      function chip(text, label, warn) {
+        var s = document.createElement("span");
+        s.className = "rchan-flagchip" + (warn ? " rchan-ts-warn" : "");
+        s.textContent = text;
+        s.setAttribute("data-tooltip", label);
+        s.setAttribute("aria-label", label);
+        stats.appendChild(s);
+      }
+      if (m.autoSage) { chip("bump limit", "Bump limit reached — replies no longer bump this thread", true); }
+      if (m.cyclic) { chip("cyclic", "Cyclic thread — oldest replies rotate out"); }
+    });
   }
   /* ---------- Deep search: reply-level search across the whole board ----------
      Native catalog search only sees OP subject/message. On a small board the
@@ -2298,6 +2327,28 @@
     return '<span class="rchan-ts-seg" data-tooltip="' + escHtml(label) + '" aria-label="' +
            escHtml(label) + '">' + escHtml(text) + " " + svg + "</span>";
   }
+  function tsChip(text, label, warn) {
+    return '<span class="rchan-ts-chip' + (warn ? " rchan-ts-warn" : "") + '" data-tooltip="' +
+           escHtml(label) + '" aria-label="' + escHtml(label) + '">' + escHtml(text) + "</span>";
+  }
+  // Thread lifecycle (thread-page side): one catalog.json fetch resolves this
+  // thread's autoSage/cyclic flags + its page position for the status line.
+  var threadFlags = null;
+  function initThreadFlags() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t || b.charAt(0) === "." || isOverboard(b)) { return; }
+    fetch("/" + b + "/catalog.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (list) {
+      if (!list) { return; }
+      var maxPage = 1, mine = null;
+      list.forEach(function (e) {
+        if ((e.page || 1) > maxPage) { maxPage = e.page; }
+        if (String(e.threadId) === String(t)) { mine = e; }
+      });
+      if (!mine) { return; }
+      threadFlags = { autoSage: !!mine.autoSage, cyclic: !!mine.cyclic, page: mine.page || 1, maxPage: maxPage };
+      updateThreadStat();
+    }).catch(function () {});
+  }
   function updateThreadStat() {
     if (!curThreadId()) { return; }
     var nav = document.querySelector("nav, #dynamicHeader");
@@ -2330,6 +2381,14 @@
     if (last) { segs.push(tsSeg(ago, TS_SVG.clock, "updated " + (ago === "now" ? "just now" : ago + " ago"))); }
     if (presenceCount) { segs.push(tsSeg(String(presenceCount), TS_SVG.anon, presenceCount + (presenceCount === 1 ? " anon here now" : " anons here now"))); }
     if (presenceTyping) { segs.push(tsSeg(String(presenceTyping), TS_SVG.pen, presenceTyping + (presenceTyping === 1 ? " anon typing…" : " anons typing…"))); }
+    if (threadFlags) {
+      if (threadFlags.autoSage) { segs.push(tsChip("bump limit", "Bump limit reached — replies no longer bump this thread", true)); }
+      if (threadFlags.cyclic) { segs.push(tsChip("cyclic", "Cyclic thread — oldest replies rotate out")); }
+      var lastPage = threadFlags.page === threadFlags.maxPage && threadFlags.maxPage >= 9;
+      segs.push(tsChip("p." + threadFlags.page + "/" + threadFlags.maxPage,
+        lastPage ? "On the board's last page — will prune soon" : "Catalog page " + threadFlags.page + " of " + threadFlags.maxPage,
+        lastPage));
+    }
     el.innerHTML = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
   }
 
@@ -5015,7 +5074,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -5081,7 +5140,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,

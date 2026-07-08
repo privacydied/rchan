@@ -225,6 +225,22 @@ body #navLinkSpan { order: 2; }
 #rchan-threadstat .rchan-ts-seg { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
 #rchan-threadstat .rchan-ts-seg svg { display: block; flex: none; opacity: .7; }
 #rchan-threadstat .rchan-ts-dot { margin: 0 6px; opacity: .55; }
+/* lifecycle chips (bump limit / cyclic / page position) */
+.rchan-ts-chip, .rchan-flagchip {
+  display: inline-block; padding: 0 6px; vertical-align: middle;
+  background: #DCDCCF; color: #393939; border: 1px solid #CFCFC4;
+  font-size: x-small; font-weight: 700; white-space: nowrap; cursor: default;
+}
+.rchan-flagchip { margin-left: 5px; }
+.rchan-ts-chip.rchan-ts-warn, .rchan-flagchip.rchan-ts-warn {
+  background: #c8102e; color: #fff; border-color: #c8102e;
+}
+.theme_dark .rchan-ts-chip, .theme_dark .rchan-flagchip {
+  background: #262a31; color: #c9ccd1; border-color: #333;
+}
+.theme_dark .rchan-ts-chip.rchan-ts-warn, .theme_dark .rchan-flagchip.rchan-ts-warn {
+  background: #8f0c21; color: #fff; border-color: #8f0c21;
+}
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
 /* footer (4chan #absbot: x-small) */

@@ -114,6 +114,9 @@
       bell.id = "rchan-bellbtn";
       if (localStorage.getItem(NOTIFY_KEY) === "1") { bell.classList.add("rchan-on"); }
     }
+    var SVG_INBOX = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>';
+    var inbox = btn(SVG_INBOX + "<span></span>", "Replies to your posts", toggleYoubox);
+    inbox.id = "rchan-youboxbtn";
     btn(SVG_GEAR, "Site settings", toggleSetPanel);
     btn(SVG_CLOCK, "Recently visited threads", toggleHistPanel);
     btn(SVG_DOWN, "Bottom", function () {
@@ -1323,10 +1326,14 @@
         if (!mineSet[String(id)] && quotesMine(posts[i], mineSet)) {
           youNew++;
           if (!firstYou) { firstYou = posts[i]; }
+          // persist into the (You) inbox; already-read when you're looking at it
+          var msgEl = posts[i].querySelector(".divMessage");
+          youboxAdd(board, tid, id, msgEl ? msgEl.textContent : "", Date.now(), !document.hidden);
         }
       }
     }
-    if (youNew > 0) { youChime(); }
+    if (youNew > 0) { youChime(); updateYouboxBadge(); }
+    if (!document.hidden) { youboxMarkThreadRead(board, tid); }   // being here = reading it
     if (firstNew && !document.getElementById("rchan-newline")) {
       var d = document.createElement("div"); d.id = "rchan-newline";
       d.textContent = newCount + " new post" + (newCount > 1 ? "s" : "") + " since last visit";
@@ -1481,6 +1488,151 @@
     }
     youBtn.style.display = "";
     youBtn.lastChild.textContent = youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
+  }
+
+  /* ---------- (You) inbox: replies to your posts, persisted ----------
+     Notifications are ephemeral and scanRepliesToYou only sees the open page —
+     miss the toast and a reply to you is silently gone. The native watcher
+     already fetches every watched thread's full JSON every poll; scan those
+     posts for quotes of your recorded (You) ids and persist the hits. Opening
+     the thread marks its entries read, like any inbox. Combined with
+     auto-watch, every reply to anything you posted lands here. */
+  var YOUBOX_KEY = "rchan_youbox", YOUBOX_MAX = 200;
+  function youboxAll() { try { return JSON.parse(localStorage.getItem(YOUBOX_KEY) || "{}"); } catch (e) { return {}; } }
+  function youboxSave(o) {
+    var keys = Object.keys(o);
+    if (keys.length > YOUBOX_MAX) {                              // prune oldest
+      keys.sort(function (a, b) { return (o[a].ts || 0) - (o[b].ts || 0); });
+      for (var i = 0; i < keys.length - YOUBOX_MAX; i++) { delete o[keys[i]]; }
+    }
+    try { localStorage.setItem(YOUBOX_KEY, JSON.stringify(o)); } catch (e) {}
+  }
+  function youboxAdd(b, t, p, snippet, ts, read) {
+    var o = youboxAll(), key = b + "/" + t + "/" + p;
+    if (o[key]) { return false; }
+    o[key] = { b: b, t: String(t), p: String(p),
+               s: String(snippet || "").replace(/\s+/g, " ").trim().slice(0, 90),
+               ts: ts || Date.now(), r: read ? 1 : 0 };
+    youboxSave(o);
+    return true;
+  }
+  function youboxMarkThreadRead(b, t) {
+    var o = youboxAll(), changed = false;
+    Object.keys(o).forEach(function (k) {
+      if (o[k].b === b && o[k].t === String(t) && !o[k].r) { o[k].r = 1; changed = true; }
+    });
+    if (changed) { youboxSave(o); updateYouboxBadge(); }
+  }
+  function youboxUnread() {
+    var o = youboxAll(), n = 0;
+    Object.keys(o).forEach(function (k) { if (!o[k].r) { n++; } });
+    return n;
+  }
+  function updateYouboxBadge() {
+    var btn = document.getElementById("rchan-youboxbtn");
+    if (!btn) { return; }
+    var n = youboxUnread();
+    btn.lastChild.textContent = n ? (n > 99 ? "99+" : String(n)) : "";
+    btn.classList.toggle("rchan-on", n > 0);
+  }
+  // Scan a thread's posts (watcher poll JSON) for quotes of your (You) ids
+  function scanPostsForYou(b, t, posts) {
+    var mine = load(YOU_KEY);
+    if (!mine.length || !posts || !posts.length) { return; }
+    var set = {};
+    for (var i = 0; i < mine.length; i++) { set[mine[i]] = 1; }
+    var added = 0;
+    for (var j = 0; j < posts.length; j++) {
+      var p = posts[j], pid = String(p.postId);
+      if (set[pid]) { continue; }                                // your own post
+      var quotes = (p.message || "").match(/>>(\d+)/g) || [];
+      for (var q = 0; q < quotes.length; q++) {
+        if (set[quotes[q].slice(2)]) {
+          if (youboxAdd(b, t, pid, p.message, Date.parse(p.creation) || Date.now(),
+                        b === getBoard() && String(t) === curThreadId() && !document.hidden)) { added++; }
+          break;
+        }
+      }
+    }
+    if (added) { updateYouboxBadge(); }
+  }
+  function hookYouboxScan() {
+    var w = window.watcher;
+    if (!w || !w.processThread || w.__rchanYoubox) { return; }
+    w.__rchanYoubox = true;
+    var orig = w.processThread;
+    w.processThread = function (urls, index, data) {
+      try {
+        var u = urls[index];
+        var d = JSON.parse(data);
+        scanPostsForYou(u.board, String(u.thread), d.posts || []);
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    };
+  }
+  var youboxPanel = null;
+  function renderYoubox() {
+    var list = youboxPanel.lastChild;
+    var o = youboxAll();
+    var entries = Object.keys(o).map(function (k) { return o[k]; })
+      .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    list.innerHTML = "";
+    if (!entries.length) {
+      var empty = document.createElement("div"); empty.className = "rchan-hist-empty";
+      empty.textContent = "No replies to your posts yet";
+      list.appendChild(empty);
+      return;
+    }
+    entries.forEach(function (e) {
+      var row = document.createElement("a");
+      row.className = "rchan-hist-row rchan-yb-row" + (e.r ? "" : " rchan-yb-unread");
+      row.href = "/" + e.b + "/res/" + e.t + ".html#" + e.p;
+      var title = document.createElement("span"); title.className = "rchan-hist-title";
+      title.textContent = "/" + e.b + "/ · " + (e.s || (">>" + e.p));
+      var meta = document.createElement("span"); meta.className = "rchan-hist-meta";
+      meta.textContent = fmtAgo(e.ts);
+      meta.setAttribute("data-ts", e.ts);
+      row.appendChild(title); row.appendChild(meta);
+      row.addEventListener("click", function () {                // navigating = reading
+        var cur = youboxAll(), k = e.b + "/" + e.t + "/" + e.p;
+        if (cur[k] && !cur[k].r) { cur[k].r = 1; youboxSave(cur); updateYouboxBadge(); }
+      });
+      list.appendChild(row);
+    });
+  }
+  function toggleYoubox() {
+    if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; return; }
+    if (!youboxPanel) {
+      youboxPanel = document.createElement("div"); youboxPanel.id = "rchan-youbox";
+      youboxPanel.setAttribute("role", "dialog"); youboxPanel.setAttribute("aria-label", "Replies to your posts");
+      var head = document.createElement("div"); head.className = "rchan-hist-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Replies to you";
+      var mark = document.createElement("button"); mark.type = "button"; mark.className = "rchan-hist-clear";
+      mark.textContent = "Mark read";
+      mark.addEventListener("click", function () {
+        var o = youboxAll();
+        Object.keys(o).forEach(function (k) { o[k].r = 1; });
+        youboxSave(o); updateYouboxBadge(); renderYoubox();
+      });
+      var clr = document.createElement("button"); clr.type = "button"; clr.className = "rchan-hist-clear";
+      clr.textContent = "Clear";
+      clr.addEventListener("click", function () {
+        try { localStorage.removeItem(YOUBOX_KEY); } catch (e) {}
+        updateYouboxBadge(); renderYoubox();
+      });
+      head.appendChild(ttl); head.appendChild(mark); head.appendChild(clr);
+      youboxPanel.appendChild(head);
+      youboxPanel.appendChild(document.createElement("div"));    // list container (lastChild)
+      document.body.appendChild(youboxPanel);
+      document.addEventListener("click", function (ev) {         // click-away closes
+        if (youboxPanel.style.display !== "block") { return; }
+        var t2 = ev.target;
+        if (youboxPanel.contains(t2) || (t2.closest && t2.closest("#rchan-nav"))) { return; }
+        youboxPanel.style.display = "none";
+      }, true);
+    }
+    renderYoubox();
+    youboxPanel.style.display = "block";
   }
 
   /* ---------- Recently visited threads: history panel (🕘 in the nav column) ----------
@@ -3957,6 +4109,7 @@
       add("action", "Filter posts in this thread", "find bar (f)", function () { toggleFind(); });
       add("action", "Expand all images", "this thread (e per post)", function () { setExpandAll(!expandAllOn); });
     }
+    add("action", "Replies to you", "the (You) inbox" + (youboxUnread() ? " — " + youboxUnread() + " unread" : ""), toggleYoubox);
     add("action", "Recent threads panel", "history (🕘)", toggleHistPanel);
     add("action", "Backup my rchan data", "download a merge-safe JSON", exportData);
     add("action", "Home", "front page", "/");
@@ -4093,6 +4246,7 @@
     if (pal && pal.style.display === "flex") { closePalette(); return; }
     if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
+    if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
     if (convRoot) { closeConv(); return; }
     if (findBar && findBar.style.display === "flex") { closeFind(); return; }
@@ -4370,6 +4524,14 @@
     // arm the WebAudio context inside a real user gesture so later chimes can play
     document.addEventListener("pointerdown", armAudio, { once: true, capture: true });
     document.addEventListener("keydown", armAudio, { once: true, capture: true });
+    // (You) inbox: other tabs' scans update our badge; returning to a thread reads it
+    window.addEventListener("storage", function (e) {
+      if (e.key === YOUBOX_KEY) { updateYouboxBadge(); }
+    });
+    document.addEventListener("visibilitychange", function () {
+      var b = getBoard(), t = curThreadId();
+      if (!document.hidden && b && t) { youboxMarkThreadRead(b, t); }
+    });
     // remember hide-menu clicks so hookHideUndo can tell user hides from
     // the silent stored-hide re-application at load/refresh
     document.addEventListener("click", function (e) {
@@ -4386,7 +4548,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,

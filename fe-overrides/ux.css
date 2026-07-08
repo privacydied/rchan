@@ -938,8 +938,8 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
-/* ---------- Recently visited threads panel (🕘 in the nav column) ---------- */
-#rchan-hist {
+/* ---------- Recently visited threads panel (🕘) + (You) inbox (✉) ---------- */
+#rchan-hist, #rchan-youbox {
   position: fixed; right: 60px; bottom: 12px; z-index: 10004;
   width: 340px; max-width: 92vw; max-height: 60vh;
   display: none; overflow: auto;
@@ -947,6 +947,19 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
   font-size: .833rem;
 }
+/* inbox rows: unread gets weight + a green edge; head fits two buttons */
+#rchan-youbox .rchan-hist-head { gap: 10px; }
+#rchan-youbox .rchan-hist-head span { margin-right: auto; }
+.rchan-yb-unread { font-weight: 700; box-shadow: inset 3px 0 0 #2ea043; }
+/* unread count bubble on the nav envelope */
+#rchan-youboxbtn { position: relative; }
+#rchan-youboxbtn > span {
+  position: absolute; top: -4px; right: -4px; pointer-events: none;
+  min-width: 15px; height: 15px; line-height: 15px; padding: 0 2px;
+  border-radius: 8px; background: #c8102e; color: #fff;
+  font-size: 10px; font-weight: 700; text-align: center;
+}
+#rchan-youboxbtn > span:empty { display: none; }
 .rchan-hist-head {
   position: sticky; top: 0; z-index: 1;
   display: flex; align-items: center; justify-content: space-between;
@@ -976,7 +989,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 .rchan-hist-x:hover { opacity: 1; color: #c8102e; }
 .rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .85; text-align: center; }
-.theme_dark #rchan-hist { background: #16171b; border-color: #2c2f36; }
+.theme_dark #rchan-hist, .theme_dark #rchan-youbox { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-hist-head { background: #262a31; border-color: #2c2f36; }
 .theme_dark .rchan-hist-row { border-color: #2c2f3666; }
 .theme_dark .rchan-hist-row:hover { background: rgba(224,108,117,.1); }
@@ -1458,7 +1471,7 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   .rchan-idfunnel { padding: 4px 6px; }
   .rchan-idfunnel svg { width: 14px; height: 14px; }
   /* floating panels: hug the small screen instead of the desktop offsets */
-  #rchan-hist, #rchan-set { right: 8px; left: 8px; width: auto; max-height: 62vh; }
+  #rchan-hist, #rchan-set, #rchan-youbox { right: 8px; left: 8px; width: auto; max-height: 62vh; }
   #rchan-find { left: 8px; right: 8px; transform: none; max-width: none; top: 46px; }
   #rchan-find input { flex: 1; width: auto; max-width: none; min-width: 0; }
   /* catalog toolbar dropdowns: finger-sized */

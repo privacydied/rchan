@@ -151,16 +151,14 @@ body .divMessage {
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-/* cream: Claude-register body copy. The "depth" here is NOT a shadow (shadow on
-   reading-size text just blurs it) — it's a serif with real stroke contrast, a
-   warm near-black on the ivory ground, generous leading, and font smoothing. */
+/* cream: body copy in Arial with a whisper of white edge-catch for lift — the
+   only body-size shadow that doesn't blur reading text (no blur, no dark). */
 body.theme_cream .divMessage {
-  font-family: "Hedvig Letters Serif", Georgia, "Times New Roman", serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 15px;
   line-height: 1.65;
   color: #2A2620;                       /* warm charcoal, not #000 */
-  -webkit-font-smoothing: antialiased;  /* thins strokes slightly — the "book page" feel */
-  text-rendering: optimizeLegibility;   /* kerning/ligatures in the serif */
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
 }
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
 .linkName, .labelName { color: #3a6b2e; font-weight: 700; }
@@ -1030,8 +1028,6 @@ body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
    ========================================================================== */
 /* Linux Libertine 5.3.0 (SIL OFL 1.1) — humanist old-style serif w/ true
    italics, real bold, and small-caps. Subset to latin+punctuation, TTF->woff2. */
-/* Hedvig Letters Serif (SIL OFL 1.1, self-hosted) — Cream theme body serif. */
-@font-face { font-family: "Hedvig Letters Serif"; font-weight: 400; font-style: normal; font-display: swap; src: url("/.rchan/hedvig-serif.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 400; font-style: normal; font-display: swap; src: url("/.rchan/ll-regular.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 400; font-style: italic;  font-display: swap; src: url("/.rchan/ll-italic.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 700; font-style: normal; font-display: swap; src: url("/.rchan/ll-bold.woff2") format("woff2"); }

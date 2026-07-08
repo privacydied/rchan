@@ -606,7 +606,7 @@
   var SORT_MODES = ["bump", "lastreply", "longreply", "new", "replies", "images", "ppm"];
   var SORT_NAMES = { bump: "Bump order", lastreply: "Last reply", longreply: "Last long reply",
                      "new": "Creation date", replies: "Reply count", images: "File count", ppm: "Posts per minute" };
-  var VIEW_KEY = "rchan_catview", VIEW_MODES = ["catalog", "index"], VIEW_NAMES = { catalog: "Catalog", index: "Index" };
+  var VIEW_MODES = ["catalog", "index"], VIEW_NAMES = { catalog: "Catalog", index: "Index" };
   var LONG_REPLY_MIN = 400;   // chars — what counts as a "real" reply for Last long reply
   function applyCatSize(sz) {
     if (sz === "s" || sz === "m") { sz = "small"; }            // migrate old s/m/l/xl values
@@ -614,11 +614,6 @@
     document.body.classList.remove("rchan-cat-s", "rchan-cat-m", "rchan-cat-l", "rchan-cat-xl");
     document.body.classList.add(CAT_CLASS[sz]);
     return sz;
-  }
-  function applyCatView(v) {
-    if (VIEW_MODES.indexOf(v) < 0) { v = "catalog"; }
-    document.body.classList.toggle("rchan-view-index", v === "index");
-    return v;
   }
   var catalogOrig = null, catMeta = null, catDetails = {};
   function catCells() { var t = document.getElementById("divThreads"); return t ? Array.prototype.slice.call(t.getElementsByClassName("catalogCell")) : []; }
@@ -709,7 +704,6 @@
   function buildCatalogTools() {
     if (!isCatalog()) { return; }
     var curSize = applyCatSize(localStorage.getItem(CAT_KEY) || "large");
-    var curView = applyCatView(localStorage.getItem(VIEW_KEY) || "catalog");
     var curSort = localStorage.getItem(SORT_KEY) || "bump";
     if (SORT_MODES.indexOf(curSort) < 0) { curSort = "bump"; }
     loadCatMeta(function () { if (curSort !== "bump") { sortCatalog(curSort); } });
@@ -718,7 +712,15 @@
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
     bar.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
     bar.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
-    bar.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, curView, function (v) { localStorage.setItem(VIEW_KEY, v); applyCatView(v); }));
+    // "Index" = the REAL old-school board index (OP + last replies, pages) at
+    // /<board>/?index — not a CSS re-layout of the catalog cells. Remember the
+    // choice as the preferred board landing view (same cookie toggleCatalog sets).
+    bar.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, "catalog", function (v) {
+      if (v !== "index") { return; }
+      var b = getBoard(); if (!b) { return; }
+      try { document.cookie = "rchan_view=index; path=/; max-age=31536000; SameSite=Lax"; } catch (e) {}
+      location.href = "/" + b + "/?index";
+    }));
     threads.parentNode.insertBefore(bar, threads);
   }
   // prefetch a thread page when hovering its catalog cell (snappier open)

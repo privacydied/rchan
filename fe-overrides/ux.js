@@ -2392,6 +2392,127 @@
     el.innerHTML = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
   }
 
+  /* ---------- Sticky OP: keep the thread's context while scrolled deep ----------
+     Once the OP leaves the viewport, a slim bar under the nav shows its thumb
+     + subject; click jumps back to the top. IntersectionObserver-driven, so
+     it costs nothing while the OP is visible. ---------- */
+  function initStickyOp() {
+    if (!curThreadId() || !window.IntersectionObserver) { return; }
+    var op = document.querySelector(".innerOP");
+    if (!op) { return; }
+    var bar = null;
+    function build() {
+      bar = document.createElement("button");
+      bar.id = "rchan-stickyop"; bar.type = "button";
+      bar.setAttribute("aria-label", "Back to the start of the thread");
+      bar.setAttribute("data-tooltip", "Back to the OP");
+      var img = op.querySelector(".imgLink img, img.imgLink");
+      if (img && img.getAttribute("src")) {
+        var th = document.createElement("img");
+        th.src = img.getAttribute("src"); th.alt = "";
+        bar.appendChild(th);
+      }
+      var txt = document.createElement("span");
+      txt.textContent = threadTitle();
+      bar.appendChild(txt);
+      bar.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: SB }); });
+      document.body.appendChild(bar);
+    }
+    var io = new IntersectionObserver(function (entries) {
+      var e = entries[0];
+      var show = !e.isIntersecting && e.boundingClientRect.bottom < 0 && setOn("stickyop");
+      if (show && !bar) { build(); }
+      if (bar) { bar.style.display = show ? "flex" : "none"; }
+    });
+    io.observe(op);
+  }
+
+  /* ---------- Thread minimap: the whole thread at a glance ----------
+     j/k, find and conversation view are all LOCAL moves; a 400-post thread
+     had no global structure. A thin canvas on the right edge maps every post
+     to a tick — your posts red, replies to you green, image posts amber —
+     with a translucent viewport window. Click or drag to jump. Desktop only,
+     threads of 30+ posts, toggleable. ---------- */
+  var mmap = null, mmapCv = null, mmapPosts = null, mmapDoc = 1, mmapRaf = 0;
+  var MMAP_COLORS = ["rgba(120,120,120,.55)", "#d29a2b", "#2ea043", "#c8102e"];
+  function mmapCollect() {
+    var cells = document.querySelectorAll(".opCell, .postCell");
+    if (cells.length < 30) { mmapPosts = null; if (mmap) { mmap.style.display = "none"; } return; }
+    var mine = load(YOU_KEY), set = {};
+    for (var m = 0; m < mine.length; m++) { set[mine[m]] = 1; }
+    var arr = [];
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i].offsetParent === null) { continue; }            // hidden/filtered
+      var r = cells[i].getBoundingClientRect();
+      var inner = cells[i].querySelector(".innerPost, .innerOP");
+      var kind = 0;
+      if (inner && inner.classList.contains("rchan-you")) { kind = 3; }
+      else if (quotesMine(cells[i], set)) { kind = 2; }
+      else if (findImgLink(cells[i])) { kind = 1; }
+      arr.push({ y: r.top + (window.scrollY || 0), k: kind });
+    }
+    mmapPosts = arr;
+    mmapDoc = Math.max(1, document.documentElement.scrollHeight);
+    if (mmap) { mmap.style.display = ""; }
+  }
+  function mmapDraw() {
+    mmapRaf = 0;
+    if (!mmapCv || !mmapPosts || !setOn("minimap")) { return; }
+    var W = mmapCv.width, H = mmapCv.height;
+    var x = mmapCv.getContext("2d");
+    x.clearRect(0, 0, W, H);
+    for (var i = 0; i < mmapPosts.length; i++) {
+      var p = mmapPosts[i];
+      x.fillStyle = MMAP_COLORS[p.k];
+      x.fillRect(1, Math.round(p.y / mmapDoc * H), W - 2, p.k ? 3 : 2);
+    }
+    var vy = (window.scrollY || 0) / mmapDoc * H;
+    var vh = Math.max(8, window.innerHeight / mmapDoc * H);
+    x.fillStyle = "rgba(39,74,107,.18)";
+    x.fillRect(0, vy, W, vh);
+    x.strokeStyle = "rgba(39,74,107,.6)";
+    x.strokeRect(0.5, vy + 0.5, W - 1, vh - 1);
+  }
+  function mmapQueue() { if (!mmapRaf) { mmapRaf = requestAnimationFrame(mmapDraw); } }
+  function mmapJump(e) {
+    var r = mmapCv.getBoundingClientRect();
+    var frac = (e.clientY - r.top) / r.height;
+    window.scrollTo({ top: Math.max(0, frac * mmapDoc - window.innerHeight / 2) });
+  }
+  function initMinimap() {
+    if (!curThreadId() || !setOn("minimap")) { return; }
+    if (!(window.matchMedia && matchMedia("(min-width: 1000px)").matches)) { return; }
+    if (document.getElementById("rchan-minimap")) { return; }
+    mmap = document.createElement("div"); mmap.id = "rchan-minimap";
+    mmap.setAttribute("aria-hidden", "true");                      // pointer shortcut, not the primary nav
+    mmapCv = document.createElement("canvas");
+    mmap.appendChild(mmapCv);
+    document.body.appendChild(mmap);
+    function size() {
+      mmapCv.width = mmap.offsetWidth || 14;
+      mmapCv.height = mmap.offsetHeight || 300;
+    }
+    size();
+    mmapCollect();
+    if (!mmapPosts) { return; }                                    // under 30 posts: stays hidden until WS grows it
+    mmapDraw();
+    var drag = false;
+    mmapCv.addEventListener("pointerdown", function (e) {
+      drag = true; mmapJump(e);
+      try { mmapCv.setPointerCapture(e.pointerId); } catch (e2) {}
+      e.preventDefault();
+    });
+    mmapCv.addEventListener("pointermove", function (e) { if (drag) { mmapJump(e); } });
+    mmapCv.addEventListener("pointerup", function () { drag = false; });
+    window.addEventListener("scroll", mmapQueue, { passive: true });
+    window.addEventListener("resize", function () { size(); mmapCollect(); mmapQueue(); });
+  }
+  function refreshMinimap() {                                      // called from refresh(): new posts shift everything
+    if (!mmap) { return; }
+    mmapCollect();
+    mmapQueue();
+  }
+
   /* ---------- Find-in-thread: live post filter ----------
      `f` (or the magnifier in the nav) opens a bar that COLLAPSES non-matching
      posts instead of fighting Ctrl+F's lazy rendering. Plain text searches
@@ -3854,6 +3975,8 @@
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
+    { k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
+    { k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
     { t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },
@@ -5074,7 +5197,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -5140,7 +5263,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,

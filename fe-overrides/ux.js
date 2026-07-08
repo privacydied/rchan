@@ -56,6 +56,7 @@
   var SVG_PEN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
   var SVG_BELL = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>';
   var SVG_CLOCK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg>';
+  var SVG_GEAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.484.484 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.61 3.61 0 0 1 8.4 12c0-1.98 1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>';
   function isCatalog() { return /\/catalog(\.html)?$/.test(location.pathname); }
   function toggleCatalog() {
     var b = getBoard();
@@ -108,8 +109,10 @@
           if (p === "granted") { localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on"); }
         });
       });
+      bell.id = "rchan-bellbtn";
       if (localStorage.getItem(NOTIFY_KEY) === "1") { bell.classList.add("rchan-on"); }
     }
+    btn(SVG_GEAR, "Site settings", toggleSetPanel);
     btn(SVG_CLOCK, "Recently visited threads", toggleHistPanel);
     btn(SVG_DOWN, "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
@@ -207,6 +210,7 @@
   }
   var draftT = null;
   function saveDraftFrom(el) {
+    if (!setOn("drafts")) { return; }
     clearTimeout(draftT);
     draftT = setTimeout(function () {
       var key = draftKey(); if (!key) { return; }
@@ -226,7 +230,7 @@
     if (!msg || msg.getAttribute("data-draft")) { return; }
     msg.setAttribute("data-draft", "1");
     try {
-      var d = localStorage.getItem(key);
+      var d = setOn("drafts") ? localStorage.getItem(key) : null;
       if (d && !msg.value) {
         msg.value = d;
         msg.dispatchEvent(new Event("input", { bubbles: true }));  // syncs #qrbody + counters
@@ -360,6 +364,7 @@
     return null;
   }
   function onOver(e) {
+    if (!setOn("hoverzoom")) { return; }
     var img = e.target;
     if (!img || img.tagName !== "IMG") { return; }
     var a = (img.closest && img.closest("a")) || img.parentNode;
@@ -419,6 +424,7 @@
     vidzoom.removeAttribute("src"); vidzoom.load();   // stop buffering the file
   }
   function onVidOver(e) {
+    if (!setOn("vidpop")) { return; }
     var img = e.target;
     if (!img || img.tagName !== "IMG") { return; }     // only the thumbnail image, like image-zoom
     var info = videoUrlFor(img); if (!info) { return; }
@@ -485,6 +491,7 @@
      no-op on a static-positioned div). Modified clicks (ctrl/middle/…) keep
      native navigation. This is also how touch users read quote chains. */
   function onQuoteClick(e) {
+    if (!setOn("inlinequote")) { return; }             // off: native jump
     if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
     var a = e.target && e.target.closest ? e.target.closest(".quoteLink, .panelBacklinks a") : null;
     if (!a || a.closest(".quoteTooltip")) { return; }         // inside a hover preview: leave native
@@ -573,6 +580,8 @@
   }
   function onKey(e) {
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) { return; }
+    if (e.key === "?") { toggleKeysOverlay(); e.preventDefault(); return; }   // always available
+    if (!setOn("keys")) { return; }
     if (e.key === "t") { window.scrollTo({ top: 0, behavior: SB }); }
     else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: SB }); }
     else if (e.key === "c") { toggleCatalog(); }
@@ -760,6 +769,7 @@
     catPrev.style.top = y + "px";
   }
   function onCatPrevOver(e, fromTap) {
+    if (!setOn("catprev")) { return; }
     // touch taps fire a synthesized mouseover BEFORE click; if that path set
     // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
     if (TOUCH_ONLY && !fromTap) { return; }
@@ -788,6 +798,7 @@
   // last-replies preview, second tap (same cell) navigates into the thread.
   // Tapping anywhere else dismisses the preview.
   function onCatTap(e) {
+    if (!setOn("catprev")) { return; }                 // previews off: first tap navigates
     if (!TOUCH_ONLY || !isCatalog()) { return; }
     var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
     if (!a) {
@@ -1662,6 +1673,157 @@
     }
   }
 
+  /* ---------- Unified settings panel (gear in the nav column) + "?" cheat-sheet ----------
+     Every rchan toggle in ONE discoverable place. Feature guards read setOn()
+     at event time, so changes apply instantly — no reload. Two rows bridge
+     NATIVE storage (relativeTime, rchan_notify) instead of duplicating it. */
+  var SET_NS = "rchan_set_";
+  function setOn(k) {
+    try { var v = localStorage.getItem(SET_NS + k); return v === null ? true : v === "1"; }
+    catch (e) { return true; }
+  }
+  function setPut(k, on) { try { localStorage.setItem(SET_NS + k, on ? "1" : "0"); } catch (e) {} }
+  function syncBell(on) {
+    var b = document.getElementById("rchan-bellbtn");
+    if (b) { b.classList.toggle("rchan-on", on); }
+  }
+  var SET_ROWS = [
+    { k: "hoverzoom", t: "Image hover zoom", d: "Full-size floating preview while hovering a thumbnail" },
+    { k: "vidpop", t: "Video hover pop-out", d: "Muted autoplay preview while hovering a video thumbnail" },
+    { k: "catprev", t: "Catalog thread previews", d: "Last replies shown when hovering (or tapping) a catalog card" },
+    { k: "inlinequote", t: "Inline quote expansion", d: "Click a >>quote to embed the post instead of jumping to it" },
+    { k: "keys", t: "Keyboard shortcuts", d: "j/k posts · t/b top/bottom · c catalog · r reply — press ? for the full list" },
+    { k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
+    { t: "Relative timestamps", d: "“14 minutes ago” next to post dates",
+      get: function () { try { return JSON.parse(localStorage.relativeTime || "true"); } catch (e) { return true; } },
+      set: function (on) {
+        try { localStorage.relativeTime = on ? "true" : "false"; } catch (e) {}
+        if (on) { enableRelativeTimes(); return; }
+        if (relTimer) { clearInterval(relTimer); relTimer = null; }
+        var els = document.getElementsByClassName("relativeTime");
+        for (var i = els.length - 1; i >= 0; i--) { els[i].parentNode.removeChild(els[i]); }
+      } },
+    { t: "Desktop notifications", d: "System notification when a hidden tab's thread gets replies (same as the bell button)",
+      get: function () { try { return localStorage.getItem(NOTIFY_KEY) === "1"; } catch (e) { return false; } },
+      set: function (on, report) {
+        if (!on) {
+          try { localStorage.removeItem(NOTIFY_KEY); } catch (e) {}
+          syncBell(false); if (report) { report(false); }
+          return;
+        }
+        if (!("Notification" in window)) { toast("This browser doesn't support notifications", true); if (report) { report(false); } return; }
+        Notification.requestPermission().then(function (p) {
+          var ok = p === "granted";
+          if (ok) { try { localStorage.setItem(NOTIFY_KEY, "1"); } catch (e) {} }
+          else { toast("Notifications are blocked by the browser", true); }
+          syncBell(ok); if (report) { report(ok); }
+        });
+      } }
+  ];
+  var setPanel = null;
+  function buildSetRow(row) {
+    var lab = document.createElement("label"); lab.className = "rchan-set-row";
+    var txt = document.createElement("span"); txt.className = "rchan-set-text";
+    var t = document.createElement("span"); t.className = "rchan-set-title"; t.textContent = row.t;
+    var d = document.createElement("span"); d.className = "rchan-set-desc"; d.textContent = row.d;
+    txt.appendChild(t); txt.appendChild(d);
+    var cb = document.createElement("input"); cb.type = "checkbox";
+    cb.checked = row.get ? !!row.get() : setOn(row.k);
+    cb.addEventListener("change", function () {
+      if (row.set) { row.set(cb.checked, function (v) { cb.checked = !!v; }); }
+      else { setPut(row.k, cb.checked); }
+    });
+    lab.appendChild(txt); lab.appendChild(cb);
+    return lab;
+  }
+  function setFootLink(text, fn) {
+    var a = document.createElement("a"); a.href = "#"; a.textContent = text;
+    a.addEventListener("click", function (e) { e.preventDefault(); fn(); });
+    return a;
+  }
+  function toggleSetPanel() {
+    if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; return; }
+    if (!setPanel) {
+      setPanel = document.createElement("div"); setPanel.id = "rchan-set";
+      setPanel.setAttribute("role", "dialog"); setPanel.setAttribute("aria-label", "Site settings");
+      var head = document.createElement("div"); head.className = "rchan-set-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Site settings";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.title = "Close"; x.setAttribute("aria-label", "Close settings");
+      x.addEventListener("click", function () { setPanel.style.display = "none"; });
+      head.appendChild(ttl); head.appendChild(x);
+      setPanel.appendChild(head);
+      setPanel.appendChild(document.createElement("div"));       // rows container
+      var foot = document.createElement("div"); foot.className = "rchan-set-foot";
+      foot.appendChild(setFootLink("Keyboard shortcuts (?)", function () { setPanel.style.display = "none"; toggleKeysOverlay(); }));
+      var eng = document.getElementById("settingsButton");        // native menu: filters / custom CSS / JS
+      if (eng) {
+        foot.appendChild(setFootLink("Filters & engine settings", function () { setPanel.style.display = "none"; eng.click(); }));
+      }
+      setPanel.appendChild(foot);
+      document.body.appendChild(setPanel);
+      document.addEventListener("click", function (ev) {          // click-away closes
+        if (setPanel.style.display !== "block") { return; }
+        var t2 = ev.target;
+        if (setPanel.contains(t2) || (t2.closest && t2.closest("#rchan-nav"))) { return; }
+        setPanel.style.display = "none";
+      }, true);
+    }
+    var list = setPanel.children[1];                              // rebuild → checkboxes reflect live state
+    list.innerHTML = "";
+    SET_ROWS.forEach(function (row) { list.appendChild(buildSetRow(row)); });
+    setPanel.style.display = "block";
+  }
+  /* "?" cheat-sheet overlay (works even with shortcuts toggled off) */
+  var KEYS_LIST = [
+    ["j / k", "Next / previous post"],
+    ["t", "Jump to top"],
+    ["b", "Jump to bottom"],
+    ["c", "Toggle catalog ↔ index view"],
+    ["r", "Focus the reply box"],
+    ["?", "This cheat-sheet"],
+    ["Esc", "Close panels and overlays"]
+  ];
+  var keysOverlay = null;
+  function toggleKeysOverlay() {
+    if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
+    if (!keysOverlay) {
+      keysOverlay = document.createElement("div"); keysOverlay.id = "rchan-keys";
+      keysOverlay.setAttribute("role", "dialog"); keysOverlay.setAttribute("aria-label", "Keyboard shortcuts");
+      var box = document.createElement("div"); box.className = "rchan-keys-box";
+      var head = document.createElement("div"); head.className = "rchan-set-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Keyboard shortcuts";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.title = "Close"; x.setAttribute("aria-label", "Close shortcuts");
+      x.addEventListener("click", function () { keysOverlay.style.display = "none"; });
+      head.appendChild(ttl); head.appendChild(x);
+      box.appendChild(head);
+      var list = document.createElement("div"); list.className = "rchan-keys-list";
+      box.appendChild(list);
+      keysOverlay.appendChild(box);
+      keysOverlay.addEventListener("click", function (e) {        // backdrop click closes
+        if (e.target === keysOverlay) { keysOverlay.style.display = "none"; }
+      });
+      document.body.appendChild(keysOverlay);
+    }
+    var list2 = keysOverlay.firstChild.lastChild;                 // rebuilt each open (rows grow with features)
+    list2.innerHTML = "";
+    KEYS_LIST.forEach(function (k) {
+      var row = document.createElement("div"); row.className = "rchan-keys-row";
+      var kbd = document.createElement("kbd"); kbd.textContent = k[0];
+      var lbl = document.createElement("span"); lbl.textContent = k[1];
+      row.appendChild(kbd); row.appendChild(lbl);
+      list2.appendChild(row);
+    });
+    keysOverlay.style.display = "flex";
+  }
+  function onEscKey(e) {
+    if (e.key !== "Escape") { return; }
+    if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
+    if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; return; }
+    if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
+  }
+
   /* ---------- init + observe ---------- */
   var pending = false;
   function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); }, 80); }
@@ -1700,6 +1862,7 @@
     document.addEventListener("scroll", hideTip, true);
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onEscKey);
     // keep the pre-paint dark hint (html.predark, set by an inline head script the
     // router injects) in sync when the user switches themes mid-session
     try { if (!/theme_dark/.test(document.body.className)) { document.documentElement.classList.remove("predark"); } } catch (e) {}

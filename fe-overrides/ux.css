@@ -423,6 +423,11 @@ body.theme_dark .markedPost {
   box-shadow: inset 4px 0 0 #f2b21e !important;
 }
 
+/* ---------- Reverse image search links (file rows) ---------- */
+.rchan-ris { font-size: x-small; margin-left: 6px; opacity: .75; white-space: nowrap; }
+.rchan-ris:hover { opacity: 1; }
+.rchan-ris a { text-decoration: none; }
+
 /* ---------- Backlinks row ---------- */
 .panelBacklinks a { margin-right: 4px; }
 

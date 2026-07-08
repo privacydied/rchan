@@ -793,6 +793,37 @@
     }
   }
 
+  /* ---------- Reverse image search links on file rows ---------- */
+  var RIS_EXT = /\.(jpe?g|png|gif|webp|bmp)(?:$|\?)/i;
+  var RIS_SVCS = [
+    ["iqdb", "https://iqdb.org/?url="],
+    ["sauce", "https://saucenao.com/search.php?url="],
+    ["lens", "https://lens.google.com/uploadbyurl?url="],
+    ["tineye", "https://tineye.com/search?url="]
+  ];
+  function decorateFileSearch(root) {
+    var links = (root || document).getElementsByClassName("originalNameLink");
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.getAttribute("data-ris")) { continue; }
+      a.setAttribute("data-ris", "1");
+      var href = a.getAttribute("href") || "";
+      if (!RIS_EXT.test(href)) { continue; }               // images only, not video/audio
+      var abs = encodeURIComponent(location.origin + href);
+      var s = document.createElement("span");
+      s.className = "rchan-ris";
+      for (var j = 0; j < RIS_SVCS.length; j++) {
+        if (j) { s.appendChild(document.createTextNode(" · ")); }
+        var l = document.createElement("a");
+        l.href = RIS_SVCS[j][1] + abs;
+        l.target = "_blank"; l.rel = "noopener noreferrer";
+        l.textContent = RIS_SVCS[j][0];
+        s.appendChild(l);
+      }
+      a.parentNode.appendChild(s);                          // lands after the ")" span
+    }
+  }
+
   /* ---------- Instant styled tooltip (any element with data-tooltip) ---------- */
   var tip = null;
   function tipTarget(el) {
@@ -1423,7 +1454,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
@@ -1465,7 +1496,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
-     function () { decorateIdPills(document); }
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

@@ -71,6 +71,16 @@ and do NOT hand-edit the gridfs page (it's gzip-compressed with a `.gz` sibling 
   (single-file bind mounts pin the old inode until restart), and smoke-checks the
   versioned URLs. Never hand-bump version numbers.
 
+## UI conventions (fe-overrides)
+- **Use SVGs, not text labels or emoji, for UI affordances.** Buttons, nav icons,
+  status-line segments, badges and controls should render an inline `<svg>` (sized in
+  px, `fill="currentColor"` / `stroke="currentColor"` so it follows the theme), never a
+  word ("Reply", "Hide", "Refresh") or an emoji glyph (🔔, 🕘, ✉). The text that the
+  icon replaces moves to `aria-label` + `data-tooltip` so nothing is lost to screen
+  readers or on hover. This is the established pattern across `ux.js`/`ux.css` (e.g. the
+  thread status line, file-row controls, nav buttons) — match it for anything new, and
+  when you touch an old text/emoji control, convert it.
+
 ## Project
 LynxChan + MongoDB in Docker behind DSM reverse proxy + Cloudflare. See `README.md` for
 architecture, routing, overrides in `fe-overrides/`, and restore steps.

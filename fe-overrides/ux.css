@@ -667,30 +667,238 @@ body.theme_dark .markedPost {
   box-shadow: inset 4px 0 0 #f2b21e !important;
 }
 
-/* ---------- Brutalist theme (duplicated from Cream — customize independently) ----------
-   Registered in the theme switcher by ux.js (initAutoTheme). Starts identical to
-   Cream; these are Cream's palette rules re-scoped to .theme_brutalist so they can
-   diverge freely. The unscoped base styles in this sheet already apply to every
-   theme, so only the cream-specific overrides are copied here. */
-body.theme_brutalist, .theme_brutalist { background: #EEEEE4 !important; color: #393939 !important; }
-.theme_brutalist a { color: #274a6b; }
-.theme_brutalist .innerPost, .theme_brutalist .sideCatalogCell, .theme_brutalist .markedPost,
-.theme_brutalist .sideCatalogMarkedCell, .theme_brutalist #quick-reply table, .theme_brutalist .floatingMenu,
-.theme_brutalist #newPostFieldset, .theme_brutalist #postingForm, .theme_brutalist #postingTable,
-.theme_brutalist #postingForm td, .theme_brutalist .modalTableBody td, .theme_brutalist .topBoards a,
-.theme_brutalist #divLatestPosts .latestPostCell {
-  background: #E6E6DA !important; color: #393939 !important; border-color: #CFCFC4 !important;
+/* ==========================================================================
+   BRUTALIST THEME  (selectable: "Brutalist"; registered in ux.js)
+   White ground, thick black rules, hard-inversion hovers. No radius/shadow/
+   gradient. Palette: BLACK = structure, --brutal-blue = interactive/links,
+   brand RED = staff/warning/attention. Two type registers: Helvetica Neue
+   (content) + Roboto Mono (machine metadata). Everything scoped to
+   .theme_brutalist so the other themes are untouched.
+   ========================================================================== */
+@font-face {
+  font-family: "Helvetica Neue LT Std"; font-weight: 400; font-style: normal; font-display: swap;
+  src: url("/.rchan/hn-roman.woff2") format("woff2");
 }
-.theme_brutalist #postingForm th, .theme_brutalist .modalTableBody th {
-  background: #DCDCCF !important; color: #393939 !important; border-color: #CFCFC4 !important;
+@font-face {
+  font-family: "Helvetica Neue LT Std"; font-weight: 700; font-style: normal; font-display: swap;
+  src: url("/.rchan/hn-bold.woff2") format("woff2");
 }
-.theme_brutalist nav, .theme_brutalist #dynamicHeader { background: #E6E6DA !important; }
-.theme_brutalist .labelSubject, .theme_brutalist .postInfo, .theme_brutalist .divMessage, .theme_brutalist .title { color: #393939 !important; }
-.theme_brutalist .linkName, .theme_brutalist .labelName { color: #3A6B2E !important; }
-.theme_brutalist .rchan-you { background: #f4e9e3 !important; }
-.theme_brutalist .markedPost {
-  background: #EFE8CF !important;
-  box-shadow: inset 4px 0 0 #f2b21e, 2px 2px 0 rgba(0,0,0,.1) !important;
+@font-face {
+  font-family: "Helvetica Neue LT Std"; font-weight: 400; font-style: italic; font-display: swap;
+  src: url("/.rchan/hn-italic.woff2") format("woff2");
+}
+
+body.theme_brutalist {
+  --brutal-blue: #1f3fff;          /* links / interactive */
+  --brutal-blue-fill: #1a1ae6;     /* deeper blue for fills / focus */
+  --brutal-red: #c8102e;           /* staff / warning / attention */
+  --brutal-sans: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --brutal-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #fff !important; color: #000 !important;
+  font-family: var(--brutal-sans);
+}
+/* strip every soft affordance inside the theme (flat blocks only) */
+body.theme_brutalist *, body.theme_brutalist *::before, body.theme_brutalist *::after {
+  border-radius: 0 !important; box-shadow: none !important; text-shadow: none !important;
+}
+
+/* ---------- Type: content = Helvetica, metadata = Roboto Mono ---------- */
+body.theme_brutalist, body.theme_brutalist .divMessage, body.theme_brutalist .labelSubject,
+body.theme_brutalist .linkName, body.theme_brutalist .labelName, body.theme_brutalist .title,
+body.theme_brutalist input, body.theme_brutalist textarea, body.theme_brutalist select,
+body.theme_brutalist button, body.theme_brutalist .boardTitle, body.theme_brutalist .boardSubtitle,
+body.theme_brutalist nav, body.theme_brutalist #dynamicHeader { font-family: var(--brutal-sans) !important; }
+/* machine layer: ids, times, quotes, filenames, sizes, IDs, stats, pagination, bans, code */
+body.theme_brutalist .linkQuote, body.theme_brutalist .labelCreated, body.theme_brutalist .quoteLink,
+body.theme_brutalist .panelBacklinks, body.theme_brutalist .panelBacklinks a, body.theme_brutalist .originalNameLink,
+body.theme_brutalist .uploadDetails, body.theme_brutalist .labelId, body.theme_brutalist .pagelist,
+body.theme_brutalist #rchan-threadstat, body.theme_brutalist #rchan-mstats, body.theme_brutalist #rchan-sitestat,
+body.theme_brutalist #rchan-sitestat-nav, body.theme_brutalist .contentOmissionIndicator,
+body.theme_brutalist .labelOmission, body.theme_brutalist .divBanMessage, body.theme_brutalist .divMessage code,
+body.theme_brutalist .rchan-idname, body.theme_brutalist .rchan-getbadge, body.theme_brutalist .rchan-ts-chip,
+body.theme_brutalist .rchan-flagchip, body.theme_brutalist .labelReplies, body.theme_brutalist .labelImages,
+body.theme_brutalist .rchan-newbadge, body.theme_brutalist .rchan-deadbadge, body.theme_brutalist .rchan-ris,
+body.theme_brutalist .rchan-yours-chip, body.theme_brutalist .rchan-active-meta {
+  font-family: var(--brutal-mono) !important;
+}
+body.theme_brutalist .boardTitle { font-weight: 700; text-transform: uppercase; letter-spacing: .01em; color: #000 !important; }
+body.theme_brutalist .boardSubtitle { color: #000 !important; }
+
+/* ---------- Links: royal blue + underline; hover = hard invert ---------- */
+body.theme_brutalist a, body.theme_brutalist .quoteLink, body.theme_brutalist .linkQuote { color: var(--brutal-blue) !important; text-decoration: underline; }
+body.theme_brutalist a:hover, body.theme_brutalist .quoteLink:hover, body.theme_brutalist .linkQuote:hover {
+  background: #000 !important; color: #fff !important; text-decoration: none;
+}
+body.theme_brutalist a:focus-visible, body.theme_brutalist button:focus-visible,
+body.theme_brutalist input:focus-visible, body.theme_brutalist select:focus-visible,
+body.theme_brutalist textarea:focus-visible {
+  outline: 3px solid var(--brutal-blue-fill) !important; outline-offset: 0 !important;
+}
+
+/* ---------- Post cells: hard-outlined white blocks ---------- */
+body.theme_brutalist .innerPost, body.theme_brutalist .innerOP, body.theme_brutalist .markedPost {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .divMessage { color: #000 !important; }
+body.theme_brutalist .postInfo, body.theme_brutalist .opHead { border-bottom: 2px solid #000; }
+body.theme_brutalist .labelSubject { color: #000 !important; font-weight: 700; text-transform: uppercase; }
+body.theme_brutalist .linkName, body.theme_brutalist .labelName { color: #000 !important; font-weight: 700; }
+body.theme_brutalist .labelCreated { color: #000 !important; }
+/* the mod capcode / signed role reads as staff = red */
+body.theme_brutalist .labelRole, body.theme_brutalist .panelRange { color: var(--brutal-red) !important; font-weight: 700; }
+
+/* ---------- File info block ---------- */
+body.theme_brutalist .uploadCell, body.theme_brutalist .opUploadPanel { border: 2px solid #000; padding: 2px; }
+body.theme_brutalist .imgFlag { border: 1px solid #000; vertical-align: -1px; }
+
+/* ---------- Quote hover previews + inline quotes ---------- */
+body.theme_brutalist .quoteTooltip, body.theme_brutalist .quoteTooltip .innerPost,
+body.theme_brutalist .quoteTooltip .innerOP, body.theme_brutalist .rchan-inline-quote .innerPost,
+body.theme_brutalist .rchan-inline-quote .innerOP {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+
+/* ---------- (You) + replies-to-you = red ---------- */
+body.theme_brutalist .rchan-you { background: #fff !important; border: 2px solid var(--brutal-red) !important; border-left: 5px solid var(--brutal-red) !important; }
+body.theme_brutalist .postCell.rchan-new .innerPost { border-left: 5px solid var(--brutal-blue) !important; }
+body.theme_brutalist #rchan-newline { color: var(--brutal-blue) !important; border-top: 2px dashed var(--brutal-blue) !important; }
+body.theme_brutalist #rchan-youbtn, body.theme_brutalist #rchan-newpill, body.theme_brutalist #rchan-boardpill,
+body.theme_brutalist #rchan-wspill, body.theme_brutalist #rchan-resume {
+  background: var(--brutal-red) !important; color: #fff !important; border: 2px solid #000 !important;
+}
+
+/* ---------- Nav / boardlist bar ---------- */
+body.theme_brutalist nav, body.theme_brutalist #dynamicHeader {
+  background: #fff !important; border-bottom: 3px solid #000 !important;
+}
+body.theme_brutalist nav a, body.theme_brutalist #dynamicHeader a { color: var(--brutal-blue) !important; }
+body.theme_brutalist nav a:hover, body.theme_brutalist #dynamicHeader a:hover { background: #000 !important; color: #fff !important; }
+/* floating nav buttons */
+body.theme_brutalist #rchan-nav button {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist #rchan-nav button:hover, body.theme_brutalist #rchan-nav button.rchan-on { background: #000 !important; color: #fff !important; }
+body.theme_brutalist #rchan-nav button#rchan-penbtn { background: var(--brutal-red) !important; color: #fff !important; }
+
+/* ---------- Pagination ---------- */
+body.theme_brutalist .pagelist { background: #fff !important; }
+body.theme_brutalist .pagelist a, body.theme_brutalist .pagelist span {
+  border: 2px solid #000 !important; padding: 1px 7px; margin: 0 1px; color: var(--brutal-blue) !important; background: #fff !important;
+}
+body.theme_brutalist .pagelist a:hover, body.theme_brutalist .pagelist .selectedPage { background: #000 !important; color: #fff !important; }
+
+/* ---------- Catalog grid ---------- */
+body.theme_brutalist .catalogCell {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .catalogCell:hover { outline: 3px solid var(--brutal-blue) !important; outline-offset: -1px; }
+body.theme_brutalist .catalogCell.rchan-visited { opacity: .55; }
+body.theme_brutalist .linkThumb img, body.theme_brutalist .imgLink img { border: 2px solid #000; }
+
+/* ---------- Post form / quick reply ---------- */
+body.theme_brutalist #postingForm, body.theme_brutalist #quick-reply, body.theme_brutalist #quick-reply table,
+body.theme_brutalist #rchan-qr, body.theme_brutalist #newPostFieldset {
+  background: #fff !important; color: #000 !important; border: 3px solid #000 !important;
+}
+body.theme_brutalist #postingForm th, body.theme_brutalist #postingForm td,
+body.theme_brutalist .modalTableBody th, body.theme_brutalist .modalTableBody td,
+body.theme_brutalist #quick-reply th, body.theme_brutalist #quick-reply td {
+  background: #fff !important; color: #000 !important; border-color: #000 !important;
+}
+body.theme_brutalist input[type=text], body.theme_brutalist input[type=password], body.theme_brutalist input[type=email],
+body.theme_brutalist input[type=number], body.theme_brutalist textarea, body.theme_brutalist select,
+body.theme_brutalist #qrbody, body.theme_brutalist #fieldMessage {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist button, body.theme_brutalist input[type=submit], body.theme_brutalist input[type=button],
+body.theme_brutalist #qrbutton, body.theme_brutalist #formButton, body.theme_brutalist .rchan-fmtbar button,
+body.theme_brutalist #rchan-formtoggle, body.theme_brutalist .reloadCaptchaButton {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+  font-weight: 700; text-transform: uppercase; cursor: pointer;
+}
+body.theme_brutalist button:hover, body.theme_brutalist input[type=submit]:hover, body.theme_brutalist input[type=button]:hover,
+body.theme_brutalist #qrbutton:hover, body.theme_brutalist #formButton:hover, body.theme_brutalist .rchan-fmtbar button:hover,
+body.theme_brutalist #rchan-formtoggle:hover, body.theme_brutalist .reloadCaptchaButton:hover {
+  background: #000 !important; color: #fff !important; border-color: #000 !important;
+}
+body.theme_brutalist .captchaImage { border: 2px solid #000 !important; background: #fff !important; }
+body.theme_brutalist #quick-reply .handle, body.theme_brutalist #rchan-qr-header { background: #000 !important; color: #fff !important; }
+
+/* ---------- Modals + rchan panels ---------- */
+body.theme_brutalist .modalInnerPanel, body.theme_brutalist .floatingMenu, body.theme_brutalist #watchedMenu,
+body.theme_brutalist #settingsMenu, body.theme_brutalist #rchan-set, body.theme_brutalist #rchan-hist,
+body.theme_brutalist #rchan-youbox, body.theme_brutalist #rchan-reports, body.theme_brutalist #rchan-find,
+body.theme_brutalist #rchan-conv, body.theme_brutalist .rchan-pal-box, body.theme_brutalist .rchan-keys-box,
+body.theme_brutalist .rchan-guide-box, body.theme_brutalist #rchan-catprev, body.theme_brutalist #rchan-tip,
+body.theme_brutalist .rchan-ed-box, body.theme_brutalist .rchan-sheet-box {
+  background: #fff !important; color: #000 !important; border: 3px solid #000 !important;
+}
+body.theme_brutalist .modalHeader, body.theme_brutalist .rchan-set-head, body.theme_brutalist .rchan-hist-head,
+body.theme_brutalist .rchan-set-group summary, body.theme_brutalist .header {
+  background: #000 !important; color: #fff !important; border-color: #000 !important;
+}
+body.theme_brutalist .rchan-set-head *, body.theme_brutalist .rchan-hist-head *, body.theme_brutalist .rchan-set-group summary * { color: #fff !important; }
+body.theme_brutalist .rchan-set-row, body.theme_brutalist .rchan-hist-row, body.theme_brutalist .rchan-pal-row,
+body.theme_brutalist .rchan-filter-row, body.theme_brutalist .rchan-guide-row {
+  border-bottom: 2px solid #000 !important;
+}
+body.theme_brutalist .rchan-pal-row.rchan-pal-sel, body.theme_brutalist .rchan-hist-row:hover,
+body.theme_brutalist .rchan-pal-row:hover, body.theme_brutalist .rchan-set-row:hover {
+  background: #000 !important; color: #fff !important;
+}
+body.theme_brutalist .rchan-pal-box input, body.theme_brutalist .rchan-css-input,
+body.theme_brutalist .rchan-set-select { border: 2px solid #000 !important; background: #fff !important; color: #000 !important; }
+body.theme_brutalist .rchan-set-grpcount, body.theme_brutalist .rchan-pal-kind { background: #000 !important; color: #fff !important; }
+
+/* ---------- ID pills / chips ---------- */
+body.theme_brutalist .labelId {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .labelId.markedId, body.theme_brutalist .markedPost .labelId { background: #000 !important; color: #fff !important; }
+body.theme_brutalist .rchan-idname, body.theme_brutalist .rchan-ts-chip, body.theme_brutalist .rchan-flagchip {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .rchan-ts-warn, body.theme_brutalist .rchan-flagchip.rchan-ts-warn,
+body.theme_brutalist .rchan-newbadge, body.theme_brutalist .rchan-getbadge {
+  background: var(--brutal-red) !important; color: #fff !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .rchan-deadbadge { background: #000 !important; color: #fff !important; border: 2px solid #000 !important; }
+
+/* ---------- Toast / homepage strips / presence ---------- */
+body.theme_brutalist #rchan-toast { background: #fff !important; color: #000 !important; border: 3px solid #000 !important; }
+body.theme_brutalist #rchan-toast.rchan-toast-err { border-color: var(--brutal-red) !important; }
+body.theme_brutalist .rchan-yours-chip, body.theme_brutalist .rchan-active-cell {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+body.theme_brutalist .rchan-yours-chip:hover, body.theme_brutalist .rchan-active-cell:hover { background: #000 !important; color: #fff !important; }
+body.theme_brutalist .rchan-yours-chip.rchan-yours-unread { border-color: var(--brutal-red) !important; border-left: 5px solid var(--brutal-red) !important; }
+body.theme_brutalist .rchan-sitedot, body.theme_brutalist .rchan-wsdot.rchan-ws-live { background: var(--brutal-red) !important; }
+
+/* ---------- Spoilers / greentext / red / code ---------- */
+body.theme_brutalist .spoiler { background: #000 !important; color: #000 !important; }
+body.theme_brutalist .spoiler:hover, body.theme_brutalist .spoiler:active { color: #fff !important; }
+body.theme_brutalist .greenText { color: #007a00 !important; }
+body.theme_brutalist .redText { color: var(--brutal-red) !important; }
+body.theme_brutalist .divBanMessage, body.theme_brutalist .banMessage { color: var(--brutal-red) !important; font-weight: 700; border: 2px solid var(--brutal-red) !important; padding: 2px 6px; display: inline-block; }
+body.theme_brutalist .divMessage code {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+}
+
+/* ---------- Catalog toolbar / find bar / conv bar ---------- */
+body.theme_brutalist #rchan-cattools select, body.theme_brutalist #rchan-find input {
+  border: 2px solid #000 !important; background: #fff !important; color: #000 !important;
+}
+body.theme_brutalist .rchan-set-x, body.theme_brutalist .rchan-hist-clear { color: #fff !important; }
+
+/* ---------- Gallery: keep the media legible, brutalize the chrome ---------- */
+body.theme_brutalist #rchan-gallery { background: #fff !important; }
+body.theme_brutalist .rchan-gal-main img, body.theme_brutalist .rchan-gal-main video { border: 3px solid #000; }
+body.theme_brutalist .rchan-gal-strip { background: #000 !important; }
+body.theme_brutalist .rchan-gal-thumb { border: 2px solid #fff !important; }
+body.theme_brutalist .rchan-gal-thumb.rchan-gal-cur { border-color: var(--brutal-red) !important; }
+body.theme_brutalist .rchan-gal-meta { color: #000 !important; }
+body.theme_brutalist #rchan-gallery .rchan-gal-x, body.theme_brutalist .rchan-gal-prev, body.theme_brutalist .rchan-gal-next {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
 }
 
 /* ---------- File row controls: words -> SVG icons ----------

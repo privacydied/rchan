@@ -263,6 +263,24 @@
 
   /* ---------- "(You)" — record your own posts, then highlight ---------- */
   var flashId = null, flashDeadline = 0;
+  // Auto-watch: posting in a thread (or creating one) adds it to the native
+  // watcher, so the whole notification pipeline fires without the manual
+  // bell click. Default ON, toggleable in settings.
+  function autoWatch(board, threadId, label) {
+    if (!setOn("autowatch") || !board || !threadId) { return; }
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      if (wd[board] && wd[board][threadId]) { return; }            // already watched
+      var now = Date.now();
+      // native addWatchedCell innerHTMLs the label — escape like the native watch button does
+      var rec = { lastSeen: now, lastReplied: now, label: escHtml(String(label || "").slice(0, 70)) || null };
+      (wd[board] = wd[board] || {})[threadId] = rec;
+      localStorage.watchedData = JSON.stringify(wd);
+      if (window.watcher && watcher.addWatchedCell) {              // render the menu cell live
+        try { watcher.addWatchedCell(board, String(threadId), rec); } catch (e2) {}
+      }
+    } catch (e) {}
+  }
   function addYou(id) {
     id = String(id).replace(/\D/g, "");
     if (!id) { return; }
@@ -270,6 +288,8 @@
     flashId = id; flashDeadline = Date.now() + 20000;
     var a = load(YOU_KEY);
     if (a.indexOf(id) < 0) { a.push(id); save(YOU_KEY, a); refresh(); }
+    var t = curThreadId();
+    if (t) { autoWatch(getBoard(), t, threadTitle()); }
   }
   // After a successful reply, scroll to your post once it renders and flash it.
   function tryFlashOwnPost() {
@@ -283,6 +303,14 @@
     try { el.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {}
     inner.classList.add("rchan-flash");
     setTimeout(function () { inner.classList.remove("rchan-flash"); }, 2600);
+  }
+  // Label for a just-created thread (subject field, else message snippet)
+  function newThreadLabel() {
+    var s = document.getElementById("fieldSubject");
+    if (s && s.value.trim()) { return s.value.trim().slice(0, 70); }
+    var m = document.getElementById("fieldMessage");
+    if (m && m.value.trim()) { return m.value.trim().replace(/\s+/g, " ").slice(0, 70); }
+    return null;
   }
   function hookPostCapture() {
     var re = /\/(replyThread|newThread)\.js/;
@@ -306,6 +334,7 @@
             var r = JSON.parse(x.responseText);
             if (r && r.status === "ok" && r.data != null) {
               addYou(r.data);
+              if (/newThread/.test(x.__u)) { autoWatch(getBoard(), r.data, newThreadLabel()); }
               okToast(/newThread/.test(x.__u) ? "Thread created" : "Reply posted");
             }
           }
@@ -323,6 +352,7 @@
             res.clone().json().then(function (r) {
               if (r && r.status === "ok" && r.data != null) {
                 addYou(r.data);
+                if (/newThread/.test(url)) { autoWatch(getBoard(), r.data, newThreadLabel()); }
                 okToast(/newThread/.test(url) ? "Thread created" : "Reply posted");
               }
             }).catch(function () {});
@@ -3298,6 +3328,7 @@
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
     { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
     { k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
     { k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },

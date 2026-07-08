@@ -1201,6 +1201,55 @@
       (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "");
   }
 
+  /* ---------- Homepage: "Active threads" strip ----------
+     Top threads by last bump across boards (boards list -> one catalog.json
+     each, capped at 8 boards), rendered as cards under the board list. Makes
+     the front page a destination instead of a signpost. */
+  function buildActiveThreads() {
+    if (!/^\/(index\.html)?$/.test(location.pathname)) { return; }
+    var anchor = document.getElementById("divBoards");
+    if (!anchor || document.getElementById("rchan-active")) { return; }
+    fetch("/boards.js?json=1").then(function (r) { return r.json(); }).then(function (res) {
+      var boards = ((res && res.data && res.data.boards) || []).slice(0, 8)
+        .map(function (b) { return b.boardUri; });
+      if (!boards.length) { return; }
+      Promise.all(boards.map(function (b) {
+        return fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
+          .then(function (list) { return (list || []).map(function (t) { t.__b = b; return t; }); })
+          .catch(function () { return []; });
+      })).then(function (all) {
+        var threads = Array.prototype.concat.apply([], all).sort(function (a, b2) {
+          return (Date.parse(b2.lastBump) || 0) - (Date.parse(a.lastBump) || 0);
+        }).slice(0, 6);
+        if (!threads.length || document.getElementById("rchan-active")) { return; }
+        var box = document.createElement("div"); box.id = "rchan-active";
+        var head = document.createElement("div"); head.id = "rchan-active-head";
+        head.textContent = "Active threads";
+        box.appendChild(head);
+        threads.forEach(function (t) {
+          var a = document.createElement("a");
+          a.className = "rchan-active-cell";
+          a.href = "/" + t.__b + "/res/" + t.threadId;
+          if (t.thumb) {
+            var im = document.createElement("img");
+            im.src = t.thumb; im.loading = "lazy"; im.alt = "";
+            a.appendChild(im);
+          }
+          var txt = document.createElement("span"); txt.className = "rchan-active-text";
+          var ttl = document.createElement("span"); ttl.className = "rchan-active-title";
+          var label = (t.subject || t.message || ("Thread " + t.threadId)).replace(/\s+/g, " ").trim();
+          ttl.textContent = "/" + t.__b + "/ · " + label.slice(0, 60);
+          var meta = document.createElement("span"); meta.className = "rchan-active-meta";
+          var bump = Date.parse(t.lastBump) || 0;
+          meta.textContent = (t.postCount || 0) + " replies" + (bump ? " · " + fmtAgo(bump) + " ago" : "");
+          txt.appendChild(ttl); txt.appendChild(meta); a.appendChild(txt);
+          box.appendChild(a);
+        });
+        anchor.parentNode.insertBefore(box, anchor.nextSibling);
+      });
+    }).catch(function () {});
+  }
+
   /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ----------
      IMPORTANT: the engine uploads ONLY from postCommon.selectedFiles (its own
      array, rendered as .selectedCell chips) — it never reads input.files at
@@ -1600,7 +1649,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, updateThreadStat
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, updateThreadStat, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

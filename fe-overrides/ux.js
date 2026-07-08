@@ -5047,6 +5047,12 @@
     });
     var meta = gal.querySelector(".rchan-gal-meta");
     meta.firstChild.textContent = (galIdx + 1) + " / " + galItems.length + " · " + it.name;
+    // download keeps the ORIGINAL filename (media URLs are content hashes, so
+    // right-click → save loses it); open gives the raw file in a new tab
+    var dl = meta.querySelector(".rchan-gal-dl");
+    if (dl) { dl.href = it.url; dl.setAttribute("download", it.name || ""); }
+    var op = meta.querySelector(".rchan-gal-open");
+    if (op) { op.href = it.url; }
     // filmstrip: highlight + keep the current thumb in view
     var strips = gal.querySelectorAll(".rchan-gal-thumb");
     for (var s = 0; s < strips.length; s++) {
@@ -5113,6 +5119,15 @@
     slide.setAttribute("aria-label", "Toggle slideshow");
     slide.addEventListener("click", function (e) { e.preventDefault(); toggleSlideshow(); });
     meta.appendChild(slide);
+    var dl = document.createElement("a"); dl.className = "rchan-gal-dl";
+    dl.textContent = "download";
+    dl.setAttribute("aria-label", "Download this file with its original name");
+    meta.appendChild(dl);
+    var op = document.createElement("a"); op.className = "rchan-gal-open";
+    op.textContent = "open";
+    op.target = "_blank"; op.rel = "noopener noreferrer";
+    op.setAttribute("aria-label", "Open the raw file in a new tab");
+    meta.appendChild(op);
     var x = document.createElement("button"); x.type = "button"; x.className = "rchan-gal-x";
     x.innerHTML = "✕"; x.setAttribute("aria-label", "Close gallery");
     x.addEventListener("click", function () { closeGallery(false); });

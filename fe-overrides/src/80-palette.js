@@ -109,6 +109,9 @@
     add("action", "Site settings", "toggles, filters, custom CSS", toggleSetPanel);
     add("action", "Feature guide", "everything rchan does, in one page", toggleGuide);
     add("action", "Report a bug / suggest a feature", "tell the admin what's broken or missing", openFeedback);
+    if (document.body.classList.contains("rchan-staff")) {
+      add("action", "Open reports (staff)", lastReports.length + " unhandled", toggleReportsPanel);
+    }
     add("action", "Keyboard shortcuts", "the ? cheat-sheet", toggleKeysOverlay);
     if (document.querySelector("a.imgLink, a.linkThumb")) {
       add("action", "Gallery mode", "every file on this page (g)", function () { openGallery(); });
@@ -285,6 +288,7 @@
     if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
     if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; dialogClosed(youboxPanel); return; }
+    if (reportsPanel && reportsPanel.style.display === "block") { reportsPanel.style.display = "none"; dialogClosed(reportsPanel); return; }
     if (guideOverlay && guideOverlay.style.display === "flex") { guideOverlay.style.display = "none"; dialogClosed(guideOverlay); return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; dialogClosed(keysOverlay); return; }
     if (convRoot) { closeConv(); return; }

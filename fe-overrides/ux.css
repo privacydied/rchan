@@ -1093,7 +1093,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
 /* ---------- Recently visited threads panel (🕘) + (You) inbox (✉) ---------- */
-#rchan-hist, #rchan-youbox {
+#rchan-hist, #rchan-youbox, #rchan-reports {
   position: fixed; right: 60px; bottom: 12px; z-index: 10004;
   width: 340px; max-width: 92vw; max-height: 60vh;
   display: none; overflow: auto;
@@ -1114,14 +1114,20 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   font-size: 10px; font-weight: 700; text-align: center;
 }
 #rchan-youboxbtn > span:empty { display: none; }
-/* staff: open-reports bubble on the global-management nav icon */
+/* staff: open-reports bubble on the global-management nav icon —
+   clicking the bubble opens the inline queue (the link stays a link) */
 #rchan-repbadge {
-  position: absolute; top: -6px; right: -8px; pointer-events: none;
+  position: absolute; top: -6px; right: -8px; cursor: pointer;
   min-width: 14px; height: 14px; line-height: 14px; padding: 0 2px;
   border-radius: 7px; background: #c8102e; color: #fff;
   font-size: 10px; font-weight: 700; text-align: center;
 }
+#rchan-repbadge:hover { background: #8f0c21; }
 #rchan-repbadge:empty { display: none; }
+.rchan-reports-foot {
+  display: block; padding: 7px 8px; text-align: center;
+  font-size: x-small; font-weight: 700; text-decoration: underline;
+}
 .rchan-hist-head {
   position: sticky; top: 0; z-index: 1;
   display: flex; align-items: center; justify-content: space-between;
@@ -1158,7 +1164,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   background: #8a8a82; color: #fff; font-size: x-small; font-weight: 700; vertical-align: middle;
 }
 .theme_dark .rchan-deadbadge { background: #4a4e57; }
-.theme_dark #rchan-hist, .theme_dark #rchan-youbox { background: #16171b; border-color: #2c2f36; }
+.theme_dark #rchan-hist, .theme_dark #rchan-youbox, .theme_dark #rchan-reports { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-hist-head { background: #262a31; border-color: #2c2f36; }
 .theme_dark .rchan-hist-row { border-color: #2c2f3666; }
 .theme_dark .rchan-hist-row:hover { background: rgba(224,108,117,.1); }
@@ -1736,7 +1742,7 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   .rchan-idfunnel { padding: 4px 6px; }
   .rchan-idfunnel svg { width: 14px; height: 14px; }
   /* floating panels: hug the small screen instead of the desktop offsets */
-  #rchan-hist, #rchan-set, #rchan-youbox { right: 8px; left: 8px; width: auto; max-height: 62vh; }
+  #rchan-hist, #rchan-set, #rchan-youbox, #rchan-reports { right: 8px; left: 8px; width: auto; max-height: 62vh; }
   #rchan-find { left: 8px; right: 8px; transform: none; max-width: none; top: 46px; }
   #rchan-find input { flex: 1; width: auto; max-width: none; min-width: 0; }
   /* catalog toolbar dropdowns: finger-sized */

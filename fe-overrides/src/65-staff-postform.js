@@ -1,8 +1,68 @@
-  /* ---------- Staff report badge: unhandled reports, visible from anywhere ----------
+  /* ---------- Staff report badge + inline queue ----------
      Mod UX ended at quick-mod: staff learned about reports by opening the
      management pages. Poll /openReports.js?json=1 (auth-gated server-side;
-     only wired up after the same globalRole check as everything staff) and
-     bubble the count on the global-management nav icon. ---------- */
+     only wired up after the same globalRole check as everything staff),
+     bubble the count on the global-management nav icon, and let the bubble
+     open an inline queue panel — board, reason, age, jump link per report —
+     with the native page one click deeper for the actual closing. */
+  var lastReports = [], reportsPanel = null;
+  function renderReportsPanel() {
+    if (!reportsPanel) { return; }
+    var list = reportsPanel.lastChild;
+    list.innerHTML = "";
+    if (!lastReports.length) {
+      var empty = document.createElement("div"); empty.className = "rchan-hist-empty";
+      empty.textContent = "No open reports";
+      list.appendChild(empty);
+      return;
+    }
+    lastReports.forEach(function (r) {
+      var row = document.createElement("a");
+      row.className = "rchan-hist-row";
+      var b = r.boardUri || "", t = r.threadId || "", p = r.postId || "";
+      row.href = b && t ? ("/" + b + "/res/" + t + ".html" + (p ? "#" + p : "")) : "/openReports.js";
+      var title = document.createElement("span"); title.className = "rchan-hist-title";
+      title.textContent = (r.global ? "GLOBAL · " : "") + (b ? "/" + b + "/ " : "") +
+        (p ? "No." + p : t ? "thread " + t : "") +
+        (r.reason ? " — " + r.reason : " — no reason given");
+      var meta = document.createElement("span"); meta.className = "rchan-hist-meta";
+      var ts = Date.parse(r.creation) || 0;
+      meta.textContent = ts ? fmtAgo(ts) : "";
+      row.appendChild(title); row.appendChild(meta);
+      list.appendChild(row);
+    });
+    var foot = document.createElement("a");
+    foot.className = "rchan-reports-foot"; foot.href = "/openReports.js";
+    foot.textContent = "Open the full report queue (close/ban there) →";
+    list.appendChild(foot);
+  }
+  function toggleReportsPanel() {
+    if (reportsPanel && reportsPanel.style.display === "block") {
+      reportsPanel.style.display = "none"; dialogClosed(reportsPanel); return;
+    }
+    if (!reportsPanel) {
+      reportsPanel = document.createElement("div"); reportsPanel.id = "rchan-reports";
+      reportsPanel.setAttribute("role", "dialog"); reportsPanel.setAttribute("aria-label", "Open reports");
+      var head = document.createElement("div"); head.className = "rchan-hist-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Open reports";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.setAttribute("aria-label", "Close reports");
+      x.addEventListener("click", function () { reportsPanel.style.display = "none"; dialogClosed(reportsPanel); });
+      head.appendChild(ttl); head.appendChild(x);
+      reportsPanel.appendChild(head);
+      reportsPanel.appendChild(document.createElement("div"));   // list (lastChild)
+      document.body.appendChild(reportsPanel);
+      document.addEventListener("click", function (ev) {         // click-away closes
+        if (reportsPanel.style.display !== "block") { return; }
+        var t2 = ev.target;
+        if (reportsPanel.contains(t2) || (t2.closest && t2.closest("#rchan-repbadge"))) { return; }
+        reportsPanel.style.display = "none";
+      }, true);
+    }
+    renderReportsPanel();
+    reportsPanel.style.display = "block";
+    dialogOpened(reportsPanel);
+  }
   function initReportBadge() {
     if (initReportBadge.__on) { return; }
     initReportBadge.__on = true;
@@ -10,22 +70,29 @@
       if (document.hidden) { return; }
       fetch("/openReports.js?json=1").then(function (r) { return r.json(); }).then(function (d) {
         if (!d || d.status !== "ok") { return; }
-        var x = d.data, n = null;
-        if (Array.isArray(x)) { n = x.length; }
-        else if (x && Array.isArray(x.reports)) { n = x.reports.length; }
-        if (n === null) { return; }
+        var x = d.data, reports = null;
+        if (Array.isArray(x)) { reports = x; }
+        else if (x && Array.isArray(x.reports)) { reports = x.reports; }
+        if (reports === null) { return; }
+        lastReports = reports;
+        var n = reports.length;
         var host = document.getElementById("linkGlobalManagement");
         if (!host) { return; }
         var b = document.getElementById("rchan-repbadge");
         if (!b) {
           b = document.createElement("span"); b.id = "rchan-repbadge";
+          b.setAttribute("role", "button");
+          b.setAttribute("aria-label", "Open the report queue");
           host.style.position = "relative";
           host.appendChild(b);
-          host.setAttribute("data-tooltip", "Global management" + (n ? " — " + n + " open report" + (n === 1 ? "" : "s") : ""));
-        } else if (host.getAttribute("data-tooltip")) {
-          host.setAttribute("data-tooltip", "Global management" + (n ? " — " + n + " open report" + (n === 1 ? "" : "s") : ""));
+          b.addEventListener("click", function (e) {             // bubble opens the queue, link stays a link
+            e.preventDefault(); e.stopPropagation();
+            toggleReportsPanel();
+          });
         }
+        host.setAttribute("data-tooltip", "Global management" + (n ? " — " + n + " open report" + (n === 1 ? "" : "s") + " (click the bubble)" : ""));
         b.textContent = n ? (n > 99 ? "99+" : String(n)) : "";
+        if (reportsPanel && reportsPanel.style.display === "block") { renderReportsPanel(); }
       }).catch(function () {});
     }
     tick();

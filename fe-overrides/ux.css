@@ -750,6 +750,22 @@ body.theme_dark .markedPost {
   background: #2b281f !important; border-color: #2c2f36;
   box-shadow: inset 4px 0 0 #f2b21e !important;
 }
+/* side-catalog "marked/watched" cell: the engine paints it an off-theme
+   highlight colour. Give it markedPost's treatment instead — the theme surface
+   + the gold marker bar — for each Cream variant. (warmdark rule must stay LAST:
+   it ties on specificity with the .theme_dark rule and wins by source order.) */
+body.theme_cream .sideCatalogMarkedCell {
+  background: #EFE8CF !important; border: 1px solid #CFCFC4 !important;
+  box-shadow: inset 4px 0 0 #f2b21e !important;
+}
+body.theme_dark .sideCatalogMarkedCell {
+  background: #2b281f !important; border: 1px solid #2c2f36 !important; color: #c9ccd1 !important;
+  box-shadow: inset 4px 0 0 #f2b21e !important;
+}
+html.rchan-warmdark .sideCatalogMarkedCell {
+  background: #2A2926 !important; border: 1px solid #454542 !important; color: #E8E6DF !important;
+  box-shadow: inset 4px 0 0 #f2b21e !important;
+}
 
 /* ==========================================================================
    NEO-BRUTALIST THEME  (selectable: "Brutalist"; registered in ux.js)

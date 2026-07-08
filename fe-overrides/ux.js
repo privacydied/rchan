@@ -1098,6 +1098,51 @@
     }
   }
 
+  /* ---------- "Filter this image": one-click never-see-again on file rows ----------
+     Adds a type-6 (File hash) auto-filter for the file's /.media/ content
+     hash — the same image reposted under any filename stays hidden. One
+     click, with an Undo on the toast instead of an arming step. */
+  var SVG_BLOCK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 0 1 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0 1 20 12c0 4.42-3.58 8-8 8z"/></svg>';
+  function rerunFilters() {
+    if (window.hiding && hiding.__rchanStub) { try { hiding.checkFilters(); return; } catch (e) {} }
+    applyExtraFilters();
+  }
+  function decorateFileFilterButtons(root) {
+    var links = (root || document).getElementsByClassName("originalNameLink");
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.getAttribute("data-fhash")) { continue; }
+      a.setAttribute("data-fhash", "1");
+      if (a.closest && a.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var hash = mediaHashOf(a.getAttribute("href") || "");
+      if (!hash) { continue; }
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rchan-fhash";
+      b.innerHTML = SVG_BLOCK;
+      b.setAttribute("data-tooltip", "Filter this image — hide it everywhere, any filename");
+      b.setAttribute("aria-label", "Filter this image everywhere");
+      b.addEventListener("click", (function (h2) {
+        return function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var cur = loadedFilters();
+          for (var j = 0; j < cur.length; j++) {
+            if (cur[j].type === 6 && !cur[j].regex && cur[j].filter === h2) { okToast("Already filtered"); return; }
+          }
+          cur.push({ filter: h2, regex: false, type: 6 });
+          persistFilters(cur);
+          rerunFilters();
+          toastAction("Image filtered — matching posts hidden", "Undo", function () {
+            persistFilters(loadedFilters().filter(function (f) {
+              return !(f.type === 6 && !f.regex && f.filter === h2);
+            }));
+            rerunFilters();
+          });
+        };
+      })(hash));
+      a.parentNode.appendChild(b);
+    }
+  }
+
   /* ---------- Instant styled tooltip (any element with data-tooltip) ---------- */
   var tip = null;
   function tipTarget(el) {
@@ -2195,7 +2240,23 @@
      - filtered posts leave a one-line stub with a session [show] instead of
        vanishing without a trace,
      - replies that quote a filtered/hidden post collapse too (toggleable). */
-  var FILTER_TYPE_NAMES = ["Name", "Tripcode", "Subject", "Message", "ID", "Filename"];
+  var FILTER_TYPE_NAMES = ["Name", "Tripcode", "Subject", "Message", "ID", "Filename", "File hash"];
+  // /.media/<hash>.<ext> (files) and /.media/t_<hash> (thumbs) share the content hash
+  var MEDIA_HASH_RE = /\/\.media\/(?:t_)?([a-z0-9]{6,})(?:\.[a-z0-9]+)?(?:[?#]|$)/i;
+  function mediaHashOf(s) {
+    var m = (s || "").match(MEDIA_HASH_RE);
+    return m ? m[1].toLowerCase() : null;
+  }
+  function cellMediaHashes(cell) {
+    var inner = cell.querySelector(".innerPost, .innerOP") || cell;
+    var out = {}, els = inner.querySelectorAll('a[href*="/.media/"], img[src*="/.media/"]');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].closest && els[i].closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var h = mediaHashOf(els[i].getAttribute("href") || els[i].getAttribute("src"));
+      if (h) { out[h] = 1; }
+    }
+    return Object.keys(out);
+  }
   function loadedFilters() {
     try {
       if (window.settingsMenu && settingsMenu.loadedFilters) { return settingsMenu.loadedFilters; }
@@ -2234,8 +2295,10 @@
   }
   function applyExtraFilters() {
     var cells = document.querySelectorAll(".postCell, .opCell");
-    var fileFilters = loadedFilters().filter(function (f) { return f.type === 5; });
-    var i, cell;
+    var all = loadedFilters();
+    var fileFilters = all.filter(function (f) { return f.type === 5; });
+    var hashFilters = all.filter(function (f) { return f.type === 6; });
+    var i, cell, k;
     for (i = 0; i < cells.length; i++) {              // filename rules
       cell = cells[i];
       if (cell.__rchanShown || cellHidden(cell) || !fileFilters.length) { continue; }
@@ -2243,10 +2306,24 @@
       var names = inner.querySelectorAll(".originalNameLink");
       for (var n = 0; n < names.length && !cellHidden(cell); n++) {
         var fname = names[n].textContent || "";
-        for (var k = 0; k < fileFilters.length; k++) {
+        for (k = 0; k < fileFilters.length; k++) {
           if (fMatch(fname, fileFilters[k])) {
             cell.style.display = "none"; cell.__xhide = true;
             addFilterStub(cell, "Filtered file");
+            break;
+          }
+        }
+      }
+    }
+    for (i = 0; i < cells.length; i++) {              // file-hash rules
+      cell = cells[i];
+      if (cell.__rchanShown || cellHidden(cell) || !hashFilters.length) { continue; }
+      var hashes = cellMediaHashes(cell);
+      for (var h = 0; h < hashes.length && !cellHidden(cell); h++) {
+        for (k = 0; k < hashFilters.length; k++) {
+          if (fMatch(hashes[h], hashFilters[k])) {
+            cell.style.display = "none"; cell.__xhide = true;
+            addFilterStub(cell, "Filtered image");
             break;
           }
         }
@@ -3787,7 +3864,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -3844,7 +3921,7 @@
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,
      initGallerySwipe, initLongPress, initPullRefresh

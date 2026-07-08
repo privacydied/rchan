@@ -603,7 +603,7 @@ body .hideFileButton.hiddenFile::after {   /* file hidden: eye = show again */
   border: 0; background: none; cursor: pointer; padding: 2px 4px;
   color: #274a6b; opacity: .55; vertical-align: middle;
 }
-.rchan-fhash:hover { opacity: 1; color: #c8102e; }
+.rchan-fhash:hover, .rchan-fhash:focus-visible { opacity: 1; color: #c8102e; }
 .rchan-fhash svg { display: inline-block; vertical-align: middle; }
 .theme_dark .rchan-fhash { color: #9fc4e8; }
 
@@ -756,8 +756,8 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
   margin-left: 6px; color: #274a6b; opacity: 0; transition: opacity .1s ease;
   vertical-align: -1px;
 }
-.innerPost:hover .rchan-reportbtn, .innerOP:hover .rchan-reportbtn,
-.rchan-reportbtn:focus-visible { opacity: .55; }
+.innerPost:hover .rchan-reportbtn, .innerOP:hover .rchan-reportbtn { opacity: .55; }
+.rchan-reportbtn:focus-visible { opacity: 1; }
 .rchan-reportbtn:hover { opacity: 1 !important; color: #c8102e; }
 .rchan-reportbtn svg { display: inline-block; vertical-align: middle; }
 .theme_dark .rchan-reportbtn { color: #9fc4e8; }
@@ -1052,7 +1052,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   border: 0; background: none; cursor: pointer; padding: 0 2px; flex: none;
   font-size: .833rem; font-weight: 700; line-height: 1; opacity: .5;
 }
-.rchan-hist-x:hover { opacity: 1; color: #c8102e; }
+.rchan-hist-x:hover, .rchan-hist-x:focus-visible { opacity: 1; color: #c8102e; }
 .rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .85; text-align: center; }
 /* pruned/archived threads: dimmed row + grey "gone" chip */
 .rchan-hist-dead { opacity: .5; }
@@ -1092,7 +1092,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   border: 0; background: none; cursor: pointer; padding: 0 2px;
   margin-left: 2px; color: inherit; opacity: .45; vertical-align: -1px;
 }
-.rchan-idfunnel:hover { opacity: 1; color: #c8102e; }
+.rchan-idfunnel:hover, .rchan-idfunnel:focus-visible { opacity: 1; color: #c8102e; }
 .rchan-idfunnel svg { display: inline-block; vertical-align: middle; }
 
 /* ---------- Staff quick-mod strip (hover-revealed, armed confirm) ---------- */
@@ -1128,7 +1128,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   border: 0; background: none; cursor: pointer; padding: 0 3px;
   margin-left: 4px; color: #274a6b; opacity: .4; vertical-align: -1px;
 }
-.rchan-convbtn:hover { opacity: 1; color: #c8102e; }
+.rchan-convbtn:hover, .rchan-convbtn:focus-visible { opacity: 1; color: #c8102e; }
 .rchan-convbtn svg { display: inline-block; vertical-align: middle; }
 .theme_dark .rchan-convbtn { color: #9fc4e8; }
 

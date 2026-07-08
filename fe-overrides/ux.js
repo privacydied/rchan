@@ -591,6 +591,7 @@
       var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
       if (m) { m.focus(); e.preventDefault(); }
     }
+    else if (e.key === "f") { toggleFind(); e.preventDefault(); }
   }
 
   /* ---------- Catalog toolbar: Index Sort + Size + View (persisted) + prefetch ----------
@@ -1268,6 +1269,105 @@
       (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "");
   }
 
+  /* ---------- Find-in-thread: live post filter ----------
+     `f` (or the magnifier in the nav) opens a bar that COLLAPSES non-matching
+     posts instead of fighting Ctrl+F's lazy rendering. Plain text searches
+     everything; `id:` `name:` `file:` `subj:` `no:` scope to a field. Every
+     ID pill gets a funnel for one-click "show only this ID". The OP always
+     stays visible; live WS posts are re-filtered by refresh(). */
+  var SVG_FIND = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>';
+  var SVG_FUNNEL = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 4h18l-7 9v5l-4 2v-7L3 4z"/></svg>';
+  var findBar = null, findInput = null, findCount = null, findActive = false, findT = null;
+  function buildFindIndex(cell) {
+    if (cell.__find) { return cell.__find; }
+    var inner = cell.querySelector(".innerPost, .innerOP, .markedPost") || cell;
+    function grab(sel) {
+      var els = inner.querySelectorAll(sel), s = "";
+      for (var i = 0; i < els.length; i++) { s += " " + (els[i].textContent || ""); }
+      return s.toLowerCase();
+    }
+    var msgEl = inner.querySelector(".divMessage"), msg = "";
+    if (msgEl) {                                   // exclude inline-expanded quotes (other posts' text)
+      var clone = msgEl.cloneNode(true);
+      var inl = clone.querySelectorAll(".rchan-inline-quote");
+      for (var j = inl.length - 1; j >= 0; j--) { inl[j].parentNode.removeChild(inl[j]); }
+      msg = (clone.textContent || "").toLowerCase();
+    }
+    var f = {
+      name: grab(".linkName, .labelName"),
+      subj: grab(".labelSubject"),
+      id: grab(".labelId").replace(/\s*\(\d+\)\s*/g, " "),
+      file: grab(".originalNameLink"),
+      no: " " + (postIdOf(cell) || "")
+    };
+    f.all = msg + f.name + f.subj + f.id + f.file + f.no;
+    cell.__find = f;
+    return f;
+  }
+  function applyFind() {
+    if (!findActive) { return; }
+    var q = (findInput.value || "").trim().toLowerCase();
+    var mode = "all", needle = q;
+    var m = q.match(/^(id|name|file|subj|no):\s*(.*)$/);
+    if (m) { mode = m[1]; needle = m[2]; }
+    var posts = document.getElementsByClassName("postCell");
+    var shown = 0;
+    for (var i = 0; i < posts.length; i++) {
+      var f = buildFindIndex(posts[i]);
+      var hit = !needle || (f[mode] || "").indexOf(needle) > -1;
+      posts[i].classList.toggle("rchan-findhide", !hit);
+      if (hit) { shown++; }
+    }
+    findCount.textContent = needle ? (shown + " / " + posts.length) : (posts.length + " posts");
+  }
+  function closeFind() {
+    if (!findBar) { return; }
+    findBar.style.display = "none";
+    findActive = false;
+    var hidden = document.getElementsByClassName("rchan-findhide");
+    for (var i = hidden.length - 1; i >= 0; i--) { hidden[i].classList.remove("rchan-findhide"); }
+  }
+  function toggleFind(preset) {
+    if (!curThreadId()) { return; }
+    if (findBar && findBar.style.display === "flex" && preset == null) { closeFind(); return; }
+    if (!findBar) {
+      findBar = document.createElement("div"); findBar.id = "rchan-find";
+      findBar.setAttribute("role", "search");
+      findInput = document.createElement("input");
+      findInput.type = "text"; findInput.placeholder = "Filter posts — text, id:, name:, file:, subj:, no:";
+      findInput.setAttribute("aria-label", "Filter posts in this thread");
+      findInput.addEventListener("input", function () {
+        clearTimeout(findT); findT = setTimeout(applyFind, 150);
+      });
+      findInput.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { closeFind(); e.stopPropagation(); }
+      });
+      findCount = document.createElement("span"); findCount.className = "rchan-findcount";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.title = "Close filter"; x.setAttribute("aria-label", "Close filter");
+      x.addEventListener("click", closeFind);
+      findBar.appendChild(findInput); findBar.appendChild(findCount); findBar.appendChild(x);
+      document.body.appendChild(findBar);
+    }
+    findBar.style.display = "flex";
+    findActive = true;
+    if (preset != null) { findInput.value = preset; }
+    findInput.focus(); findInput.select();
+    applyFind();
+  }
+  function buildFindButton() {
+    if (!curThreadId() || document.getElementById("rchan-findbtn")) { return; }
+    var nav = document.querySelector("nav, #dynamicHeader");
+    if (!nav) { return; }
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "rchan-findbtn";
+    b.innerHTML = SVG_FIND;
+    b.setAttribute("data-tooltip", "Filter posts in this thread (f)");
+    b.setAttribute("aria-label", "Filter posts in this thread");
+    b.addEventListener("click", function () { toggleFind(); });
+    nav.insertBefore(b, document.getElementById("navOptionsSpan") || null);
+  }
+
   /* ---------- Homepage: "Active threads" strip ----------
      Top threads by last bump across boards (boards list -> one catalog.json
      each, capped at 8 boards), rendered as cards under the board list. Makes
@@ -1531,6 +1631,18 @@
       el.classList.add("rchan-idpill");
       el.style.setProperty("--idh", h);
       el.style.backgroundColor = "";                       // drop the engine's inline neon
+      // funnel: one-click "show only this ID" via the find-in-thread bar
+      if (curThreadId() && !el.closest(".rchan-inline-quote") && !el.closest(".quoteTooltip")) {
+        var fn = document.createElement("button");
+        fn.type = "button"; fn.className = "rchan-idfunnel";
+        fn.innerHTML = SVG_FUNNEL;
+        fn.setAttribute("data-tooltip", "Show only this ID");
+        fn.setAttribute("aria-label", "Show only posts by ID " + id);
+        fn.addEventListener("click", (function (idText) {
+          return function (ev) { ev.preventDefault(); ev.stopPropagation(); toggleFind("id:" + idText); };
+        })(id.toLowerCase()));
+        el.parentNode.insertBefore(fn, el.nextSibling);
+      }
     }
   }
   /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the
@@ -1831,6 +1943,7 @@
     ["b", "Jump to bottom"],
     ["c", "Toggle catalog ↔ index view"],
     ["r", "Focus the reply box"],
+    ["f", "Filter posts in the thread"],
     ["?", "This cheat-sheet"],
     ["Esc", "Close panels and overlays"]
   ];
@@ -1870,13 +1983,14 @@
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
+    if (findBar && findBar.style.display === "flex") { closeFind(); return; }
     if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; return; }
     if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
   }
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -1925,7 +2039,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildActiveThreads
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

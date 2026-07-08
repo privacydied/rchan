@@ -16,6 +16,46 @@
 var l=document.querySelector('link[rel~="icon"]');/* whole-word: matches rel="icon"/"shortcut icon", NOT apple-touch-icon */
 if(!l){l=document.createElement("link");l.rel="icon";document.head.appendChild(l);}
 var i=0;
-if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){l.href=F[0];}
-else{setInterval(function(){l.href=F[i];i=(i+1)%F.length;},90);}
+var reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Unread badge: red disc + count composited onto the frames (canvas, cached
+   per badge/frame — data: URLs, so no canvas taint). ux.js drives it via
+   window.rchanSetFaviconBadge(n) alongside the "(N)" tab-title counter. */
+var badge=0,cache={};
+function badged(idx){
+  var key=badge+":"+idx;
+  if(cache[key]){return cache[key];}
+  if(cache[key]===false){return null;}          /* still building */
+  cache[key]=false;
+  var img=new Image(),b=badge;
+  img.onload=function(){
+    try{
+      var c=document.createElement("canvas");c.width=32;c.height=32;
+      var x=c.getContext("2d");
+      x.drawImage(img,0,0,32,32);
+      x.fillStyle="#c8102e";
+      x.beginPath();x.arc(21,21,11,0,2*Math.PI);x.fill();
+      x.fillStyle="#fff";x.font="bold 15px arial,sans-serif";
+      x.textAlign="center";x.textBaseline="middle";
+      x.fillText(b>9?"9+":String(b),21,22);
+      cache[key]=c.toDataURL("image/png");
+      if(reduced&&badge===b){l.href=cache[key];} /* static mode: apply as soon as built */
+    }catch(e){delete cache[key];}
+  };
+  img.src=F[idx];
+  return null;
+}
+window.rchanSetFaviconBadge=function(n){
+  n=Math.max(0,n|0);
+  if(n===badge){return;}
+  badge=n;
+  if(reduced){if(!n){l.href=F[0];}else{badged(0);}} /* animated mode picks it up next tick */
+};
+
+if(reduced){l.href=F[0];}
+else{setInterval(function(){
+  var u=badge?badged(i):null;                    /* falls back to the plain frame while building */
+  l.href=u||F[i];
+  i=(i+1)%F.length;
+},90);}
 })();

@@ -824,12 +824,16 @@
   var SEEN_KEY = "rchan_seen", NOTIFY_KEY = "rchan_notify";
   // Tab-title unread counter: "(3) /rdr/ - thread" while the tab is hidden.
   var baseTitle = document.title, unseenCount = 0;
+  function setFavBadge(n) {  // favicon.js exposes the badge compositor
+    try { if (window.rchanSetFaviconBadge) { rchanSetFaviconBadge(n); } } catch (e) {}
+  }
   function bumpTitleUnread(n) {
     unseenCount += n;
     document.title = "(" + unseenCount + ") " + baseTitle;
+    setFavBadge(unseenCount);
   }
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && unseenCount) { unseenCount = 0; document.title = baseTitle; }
+    if (!document.hidden && unseenCount) { unseenCount = 0; document.title = baseTitle; setFavBadge(0); }
   });
   // "▼ N new" pill when new posts land outside the viewport; hides once seen.
   var newPill = null, pillIO = null, pillTotal = 0;

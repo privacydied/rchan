@@ -43,23 +43,56 @@
 
   /* ---------- "(You)" — record your own posts, then highlight ---------- */
   var flashId = null, flashDeadline = 0;
-  // Auto-watch: posting in a thread (or creating one) adds it to the native
-  // watcher, so the whole notification pipeline fires without the manual
-  // bell click. Default ON, toggleable in settings.
-  function autoWatch(board, threadId, label) {
-    if (!setOn("autowatch") || !board || !threadId) { return; }
+  // Watch primitives — shared by auto-watch (below), the catalog watch button
+  // and the catalog keyboard/long-press actions. Same watchedData records the
+  // native watch button writes; labels escaped the same way (addWatchedCell
+  // innerHTMLs them).
+  function isWatched(board, threadId) {
     try {
       var wd = JSON.parse(localStorage.watchedData || "{}");
-      if (wd[board] && wd[board][threadId]) { return; }            // already watched
+      return !!(wd[board] && wd[board][threadId]);
+    } catch (e) { return false; }
+  }
+  function watchThread(board, threadId, label) {
+    if (!board || !threadId) { return false; }
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      if (wd[board] && wd[board][threadId]) { return false; }      // already watched
       var now = Date.now();
-      // native addWatchedCell innerHTMLs the label — escape like the native watch button does
       var rec = { lastSeen: now, lastReplied: now, label: escHtml(String(label || "").slice(0, 70)) || null };
       (wd[board] = wd[board] || {})[threadId] = rec;
       localStorage.watchedData = JSON.stringify(wd);
       if (window.watcher && watcher.addWatchedCell) {              // render the menu cell live
         try { watcher.addWatchedCell(board, String(threadId), rec); } catch (e2) {}
       }
+      return true;
+    } catch (e) { return false; }
+  }
+  function unwatchThread(board, threadId) {
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      if (wd[board]) {
+        delete wd[board][threadId];
+        if (!Object.keys(wd[board]).length) { delete wd[board]; }
+      }
+      localStorage.watchedData = JSON.stringify(wd);
     } catch (e) {}
+    try {   // drop the menu cell: notification span -> label -> cell -> wrapper
+      var w = window.watcher;
+      var rel = w && w.elementRelation && w.elementRelation[board] && w.elementRelation[board][threadId];
+      if (rel) {
+        var wrap = rel.parentNode && rel.parentNode.parentNode && rel.parentNode.parentNode.parentNode;
+        if (wrap && wrap.parentNode) { wrap.parentNode.removeChild(wrap); }
+        delete w.elementRelation[board][threadId];
+      }
+    } catch (e2) {}
+  }
+  // Auto-watch: posting in a thread (or creating one) adds it to the native
+  // watcher, so the whole notification pipeline fires without the manual
+  // bell click. Default ON, toggleable in settings.
+  function autoWatch(board, threadId, label) {
+    if (!setOn("autowatch")) { return; }
+    watchThread(board, threadId, label);
   }
   function addYou(id) {
     id = String(id).replace(/\D/g, "");

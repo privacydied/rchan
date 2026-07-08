@@ -279,23 +279,56 @@
 
   /* ---------- "(You)" — record your own posts, then highlight ---------- */
   var flashId = null, flashDeadline = 0;
-  // Auto-watch: posting in a thread (or creating one) adds it to the native
-  // watcher, so the whole notification pipeline fires without the manual
-  // bell click. Default ON, toggleable in settings.
-  function autoWatch(board, threadId, label) {
-    if (!setOn("autowatch") || !board || !threadId) { return; }
+  // Watch primitives — shared by auto-watch (below), the catalog watch button
+  // and the catalog keyboard/long-press actions. Same watchedData records the
+  // native watch button writes; labels escaped the same way (addWatchedCell
+  // innerHTMLs them).
+  function isWatched(board, threadId) {
     try {
       var wd = JSON.parse(localStorage.watchedData || "{}");
-      if (wd[board] && wd[board][threadId]) { return; }            // already watched
+      return !!(wd[board] && wd[board][threadId]);
+    } catch (e) { return false; }
+  }
+  function watchThread(board, threadId, label) {
+    if (!board || !threadId) { return false; }
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      if (wd[board] && wd[board][threadId]) { return false; }      // already watched
       var now = Date.now();
-      // native addWatchedCell innerHTMLs the label — escape like the native watch button does
       var rec = { lastSeen: now, lastReplied: now, label: escHtml(String(label || "").slice(0, 70)) || null };
       (wd[board] = wd[board] || {})[threadId] = rec;
       localStorage.watchedData = JSON.stringify(wd);
       if (window.watcher && watcher.addWatchedCell) {              // render the menu cell live
         try { watcher.addWatchedCell(board, String(threadId), rec); } catch (e2) {}
       }
+      return true;
+    } catch (e) { return false; }
+  }
+  function unwatchThread(board, threadId) {
+    try {
+      var wd = JSON.parse(localStorage.watchedData || "{}");
+      if (wd[board]) {
+        delete wd[board][threadId];
+        if (!Object.keys(wd[board]).length) { delete wd[board]; }
+      }
+      localStorage.watchedData = JSON.stringify(wd);
     } catch (e) {}
+    try {   // drop the menu cell: notification span -> label -> cell -> wrapper
+      var w = window.watcher;
+      var rel = w && w.elementRelation && w.elementRelation[board] && w.elementRelation[board][threadId];
+      if (rel) {
+        var wrap = rel.parentNode && rel.parentNode.parentNode && rel.parentNode.parentNode.parentNode;
+        if (wrap && wrap.parentNode) { wrap.parentNode.removeChild(wrap); }
+        delete w.elementRelation[board][threadId];
+      }
+    } catch (e2) {}
+  }
+  // Auto-watch: posting in a thread (or creating one) adds it to the native
+  // watcher, so the whole notification pipeline fires without the manual
+  // bell click. Default ON, toggleable in settings.
+  function autoWatch(board, threadId, label) {
+    if (!setOn("autowatch")) { return; }
+    watchThread(board, threadId, label);
   }
   function addYou(id) {
     id = String(id).replace(/\D/g, "");
@@ -1081,14 +1114,7 @@
     if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
     catPrev.style.top = y + "px";
   }
-  function onCatPrevOver(e, fromTap) {
-    if (!setOn("catprev")) { return; }
-    // touch taps fire a synthesized mouseover BEFORE click; if that path set
-    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
-    if (TOUCH_ONLY && !fromTap) { return; }
-    if (!isCatalog()) { return; }
-    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
-    if (!cell || catPrevFor === cell) { return; }
+  function showCatPreviewFor(cell) {                 // shared by hover, tap, keyboard and the sheet
     catPrevFor = cell;
     var a = cell.querySelector("a.linkThumb");
     var m = (a && a.getAttribute("href") || "").match(/^\/([^\/]+)\/res\/(\d+)/);
@@ -1099,6 +1125,16 @@
       catPrevCache[url] = d;
       if (catPrevFor === cell) { renderCatPreview(cell, d); }
     }).catch(function () {});
+  }
+  function onCatPrevOver(e, fromTap) {
+    if (!setOn("catprev")) { return; }
+    // touch taps fire a synthesized mouseover BEFORE click; if that path set
+    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
+    if (TOUCH_ONLY && !fromTap) { return; }
+    if (!isCatalog()) { return; }
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell || catPrevFor === cell) { return; }
+    showCatPreviewFor(cell);
   }
   function onCatPrevOut(e) {
     var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
@@ -1122,6 +1158,60 @@
     if (!cell || catPrevFor === cell) { return; }  // second tap: fall through to navigation
     e.preventDefault(); e.stopPropagation();
     onCatPrevOver(e, true);                        // renders + caches, sets catPrevFor
+  }
+
+  /* ---------- Watch from the catalog: bookmark without entering ----------
+     Auto-watch covers threads you post in; the bell covers threads you're
+     reading. From the catalog — the scanning surface — there was no watch
+     affordance at all: you had to open a thread (loading its media, marking
+     it read, losing your scan position) just to bookmark it. A hover 👁 on
+     every card toggles the same watchedData record the native button writes. */
+  var SVG_EYE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
+  function catCellLabel(cell) {
+    var subj = cell.querySelector(".labelSubject");
+    if (subj && subj.textContent.trim()) { return subj.textContent.trim().slice(0, 70); }
+    var msg = cell.querySelector(".divMessage");
+    if (msg && msg.textContent.trim()) { return msg.textContent.replace(/\s+/g, " ").trim().slice(0, 70); }
+    return "Thread " + catThreadId(cell);
+  }
+  function toggleCatalogWatch(cell, btn) {
+    var b = getBoard(), tid = catThreadId(cell);
+    if (!b || !tid) { return; }
+    if (isWatched(b, String(tid))) {
+      unwatchThread(b, String(tid));
+      if (btn) { btn.classList.remove("rchan-on"); btn.setAttribute("data-tooltip", "Watch this thread"); }
+      okToast("Unwatched");
+    } else {
+      watchThread(b, String(tid), catCellLabel(cell));
+      if (btn) { btn.classList.add("rchan-on"); btn.setAttribute("data-tooltip", "Unwatch"); }
+      okToast("Watching — replies will notify you");
+    }
+  }
+  function decorateCatalogWatch(root) {
+    if (!isCatalog()) { return; }
+    var b = getBoard();
+    if (!b || b.charAt(0) === "." || isOverboard(b)) { return; }
+    var cells = (root || document).getElementsByClassName("catalogCell");
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      if (cell.getAttribute("data-watchbtn")) { continue; }
+      cell.setAttribute("data-watchbtn", "1");
+      var tid = catThreadId(cell);
+      if (!tid) { continue; }
+      var watched = isWatched(b, String(tid));
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "rchan-catwatch" + (watched ? " rchan-on" : "");
+      btn.innerHTML = SVG_EYE;
+      btn.setAttribute("data-tooltip", watched ? "Unwatch" : "Watch this thread");
+      btn.setAttribute("aria-label", "Watch thread " + tid);
+      btn.addEventListener("click", (function (cell2, btn2) {
+        return function (e) {
+          e.preventDefault(); e.stopPropagation();
+          toggleCatalogWatch(cell2, btn2);
+        };
+      })(cell, btn));
+      cell.appendChild(btn);
+    }
   }
 
   /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
@@ -5320,6 +5410,44 @@
     dialogOpened(sheet, box.querySelector("button"));
     try { if (navigator.vibrate) { navigator.vibrate(10); } } catch (e) {}
   }
+  // Catalog cells are one big link, so the "skip links/images" rule would make
+  // them un-pressable — they get their own sheet (Open / Watch / Preview / Copy).
+  function openCatalogSheet(cell) {
+    var b = getBoard(), tid = catThreadId(cell);
+    if (!b || !tid) { return; }
+    if (!sheet) {
+      sheet = document.createElement("div"); sheet.id = "rchan-sheet";
+      sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-label", "Thread actions");
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) { closeSheet(); } });
+      document.body.appendChild(sheet);
+    }
+    sheet.innerHTML = "";
+    var box = document.createElement("div"); box.className = "rchan-sheet-box";
+    var head = document.createElement("div"); head.className = "rchan-sheet-head";
+    head.textContent = catCellLabel(cell);
+    box.appendChild(head);
+    var href = (cell.querySelector("a.linkThumb") || {}).href;
+    if (href) { box.appendChild(sheetBtn("Open thread", function () { location.href = href; })); }
+    box.appendChild(sheetBtn(isWatched(b, String(tid)) ? "Unwatch this thread" : "Watch this thread", function () {
+      var btn = cell.querySelector(".rchan-catwatch");
+      toggleCatalogWatch(cell, btn);
+    }));
+    box.appendChild(sheetBtn("Preview last replies", function () { showCatPreviewFor(cell); }));
+    box.appendChild(sheetBtn("Copy link", function () {
+      var url = location.origin + "/" + b + "/res/" + tid;
+      var done = function () { okToast("Link copied"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () { toast(url); });
+      } else { toast(url); }
+    }));
+    var cancel = sheetBtn("Cancel", function () {});
+    cancel.className = "rchan-sheet-cancel";
+    box.appendChild(cancel);
+    sheet.appendChild(box);
+    sheet.style.display = "flex";
+    dialogOpened(sheet, box.querySelector("button"));
+    try { if (navigator.vibrate) { navigator.vibrate(10); } } catch (e) {}
+  }
   function initLongPress() {
     if (!TOUCH_ONLY) { return; }
     document.addEventListener("touchstart", function (e) {
@@ -5327,14 +5455,23 @@
       if (e.touches.length !== 1 || galOpen) { return; }
       var t = e.target;
       if (!t || !t.closest) { return; }
-      // pressing media/links/buttons keeps native behaviour (save image, etc.)
-      if (t.closest("a, img, video, audio, button, input, textarea, select, .rchan-inline-quote, .quoteTooltip")) { return; }
-      var cell = t.closest(".postCell, .opCell");
+      var cell, isCat = false;
+      var catCell = isCatalog() ? t.closest(".catalogCell") : null;
+      if (catCell && !t.closest("button, input, textarea, select")) {
+        cell = catCell; isCat = true;                  // cards are one big link — allow the press
+      } else {
+        // pressing media/links/buttons keeps native behaviour (save image, etc.)
+        if (t.closest("a, img, video, audio, button, input, textarea, select, .rchan-inline-quote, .quoteTooltip")) { return; }
+        cell = t.closest(".postCell, .opCell");
+      }
       if (!cell) { return; }
       var x0 = e.touches[0].clientX, y0 = e.touches[0].clientY;
       lpCell = cell;
       lpTimer = setTimeout(function () {
-        if (lpCell) { lpArmed = true; lpSheetAt = Date.now(); openSheet(lpCell); }
+        if (lpCell) {
+          lpArmed = true; lpSheetAt = Date.now();
+          if (isCat) { openCatalogSheet(lpCell); } else { openSheet(lpCell); }
+        }
       }, 500);
       var cancel = function (ev) {
         if (ev.type === "touchmove" && ev.touches.length === 1) {
@@ -5417,7 +5554,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); decorateCatalogWatch(document); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -5482,7 +5619,7 @@
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
-     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
+     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },

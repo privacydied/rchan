@@ -317,14 +317,7 @@
     if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
     catPrev.style.top = y + "px";
   }
-  function onCatPrevOver(e, fromTap) {
-    if (!setOn("catprev")) { return; }
-    // touch taps fire a synthesized mouseover BEFORE click; if that path set
-    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
-    if (TOUCH_ONLY && !fromTap) { return; }
-    if (!isCatalog()) { return; }
-    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
-    if (!cell || catPrevFor === cell) { return; }
+  function showCatPreviewFor(cell) {                 // shared by hover, tap, keyboard and the sheet
     catPrevFor = cell;
     var a = cell.querySelector("a.linkThumb");
     var m = (a && a.getAttribute("href") || "").match(/^\/([^\/]+)\/res\/(\d+)/);
@@ -335,6 +328,16 @@
       catPrevCache[url] = d;
       if (catPrevFor === cell) { renderCatPreview(cell, d); }
     }).catch(function () {});
+  }
+  function onCatPrevOver(e, fromTap) {
+    if (!setOn("catprev")) { return; }
+    // touch taps fire a synthesized mouseover BEFORE click; if that path set
+    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
+    if (TOUCH_ONLY && !fromTap) { return; }
+    if (!isCatalog()) { return; }
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell || catPrevFor === cell) { return; }
+    showCatPreviewFor(cell);
   }
   function onCatPrevOut(e) {
     var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
@@ -358,5 +361,59 @@
     if (!cell || catPrevFor === cell) { return; }  // second tap: fall through to navigation
     e.preventDefault(); e.stopPropagation();
     onCatPrevOver(e, true);                        // renders + caches, sets catPrevFor
+  }
+
+  /* ---------- Watch from the catalog: bookmark without entering ----------
+     Auto-watch covers threads you post in; the bell covers threads you're
+     reading. From the catalog — the scanning surface — there was no watch
+     affordance at all: you had to open a thread (loading its media, marking
+     it read, losing your scan position) just to bookmark it. A hover 👁 on
+     every card toggles the same watchedData record the native button writes. */
+  var SVG_EYE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
+  function catCellLabel(cell) {
+    var subj = cell.querySelector(".labelSubject");
+    if (subj && subj.textContent.trim()) { return subj.textContent.trim().slice(0, 70); }
+    var msg = cell.querySelector(".divMessage");
+    if (msg && msg.textContent.trim()) { return msg.textContent.replace(/\s+/g, " ").trim().slice(0, 70); }
+    return "Thread " + catThreadId(cell);
+  }
+  function toggleCatalogWatch(cell, btn) {
+    var b = getBoard(), tid = catThreadId(cell);
+    if (!b || !tid) { return; }
+    if (isWatched(b, String(tid))) {
+      unwatchThread(b, String(tid));
+      if (btn) { btn.classList.remove("rchan-on"); btn.setAttribute("data-tooltip", "Watch this thread"); }
+      okToast("Unwatched");
+    } else {
+      watchThread(b, String(tid), catCellLabel(cell));
+      if (btn) { btn.classList.add("rchan-on"); btn.setAttribute("data-tooltip", "Unwatch"); }
+      okToast("Watching — replies will notify you");
+    }
+  }
+  function decorateCatalogWatch(root) {
+    if (!isCatalog()) { return; }
+    var b = getBoard();
+    if (!b || b.charAt(0) === "." || isOverboard(b)) { return; }
+    var cells = (root || document).getElementsByClassName("catalogCell");
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      if (cell.getAttribute("data-watchbtn")) { continue; }
+      cell.setAttribute("data-watchbtn", "1");
+      var tid = catThreadId(cell);
+      if (!tid) { continue; }
+      var watched = isWatched(b, String(tid));
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "rchan-catwatch" + (watched ? " rchan-on" : "");
+      btn.innerHTML = SVG_EYE;
+      btn.setAttribute("data-tooltip", watched ? "Unwatch" : "Watch this thread");
+      btn.setAttribute("aria-label", "Watch thread " + tid);
+      btn.addEventListener("click", (function (cell2, btn2) {
+        return function (e) {
+          e.preventDefault(); e.stopPropagation();
+          toggleCatalogWatch(cell2, btn2);
+        };
+      })(cell, btn));
+      cell.appendChild(btn);
+    }
   }
 

@@ -131,6 +131,44 @@
     dialogOpened(sheet, box.querySelector("button"));
     try { if (navigator.vibrate) { navigator.vibrate(10); } } catch (e) {}
   }
+  // Catalog cells are one big link, so the "skip links/images" rule would make
+  // them un-pressable — they get their own sheet (Open / Watch / Preview / Copy).
+  function openCatalogSheet(cell) {
+    var b = getBoard(), tid = catThreadId(cell);
+    if (!b || !tid) { return; }
+    if (!sheet) {
+      sheet = document.createElement("div"); sheet.id = "rchan-sheet";
+      sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-label", "Thread actions");
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) { closeSheet(); } });
+      document.body.appendChild(sheet);
+    }
+    sheet.innerHTML = "";
+    var box = document.createElement("div"); box.className = "rchan-sheet-box";
+    var head = document.createElement("div"); head.className = "rchan-sheet-head";
+    head.textContent = catCellLabel(cell);
+    box.appendChild(head);
+    var href = (cell.querySelector("a.linkThumb") || {}).href;
+    if (href) { box.appendChild(sheetBtn("Open thread", function () { location.href = href; })); }
+    box.appendChild(sheetBtn(isWatched(b, String(tid)) ? "Unwatch this thread" : "Watch this thread", function () {
+      var btn = cell.querySelector(".rchan-catwatch");
+      toggleCatalogWatch(cell, btn);
+    }));
+    box.appendChild(sheetBtn("Preview last replies", function () { showCatPreviewFor(cell); }));
+    box.appendChild(sheetBtn("Copy link", function () {
+      var url = location.origin + "/" + b + "/res/" + tid;
+      var done = function () { okToast("Link copied"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () { toast(url); });
+      } else { toast(url); }
+    }));
+    var cancel = sheetBtn("Cancel", function () {});
+    cancel.className = "rchan-sheet-cancel";
+    box.appendChild(cancel);
+    sheet.appendChild(box);
+    sheet.style.display = "flex";
+    dialogOpened(sheet, box.querySelector("button"));
+    try { if (navigator.vibrate) { navigator.vibrate(10); } } catch (e) {}
+  }
   function initLongPress() {
     if (!TOUCH_ONLY) { return; }
     document.addEventListener("touchstart", function (e) {
@@ -138,14 +176,23 @@
       if (e.touches.length !== 1 || galOpen) { return; }
       var t = e.target;
       if (!t || !t.closest) { return; }
-      // pressing media/links/buttons keeps native behaviour (save image, etc.)
-      if (t.closest("a, img, video, audio, button, input, textarea, select, .rchan-inline-quote, .quoteTooltip")) { return; }
-      var cell = t.closest(".postCell, .opCell");
+      var cell, isCat = false;
+      var catCell = isCatalog() ? t.closest(".catalogCell") : null;
+      if (catCell && !t.closest("button, input, textarea, select")) {
+        cell = catCell; isCat = true;                  // cards are one big link — allow the press
+      } else {
+        // pressing media/links/buttons keeps native behaviour (save image, etc.)
+        if (t.closest("a, img, video, audio, button, input, textarea, select, .rchan-inline-quote, .quoteTooltip")) { return; }
+        cell = t.closest(".postCell, .opCell");
+      }
       if (!cell) { return; }
       var x0 = e.touches[0].clientX, y0 = e.touches[0].clientY;
       lpCell = cell;
       lpTimer = setTimeout(function () {
-        if (lpCell) { lpArmed = true; lpSheetAt = Date.now(); openSheet(lpCell); }
+        if (lpCell) {
+          lpArmed = true; lpSheetAt = Date.now();
+          if (isCat) { openCatalogSheet(lpCell); } else { openSheet(lpCell); }
+        }
       }, 500);
       var cancel = function (ev) {
         if (ev.type === "touchmove" && ev.touches.length === 1) {

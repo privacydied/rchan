@@ -469,6 +469,20 @@ body.rchan-ws #rchan-zoom { filter: none; }
 .catalogCell.rchan-visited { opacity: .5; transition: opacity .15s ease; }
 .catalogCell.rchan-visited:hover { opacity: 1; }
 
+/* ---------- Catalog: watch button on every card ---------- */
+.catalogCell { position: relative; }
+.rchan-catwatch {
+  position: absolute; top: 2px; right: 2px; z-index: 2;
+  border: 0; cursor: pointer; padding: 4px;
+  background: rgba(0,0,0,.45); color: #fff; line-height: 0;
+  opacity: 0; transition: opacity .12s ease;
+}
+.catalogCell:hover .rchan-catwatch, .rchan-catwatch:focus-visible, .rchan-catwatch.rchan-on { opacity: 1; }
+.rchan-catwatch:hover { background: #c8102e; }
+.rchan-catwatch.rchan-on { color: #2ea043; }
+.rchan-catwatch svg { display: block; }
+@media (hover: none) { .rchan-catwatch { opacity: .85; } }   /* no hover to reveal it on touch */
+
 /* ---------- Empty board state: an invitation, not a void ---------- */
 #rchan-empty { text-align: center; margin: 70px auto 40px; max-width: 480px; }
 .rchan-empty-title {

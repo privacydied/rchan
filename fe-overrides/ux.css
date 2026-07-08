@@ -667,6 +667,32 @@ body.theme_dark .markedPost {
   box-shadow: inset 4px 0 0 #f2b21e !important;
 }
 
+/* ---------- Brutalist theme (duplicated from Cream — customize independently) ----------
+   Registered in the theme switcher by ux.js (initAutoTheme). Starts identical to
+   Cream; these are Cream's palette rules re-scoped to .theme_brutalist so they can
+   diverge freely. The unscoped base styles in this sheet already apply to every
+   theme, so only the cream-specific overrides are copied here. */
+body.theme_brutalist, .theme_brutalist { background: #EEEEE4 !important; color: #393939 !important; }
+.theme_brutalist a { color: #274a6b; }
+.theme_brutalist .innerPost, .theme_brutalist .sideCatalogCell, .theme_brutalist .markedPost,
+.theme_brutalist .sideCatalogMarkedCell, .theme_brutalist #quick-reply table, .theme_brutalist .floatingMenu,
+.theme_brutalist #newPostFieldset, .theme_brutalist #postingForm, .theme_brutalist #postingTable,
+.theme_brutalist #postingForm td, .theme_brutalist .modalTableBody td, .theme_brutalist .topBoards a,
+.theme_brutalist #divLatestPosts .latestPostCell {
+  background: #E6E6DA !important; color: #393939 !important; border-color: #CFCFC4 !important;
+}
+.theme_brutalist #postingForm th, .theme_brutalist .modalTableBody th {
+  background: #DCDCCF !important; color: #393939 !important; border-color: #CFCFC4 !important;
+}
+.theme_brutalist nav, .theme_brutalist #dynamicHeader { background: #E6E6DA !important; }
+.theme_brutalist .labelSubject, .theme_brutalist .postInfo, .theme_brutalist .divMessage, .theme_brutalist .title { color: #393939 !important; }
+.theme_brutalist .linkName, .theme_brutalist .labelName { color: #3A6B2E !important; }
+.theme_brutalist .rchan-you { background: #f4e9e3 !important; }
+.theme_brutalist .markedPost {
+  background: #EFE8CF !important;
+  box-shadow: inset 4px 0 0 #f2b21e, 2px 2px 0 rgba(0,0,0,.1) !important;
+}
+
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
    '(Show file)'). Replace with currentColor mask icons — external-link,

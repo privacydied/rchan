@@ -258,13 +258,21 @@
     applyAutoTheme();
     var sel = document.getElementById("themeSelector");
     if (sel && !sel.querySelector("option[data-auto]")) {
+      // Custom themes whose CSS lives in ux.css (not in themes.js's native list).
+      // Append AFTER the native options so their indices stay valid for the
+      // native onchange handler; our wrapper intercepts the custom ones first.
+      var bo = document.createElement("option");
+      bo.textContent = "Brutalist";
+      bo.setAttribute("data-rchan-theme", "brutalist");
+      sel.appendChild(bo);
       var o = document.createElement("option");
       o.textContent = "Auto (OS)";
       o.setAttribute("data-auto", "1");
       sel.appendChild(o);
       if (autoThemeOn()) { o.selected = true; }
+      else { try { if (localStorage.selectedTheme === "brutalist") { bo.selected = true; } } catch (e0) {} }
       // themes.js binds onchange as a property and indexes into ITS OWN theme
-      // list — selecting our appended option through that handler would throw.
+      // list — selecting an appended option through that handler would throw.
       var orig = sel.onchange;
       sel.onchange = function () {
         var cur = sel.options[sel.selectedIndex];
@@ -274,6 +282,12 @@
           return;
         }
         try { localStorage.removeItem(THEME_AUTO_KEY); } catch (e2) {}
+        if (cur && cur.getAttribute("data-rchan-theme")) {   // Brutalist etc.
+          try { delete localStorage.manualDefault; localStorage.selectedTheme = cur.getAttribute("data-rchan-theme"); } catch (e3) {}
+          try { document.documentElement.classList.remove("predark"); } catch (e4) {}
+          if (window.themeLoader && themeLoader.load) { themeLoader.load(); }
+          return;
+        }
         if (orig) { return orig.apply(this, arguments); }
       };
     }

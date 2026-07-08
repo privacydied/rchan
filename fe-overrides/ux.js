@@ -829,6 +829,15 @@
     for (var k in CLASS_TITLES) { if (el.classList && el.classList.contains(k)) { return CLASS_TITLES[k]; } }
     return el.id ? humanizeId(el.id) : "";
   }
+  // side-catalog "Refresh" word -> SVG refresh icon (server-rendered button)
+  function decorateSideCatalog() {
+    var b = document.getElementById("sideCatalogRefreshButton");
+    if (!b || b.getAttribute("data-svg")) { return; }
+    b.setAttribute("data-svg", "1");
+    b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg>';
+    b.setAttribute("data-tooltip", "Refresh side catalog");
+    b.setAttribute("aria-label", "Refresh side catalog");
+  }
   function decorateIcons(root) {
     var icons = (root || document).querySelectorAll(".coloredIcon, #favouriteButton, .watchButton, .linkQuote, .nameLink, .hideFileButton");
     for (var i = 0; i < icons.length; i++) {
@@ -1655,7 +1664,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -1703,7 +1712,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, updateThreadStat, buildActiveThreads
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

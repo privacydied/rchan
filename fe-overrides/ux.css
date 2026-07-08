@@ -405,6 +405,16 @@ body.rchan-view-index .catalogCell .divMessage { max-height: 8em; overflow: hidd
   pointer-events: none;
 }
 
+/* ---------- Side catalog refresh (word swapped for SVG in ux.js) ---------- */
+body #sideCatalogRefreshButton {
+  display: inline-flex; align-items: center;
+  padding: 2px 4px; background: none; border: none; cursor: pointer;
+  color: #274a6b;
+}
+body #sideCatalogRefreshButton:hover { color: #c8102e; }
+.theme_dark #sideCatalogRefreshButton { color: #9fc4e8; }
+.theme_dark #sideCatalogRefreshButton:hover { color: #d6e8f8; }
+
 /* ---------- Icons legibility per theme ---------- */
 .theme_dark .coloredIcon, .theme_dark .unhideButton, .theme_dark .embedButton,
 .theme_dark #showFormsButton, .theme_dark #favouriteButton, .theme_dark .watchButton {

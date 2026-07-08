@@ -7,13 +7,13 @@
 	"boardDescription": "rdr 4 eva",
 	"owner": "admin",
 	"settings": [
-		"disableIds"
+		"requireThreadFile"
 	],
-	"uniqueIps": 15,
-	"lastPostId": 80,
-	"captchaMode": 2.0,
-	"postsPerHour": 1,
-	"threadCount": 9,
+	"uniqueIps": 17,
+	"lastPostId": 121,
+	"captchaMode": 2,
+	"postsPerHour": 0,
+	"threadCount": 18,
 	"anonymousName": "",
 	"tags": [],
 	"rules": [

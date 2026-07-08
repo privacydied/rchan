@@ -11,12 +11,22 @@
 #   2. restarts rchan-landing (re-binds inodes, reloads the conf)
 #   3. smoke-checks that the versioned URLs serve 200 through the router
 #
-# Run it after ANY edit to fe-overrides/{ux.css,ux.js,favicon.js,mod.js,
+# Run it after ANY edit to fe-overrides/{src/*,ux.css,favicon.js,mod.js,
 # tooltips.js} instead of hand-bumping numbers:
 #   ./deploy-fe.sh
 set -e
 cd "$(dirname "$0")"
 CONF=nginx/default.conf
+
+# ---- build: ux.js is generated from fe-overrides/src/*.js (numeric order) ----
+# Edit the modules, never ux.js directly; the artifact stays committed because
+# the router bind-mounts it. A failed parse aborts the deploy.
+if [ -d fe-overrides/src ]; then
+  echo "building ux.js from fe-overrides/src/ ($(ls fe-overrides/src/*.js | wc -l | tr -d ' ') modules)..."
+  cat fe-overrides/src/*.js > fe-overrides/ux.new.js
+  node --check fe-overrides/ux.new.js
+  mv fe-overrides/ux.new.js fe-overrides/ux.js
+fi
 
 bump() { # $1 = URL path in the conf, $2 = source file
   v=$(md5sum "$2" | cut -c1-8)
@@ -43,3 +53,6 @@ for p in $(grep -o '/\.rchan/[a-z.]*?v=[A-Za-z0-9]*' "$CONF" | sort -u); do
   [ "$code" = "200" ] || fail=1
 done
 [ "$fail" = "0" ] && echo "OK" || { echo "FAILED — a versioned URL is not serving"; exit 1; }
+
+echo "smoke tests:"
+sh tests/fe-smoke.sh

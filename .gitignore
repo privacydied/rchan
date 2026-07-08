@@ -15,3 +15,5 @@ private.key
 # engine at /lynxchan/addon-deps (see docker-compose.yml). ~163MB of node_modules;
 # regenerate with: cd addons-deps && npm install
 addons-deps/
+ux.new.js
+ux.js.new

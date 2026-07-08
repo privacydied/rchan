@@ -1,0 +1,362 @@
+  /* ---------- Catalog toolbar: Index Sort + Size + View (persisted) + prefetch ----------
+     Sort keys come from /<board>/catalog.json, fetched ONCE and mapped by threadId
+     (lastBump, pinned, postCount, fileCount). "Last reply", "Last long reply" and
+     "Posts per minute" need reply timestamps/lengths + OP creation, which the
+     catalog payload does NOT expose — those modes lazily fetch /res/<id>.json once
+     per thread on first use (cached). "Creation date" uses threadId (monotonic).
+     Pinned threads always sort first. All modes descending, ties: newest first. */
+  var CAT_KEY = "rchan_catsize", CAT_SIZES = ["small", "large"], CAT_NAMES = { small: "Small", large: "Large" };
+  var CAT_CLASS = { small: "rchan-cat-s", large: "rchan-cat-l" };
+  var SORT_KEY = "rchan_catsort";
+  var SORT_MODES = ["bump", "lastreply", "longreply", "new", "replies", "images", "ppm"];
+  var SORT_NAMES = { bump: "Bump order", lastreply: "Last reply", longreply: "Last long reply",
+                     "new": "Creation date", replies: "Reply count", images: "File count", ppm: "Posts per minute" };
+  var VIEW_MODES = ["catalog", "index"], VIEW_NAMES = { catalog: "Catalog", index: "Index" };
+  var LONG_REPLY_MIN = 400;   // chars — what counts as a "real" reply for Last long reply
+  function applyCatSize(sz) {
+    if (sz === "s" || sz === "m") { sz = "small"; }            // migrate old s/m/l/xl values
+    if (sz === "l" || sz === "xl" || CAT_SIZES.indexOf(sz) < 0) { sz = "large"; }
+    document.body.classList.remove("rchan-cat-s", "rchan-cat-m", "rchan-cat-l", "rchan-cat-xl");
+    document.body.classList.add(CAT_CLASS[sz]);
+    return sz;
+  }
+  var catalogOrig = null, catMeta = null, catDetails = {};
+  function catCells() { var t = document.getElementById("divThreads"); return t ? Array.prototype.slice.call(t.getElementsByClassName("catalogCell")) : []; }
+  function catNum(cell, cls) { var e = cell.getElementsByClassName(cls)[0]; return e ? (parseInt((e.textContent || "").replace(/\D/g, ""), 10) || 0) : 0; }
+  function catThreadId(cell) { var a = cell.getElementsByClassName("linkThumb")[0]; var m = a && (a.getAttribute("href") || "").match(/\/res\/(\d+)/); return m ? parseInt(m[1], 10) : 0; }
+  function loadCatMeta(done) {                                 // one catalog.json fetch per page load
+    if (catMeta) { if (done) { done(); } return; }
+    var b = getBoard(); if (!b) { return; }
+    fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
+      catMeta = {};
+      (list || []).forEach(function (t) {
+        catMeta[t.threadId] = { bump: Date.parse(t.lastBump) || 0, pinned: !!t.pinned,
+                                posts: t.postCount || 0, files: t.fileCount || 0,
+                                autoSage: !!t.autoSage, cyclic: !!t.cyclic, page: t.page || 1 };
+      });
+      if (done) { done(); }
+    }).catch(function () { catMeta = {}; if (done) { done(); } });   // no JSON -> DOM-count fallbacks
+  }
+  function loadCatDetail(b, id) {                              // per-thread detail for the 3 deep modes
+    return fetch("/" + b + "/res/" + id + ".json").then(function (r) { return r.json(); }).then(function (d) {
+      var posts = d.posts || [];
+      var creation = Date.parse(d.creation) || 0;
+      var lastReply = posts.length ? (Date.parse(posts[posts.length - 1].creation) || 0) : creation;
+      var lastLong = creation;                                 // fallback: thread creation
+      for (var i = posts.length - 1; i >= 0; i--) {
+        if (((posts[i].message) || "").length >= LONG_REPLY_MIN) { lastLong = Date.parse(posts[i].creation) || 0; break; }
+      }
+      catDetails[id] = { lastReply: lastReply, lastLong: lastLong, creation: creation, replies: posts.length };
+    }).catch(function () { catDetails[id] = { lastReply: 0, lastLong: 0, creation: 0, replies: 0 }; });
+  }
+  function sortCatalog(mode) {
+    var t = document.getElementById("divThreads"); if (!t) { return; }
+    var cells = catCells(); if (!cells.length) { return; }
+    if (!catalogOrig) { catalogOrig = cells.slice(); }         // capture bump (server) order once
+    var needsDetail = mode === "lastreply" || mode === "longreply" || mode === "ppm";
+    if (needsDetail) {
+      var b = getBoard();
+      var missing = cells.map(catThreadId).filter(function (id) { return id && !catDetails[id]; });
+      if (missing.length) {                                    // fetch once, then re-enter
+        Promise.all(missing.map(function (id) { return loadCatDetail(b, id); }))
+          .then(function () { sortCatalog(mode); });
+        return;
+      }
+    }
+    function keyOf(cell) {
+      var id = catThreadId(cell);
+      var m = (catMeta && catMeta[id]) || null, d = catDetails[id] || null;
+      switch (mode) {
+        case "lastreply": return d ? d.lastReply : 0;
+        case "longreply": return d ? d.lastLong : 0;
+        case "new":       return id;                           // threadIds are monotonic = creation order
+        case "replies":   return m ? m.posts : catNum(cell, "labelReplies");
+        case "images":    return m ? m.files : catNum(cell, "labelImages");
+        case "ppm":
+          var reps = m ? m.posts : catNum(cell, "labelReplies");
+          var mins = d && d.creation ? Math.max(1, (Date.now() - d.creation) / 60000) : 0;
+          return mins ? reps / mins : 0;
+        default:          return m ? m.bump : 0;               // bump order
+      }
+    }
+    var s;
+    if (mode === "bump" && !(catMeta && Object.keys(catMeta).length)) {
+      s = catalogOrig.filter(function (c) { return c.parentNode === t; });   // server order fallback
+    } else {
+      s = cells.slice().sort(function (a, b2) {
+        var ia = catThreadId(a), ib = catThreadId(b2);
+        var pa = catMeta && catMeta[ia] && catMeta[ia].pinned ? 1 : 0;
+        var pb = catMeta && catMeta[ib] && catMeta[ib].pinned ? 1 : 0;
+        if (pa !== pb) { return pb - pa; }                     // pinned always on top
+        var ka = keyOf(a), kb = keyOf(b2);
+        if (kb !== ka) { return kb - ka; }                     // descending
+        return ib - ia;                                        // tie-break: newest thread first
+      });
+    }
+    s.forEach(function (c) { t.appendChild(c); });             // appendChild moves existing nodes → reorders
+  }
+  function mkSelect(id, label, modes, names, cur, onChange) {
+    var s = document.createElement("select"); s.id = id;
+    var head = document.createElement("option");         // greyed-out label inside the dropdown
+    head.textContent = label; head.disabled = true;
+    s.appendChild(head);
+    for (var i = 0; i < modes.length; i++) {
+      var o = document.createElement("option"); o.value = modes[i]; o.textContent = names[modes[i]];
+      if (modes[i] === cur) { o.selected = true; } s.appendChild(o);
+    }
+    s.addEventListener("change", function () { onChange(s.value); });
+    var l = document.createElement("label"); l.appendChild(s); return l;
+  }
+  function buildCatalogTools() {
+    if (!isCatalog()) { return; }
+    var curSize = applyCatSize(localStorage.getItem(CAT_KEY) || "large");
+    var curSort = localStorage.getItem(SORT_KEY) || "bump";
+    if (SORT_MODES.indexOf(curSort) < 0) { curSort = "bump"; }
+    loadCatMeta(function () {
+      if (curSort !== "bump") { sortCatalog(curSort); }
+      decorateCatalogFlags();
+    });
+    var threads = document.getElementById("divThreads");
+    if (!threads || document.getElementById("rchan-cattools")) { return; }
+    var bar = document.createElement("div"); bar.id = "rchan-cattools";
+    bar.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
+    bar.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
+    // "Index" = the REAL old-school board index (OP + last replies, pages) at
+    // /<board>/?index — not a CSS re-layout of the catalog cells. Remember the
+    // choice as the preferred board landing view (same cookie toggleCatalog sets).
+    bar.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, "catalog", function (v) {
+      if (v !== "index") { return; }
+      var b = getBoard(); if (!b) { return; }
+      try { document.cookie = "rchan_view=index; path=/; max-age=31536000; SameSite=Lax"; } catch (e) {}
+      location.href = "/" + b + "/?index";
+    }));
+    threads.parentNode.insertBefore(bar, threads);
+  }
+  /* ---------- Thread lifecycle chips: catalog side ----------
+     The mechanics that decide a thread's fate were invisible — regulars
+     learned about bump limit and cyclic rotation by being burned. The
+     catalog payload carries autoSage/cyclic; chip them on the cards. */
+  function decorateCatalogFlags() {
+    if (!isCatalog() || !catMeta) { return; }
+    catCells().forEach(function (cell) {
+      if (cell.getAttribute("data-flagchip")) { return; }
+      var m = catMeta[catThreadId(cell)];
+      if (!m) { return; }
+      cell.setAttribute("data-flagchip", "1");
+      if (!m.autoSage && !m.cyclic) { return; }
+      var stats = cell.getElementsByClassName("threadStats")[0] || cell;
+      function chip(text, label, warn) {
+        var s = document.createElement("span");
+        s.className = "rchan-flagchip" + (warn ? " rchan-ts-warn" : "");
+        s.textContent = text;
+        s.setAttribute("data-tooltip", label);
+        s.setAttribute("aria-label", label);
+        stats.appendChild(s);
+      }
+      if (m.autoSage) { chip("bump limit", "Bump limit reached — replies no longer bump this thread", true); }
+      if (m.cyclic) { chip("cyclic", "Cyclic thread — oldest replies rotate out"); }
+    });
+  }
+  /* ---------- Deep search: reply-level search across the whole board ----------
+     Native catalog search only sees OP subject/message. On a small board the
+     client can afford what big boards need servers for: fetch every
+     res/<id>.json once (cached for the page's life) and match the term
+     against EVERY reply's name/message/filenames. Wraps catalog.search, so
+     the native input listener drives both paths; with deep on, matching
+     hides/shows the existing DOM cells (sort order + badges survive). */
+  var DEEP_KEY = "rchan_deepsearch", deepCache = {}, deepNote = null;
+  function deepEnabled() { try { return localStorage.getItem(DEEP_KEY) === "1"; } catch (e) { return false; } }
+  function deepText(d) {
+    var parts = [];
+    function one(p) {
+      parts.push(p.subject || "", p.name || "", p.message || "");
+      (p.files || []).forEach(function (f) { parts.push(f.originalName || ""); });
+    }
+    one(d);
+    (d.posts || []).forEach(one);
+    return parts.join(" ").toLowerCase();
+  }
+  function ensureDeepData(ids, done) {
+    var b = getBoard();
+    var missing = ids.filter(function (id) { return id && deepCache[id] == null; });
+    if (!missing.length) { done(); return; }
+    if (deepNote) { deepNote.textContent = "fetching " + missing.length + " thread" + (missing.length > 1 ? "s" : "") + "…"; }
+    Promise.all(missing.map(function (id) {
+      return fetch("/" + b + "/res/" + id + ".json")
+        .then(function (r) { return r.json(); })
+        .then(function (d) { deepCache[id] = deepText(d); })
+        .catch(function () { deepCache[id] = ""; });
+    })).then(done);
+  }
+  function applyDeepSearch() {                          // true = deep handled this search
+    var field = document.getElementById("catalogSearchField");
+    if (!field) { return false; }
+    var term = field.value.trim().toLowerCase();
+    var cells = catCells();
+    if (!deepEnabled() || !term) {
+      for (var i = 0; i < cells.length; i++) { cells[i].classList.remove("rchan-deephide"); }
+      if (deepNote) { deepNote.textContent = ""; }
+      return false;
+    }
+    ensureDeepData(cells.map(catThreadId), function () {
+      var shown = 0;
+      cells.forEach(function (cell) {
+        var hit = (deepCache[catThreadId(cell)] || "").indexOf(term) > -1;
+        cell.classList.toggle("rchan-deephide", !hit);
+        if (hit) { shown++; }
+      });
+      if (deepNote) { deepNote.textContent = shown + "/" + cells.length + " threads match"; }
+    });
+    return true;
+  }
+  function hookDeepSearch() {
+    if (!isCatalog()) { return; }
+    var field = document.getElementById("catalogSearchField");
+    if (!field || document.getElementById("rchan-deeplab")) { return; }
+    var lab = document.createElement("label"); lab.id = "rchan-deeplab";
+    lab.setAttribute("data-tooltip", "Search inside every thread's replies, not just OPs");
+    var cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = deepEnabled();
+    cb.setAttribute("aria-label", "Deep search: match inside replies too");
+    lab.appendChild(cb); lab.appendChild(document.createTextNode("deep"));
+    deepNote = document.createElement("span"); deepNote.id = "rchan-deepnote";
+    field.parentNode.insertBefore(lab, field.nextSibling);
+    lab.parentNode.insertBefore(deepNote, lab.nextSibling);
+    cb.addEventListener("change", function () {
+      try { localStorage.setItem(DEEP_KEY, cb.checked ? "1" : "0"); } catch (e) {}
+      if (!applyDeepSearch() && window.catalog && catalog.search) {
+        try { catalog.search(); } catch (e2) {}
+      }
+    });
+    if (window.catalog && catalog.search && !catalog.__rchanDeep) {
+      catalog.__rchanDeep = true;
+      var orig = catalog.search;
+      catalog.search = function () {
+        if (applyDeepSearch()) { return; }              // deep handled it
+        return orig.apply(this, arguments);
+      };
+    }
+    // a palette search from another page left a pending term — run it now
+    var pending = null;
+    try {
+      pending = sessionStorage.getItem(DEEP_PENDING);
+      if (pending) { sessionStorage.removeItem(DEEP_PENDING); }
+    } catch (e4) {}
+    if (pending) {
+      cb.checked = true;
+      try { localStorage.setItem(DEEP_KEY, "1"); } catch (e5) {}
+      field.value = pending;
+      applyDeepSearch();
+    }
+  }
+
+  // Deep-search for a term from anywhere on the board: on the catalog, arm the
+  // deep checkbox and run it; elsewhere, stash the term and go to the catalog
+  // (hookDeepSearch picks the pending term up on load).
+  var DEEP_PENDING = "rchan_deep_pending";
+  function deepSearchFor(term) {
+    if (!term) { return; }
+    try { localStorage.setItem(DEEP_KEY, "1"); } catch (e) {}
+    if (isCatalog()) {
+      var f = document.getElementById("catalogSearchField");
+      var cb = document.querySelector("#rchan-deeplab input");
+      if (f) {
+        if (cb) { cb.checked = true; }
+        f.value = term;
+        applyDeepSearch();
+        try { f.scrollIntoView({ behavior: SB, block: "center" }); f.focus(); } catch (e2) {}
+        return;
+      }
+    }
+    try { sessionStorage.setItem(DEEP_PENDING, term); } catch (e3) {}
+    location.href = "/" + getBoard() + "/catalog";
+  }
+  // prefetch a thread page when hovering its catalog cell (snappier open)
+  var prefetched = {};
+  function onCatHover(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
+    if (!a) { return; }
+    var href = a.getAttribute("href");
+    if (!href || prefetched[href]) { return; }
+    prefetched[href] = 1;
+    var l = document.createElement("link"); l.rel = "prefetch"; l.href = href; document.head.appendChild(l);
+  }
+
+  /* ---------- Catalog: last-replies hover preview (native 4chan catalog style) ----------
+     Hovering a catalog cell shows the thread's last 5 replies in a floating panel,
+     fetched once from /<board>/res/<id>.json and cached. The panel is
+     pointer-events:none, so mouseout handling stays trivial. */
+  var catPrev = null, catPrevFor = null, catPrevCache = {};
+  function escHtml(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+  function hideCatPreview() { if (catPrev) { catPrev.style.display = "none"; } catPrevFor = null; }
+  var TOUCH_ONLY = !!(window.matchMedia && matchMedia("(hover: none)").matches);
+  function renderCatPreview(cell, data) {
+    if (!catPrev) { catPrev = document.createElement("div"); catPrev.id = "rchan-catprev"; document.body.appendChild(catPrev); }
+    var posts = (data.posts || []).slice(-5);
+    var html = "";
+    if (!posts.length) { html = '<div class="rchan-catprev-empty">No replies yet</div>'; }
+    for (var i = 0; i < posts.length; i++) {
+      var p = posts[i];
+      html += '<div class="rchan-catprev-post"><span class="rchan-catprev-name">' +
+        escHtml(p.name || "Anonymous") + '</span> <span class="rchan-catprev-id">No.' + escHtml(String(p.postId)) + '</span>' +
+        '<div class="rchan-catprev-msg">' + (p.markdown || "") + '</div></div>';   // markdown = engine-sanitised HTML
+    }
+    catPrev.innerHTML = html;
+    catPrev.style.display = "block";
+    if (window.innerWidth < 480) {                 // phones: bottom sheet instead of side panel
+      catPrev.classList.add("rchan-catprev-sheet");
+      catPrev.style.left = ""; catPrev.style.top = "";
+      return;
+    }
+    catPrev.classList.remove("rchan-catprev-sheet");
+    var r = cell.getBoundingClientRect(), w = 360;
+    var x = r.right + 8, y = r.top;
+    if (x + w > window.innerWidth - 8) { x = Math.max(8, r.left - w - 8); }   // flip to the left edge
+    catPrev.style.left = x + "px";
+    catPrev.style.top = "0px";                                                 // measure at a stable position
+    var h = catPrev.offsetHeight;
+    if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
+    catPrev.style.top = y + "px";
+  }
+  function onCatPrevOver(e, fromTap) {
+    if (!setOn("catprev")) { return; }
+    // touch taps fire a synthesized mouseover BEFORE click; if that path set
+    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
+    if (TOUCH_ONLY && !fromTap) { return; }
+    if (!isCatalog()) { return; }
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell || catPrevFor === cell) { return; }
+    catPrevFor = cell;
+    var a = cell.querySelector("a.linkThumb");
+    var m = (a && a.getAttribute("href") || "").match(/^\/([^\/]+)\/res\/(\d+)/);
+    if (!m) { return; }
+    var url = "/" + m[1] + "/res/" + m[2] + ".json";
+    if (catPrevCache[url]) { renderCatPreview(cell, catPrevCache[url]); return; }
+    fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      catPrevCache[url] = d;
+      if (catPrevFor === cell) { renderCatPreview(cell, d); }
+    }).catch(function () {});
+  }
+  function onCatPrevOut(e) {
+    var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
+    if (!cell) { return; }
+    var to = e.relatedTarget;
+    if (to && cell.contains(to)) { return; }
+    hideCatPreview();
+  }
+  // Touch devices have no hover: first tap on a catalog thumb shows the
+  // last-replies preview, second tap (same cell) navigates into the thread.
+  // Tapping anywhere else dismisses the preview.
+  function onCatTap(e) {
+    if (!setOn("catprev")) { return; }                 // previews off: first tap navigates
+    if (!TOUCH_ONLY || !isCatalog()) { return; }
+    var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
+    if (!a) {
+      if (!(e.target.closest && e.target.closest("#rchan-catprev"))) { hideCatPreview(); }
+      return;
+    }
+    var cell = a.closest(".catalogCell");
+    if (!cell || catPrevFor === cell) { return; }  // second tap: fall through to navigation
+    e.preventDefault(); e.stopPropagation();
+    onCatPrevOver(e, true);                        // renders + caches, sets catPrevFor
+  }
+

@@ -772,6 +772,10 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
   max-width: 96vw; max-height: calc(100vh - 132px);
   object-fit: contain; box-shadow: 0 0 24px rgba(0,0,0,.6);
 }
+/* pinch/wheel zoom state: transform is set inline; grab cursor while zoomed */
+#rchan-gallery.rchan-gal-zoomed .rchan-gal-main { overflow: hidden; }
+#rchan-gallery.rchan-gal-zoomed .rchan-gal-main img { cursor: grab; }
+#rchan-gallery.rchan-gal-zoomed .rchan-gal-main img:active { cursor: grabbing; }
 .rchan-gal-meta {
   flex: none; display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 4px 56px; font-size: .833rem; min-height: 22px;

@@ -4210,6 +4210,106 @@
      thread, index and catalog pages; videos play with the site-wide saved
      volume. Touch swipe rides the same show()/step() machinery. */
   var gal = null, galItems = [], galIdx = 0, galOpen = false, galMedia = null;
+  // Zoom state (images only — video keeps native controls untouched)
+  var galScale = 1, galPanX = 0, galPanY = 0, galLastPinch = 0, galSlideT = null;
+  function galZoomable() { return galMedia && galMedia.tagName === "IMG"; }
+  function applyGalTransform() {
+    if (!galZoomable()) { return; }
+    if (galScale < 1.05) { galScale = 1; galPanX = 0; galPanY = 0; }   // snap back to fit
+    galMedia.style.transform = galScale === 1 ? "" :
+      "translate(" + Math.round(galPanX) + "px," + Math.round(galPanY) + "px) scale(" + galScale + ")";
+    if (gal) { gal.classList.toggle("rchan-gal-zoomed", galScale > 1); }
+  }
+  function galResetZoom() { galScale = 1; galPanX = 0; galPanY = 0; applyGalTransform(); }
+  // zoom toward a screen point (mx,my relative to the stage center)
+  function galZoomTo(newScale, mx, my) {
+    if (!galZoomable()) { return; }
+    newScale = Math.max(1, Math.min(8, newScale));
+    var ux = (mx - galPanX) / galScale, uy = (my - galPanY) / galScale;   // content point under the cursor
+    galPanX = mx - ux * newScale;
+    galPanY = my - uy * newScale;
+    galScale = newScale;
+    applyGalTransform();
+  }
+  function galStageCenter() {
+    var r = gal.querySelector(".rchan-gal-main").getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+  function toggleSlideshow() {
+    var link = gal && gal.querySelector(".rchan-gal-slide");
+    if (galSlideT) {
+      clearInterval(galSlideT); galSlideT = null;
+      if (link) { link.textContent = "slideshow"; }
+      return;
+    }
+    galSlideT = setInterval(function () {
+      if (!galOpen) { toggleSlideshow(); return; }
+      galShow(galIdx >= galItems.length - 1 ? 0 : galIdx + 1);     // wrap around
+    }, 3500);
+    if (link) { link.textContent = "⏸ stop"; }
+  }
+  function initGalleryZoom(main) {
+    main.style.touchAction = "none";
+    var pointers = {}, pinch = null, pan = null, lastTap = 0;
+    function count() { return Object.keys(pointers).length; }
+    function two() { var k = Object.keys(pointers); return [pointers[k[0]], pointers[k[1]]]; }
+    function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy) || 1; }
+    main.addEventListener("pointerdown", function (e) {
+      if (!galOpen || e.target.tagName === "VIDEO") { return; }
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      try { main.setPointerCapture(e.pointerId); } catch (e2) {}
+      if (count() === 2) {
+        galLastPinch = Date.now();
+        var p = two(), c = galStageCenter();
+        pinch = { d: dist(p[0], p[1]), s: galScale,
+                  ux: ((p[0].x + p[1].x) / 2 - c.x - galPanX) / galScale,
+                  uy: ((p[0].y + p[1].y) / 2 - c.y - galPanY) / galScale };
+        pan = null;
+      } else if (count() === 1) {
+        var now = Date.now();
+        if (now - lastTap < 300 && galZoomable()) {                // double-tap: toggle fit ↔ 2.5×
+          var c2 = galStageCenter();
+          if (galScale > 1.01) { galResetZoom(); }
+          else { galZoomTo(2.5, e.clientX - c2.x, e.clientY - c2.y); }
+          lastTap = 0;
+        } else { lastTap = now; }
+        if (galScale > 1.01) { pan = { x: e.clientX, y: e.clientY, px: galPanX, py: galPanY }; }
+      }
+    });
+    main.addEventListener("pointermove", function (e) {
+      if (!pointers[e.pointerId]) { return; }
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (count() === 2 && pinch) {
+        galLastPinch = Date.now();
+        var p = two(), c = galStageCenter();
+        var s = Math.max(1, Math.min(8, pinch.s * dist(p[0], p[1]) / pinch.d));
+        var mx = (p[0].x + p[1].x) / 2 - c.x, my = (p[0].y + p[1].y) / 2 - c.y;
+        galScale = s;
+        galPanX = mx - pinch.ux * s;                               // pinch midpoint stays put
+        galPanY = my - pinch.uy * s;
+        gal.__galDrag = Date.now();                                // a drag isn't a backdrop click
+        applyGalTransform();
+      } else if (pan && galScale > 1.01) {
+        galPanX = pan.px + (e.clientX - pan.x);
+        galPanY = pan.py + (e.clientY - pan.y);
+        if (Math.abs(e.clientX - pan.x) + Math.abs(e.clientY - pan.y) > 8) { gal.__galDrag = Date.now(); }
+        applyGalTransform();
+      }
+    });
+    function up(e) {
+      delete pointers[e.pointerId];
+      if (count() < 2) { pinch = null; }
+      if (!count()) { pan = null; applyGalTransform(); }           // snap-back check
+    }
+    main.addEventListener("pointerup", up);
+    main.addEventListener("pointercancel", up);
+    main.addEventListener("wheel", function (e) {                  // desktop: wheel-zoom at the cursor
+      if (!galOpen || !galZoomable()) { return; }
+      e.preventDefault();
+      var c = galStageCenter();
+      galZoomTo(galScale * (e.deltaY < 0 ? 1.18 : 1 / 1.18), e.clientX - c.x, e.clientY - c.y);
+    }, { passive: false });
+  }
   function galCollect() {
     var items = [], seen = {};
     function push(url, type, thumb, cell, name) {
@@ -4264,6 +4364,8 @@
     var it = galItems[galIdx];
     var main = gal.querySelector(".rchan-gal-main");
     galStopMedia();
+    galScale = 1; galPanX = 0; galPanY = 0;                        // each file starts fitted
+    if (gal) { gal.classList.remove("rchan-gal-zoomed"); }
     main.innerHTML = "";
     if (it.type === "video") {
       var v = document.createElement("video");
@@ -4304,6 +4406,9 @@
   function closeGallery(jump) {
     if (!galOpen) { return; }
     galOpen = false;
+    if (galSlideT) { clearInterval(galSlideT); galSlideT = null; }
+    var sl = gal && gal.querySelector(".rchan-gal-slide");
+    if (sl) { sl.textContent = "slideshow"; }
     galStopMedia();
     if (gal) { gal.style.display = "none"; dialogClosed(gal); }
     document.documentElement.classList.remove("rchan-noscroll");
@@ -4315,11 +4420,15 @@
   }
   function galKeydown(e) {
     if (!galOpen) { return; }
-    if (e.key === "Escape") { closeGallery(true); }
+    if (e.key === "Escape") {
+      if (galScale > 1.01) { galResetZoom(); }                     // first Esc un-zooms, second closes
+      else { closeGallery(true); }
+    }
     else if (e.key === "ArrowLeft") { galStep(-1); }
     else if (e.key === "ArrowRight") { galStep(1); }
     else if (e.key === "Home") { galShow(0); }
     else if (e.key === "End") { galShow(galItems.length - 1); }
+    else if (e.key === "s" && !typing(e)) { toggleSlideshow(); }
     else if (e.key === "g" && !typing(e)) { closeGallery(false); }
     else { return; }
     e.preventDefault(); e.stopPropagation();
@@ -4330,13 +4439,22 @@
     gal.id = "rchan-gallery";
     gal.setAttribute("role", "dialog"); gal.setAttribute("aria-label", "Media gallery");
     var main = document.createElement("div"); main.className = "rchan-gal-main";
-    // click outside the media (the empty main area) closes, like a lightbox backdrop
-    main.addEventListener("click", function (e) { if (e.target === main) { closeGallery(true); } });
+    // click outside the media (the empty main area) closes, like a lightbox
+    // backdrop — but the tail end of a pan/pinch is not a click
+    main.addEventListener("click", function (e) {
+      if (e.target === main && Date.now() - (gal.__galDrag || 0) > 300) { closeGallery(true); }
+    });
+    initGalleryZoom(main);
     var meta = document.createElement("div"); meta.className = "rchan-gal-meta";
     meta.appendChild(document.createElement("span"));
     var jump = document.createElement("a"); jump.href = "#"; jump.textContent = "open post";
     jump.addEventListener("click", function (e) { e.preventDefault(); closeGallery(true); });
     meta.appendChild(jump);
+    var slide = document.createElement("a"); slide.href = "#"; slide.className = "rchan-gal-slide";
+    slide.textContent = "slideshow";
+    slide.setAttribute("aria-label", "Toggle slideshow");
+    slide.addEventListener("click", function (e) { e.preventDefault(); toggleSlideshow(); });
+    meta.appendChild(slide);
     var x = document.createElement("button"); x.type = "button"; x.className = "rchan-gal-x";
     x.innerHTML = "✕"; x.setAttribute("aria-label", "Close gallery");
     x.addEventListener("click", function () { closeGallery(false); });
@@ -4661,6 +4779,8 @@
     document.addEventListener("touchend", function (e) {
       if (!live || !galOpen) { return; }
       live = false;
+      // zoomed or mid-pinch: the finger is panning/zooming, not paging
+      if (galScale > 1.01 || Date.now() - galLastPinch < 500) { return; }
       var t = e.changedTouches && e.changedTouches[0];
       if (!t || Date.now() - st > 600) { return; }
       var dx = t.clientX - sx, dy = t.clientY - sy;

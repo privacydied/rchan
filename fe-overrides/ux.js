@@ -1209,7 +1209,7 @@
       var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
       el.classList.add("rchan-idpill");
       el.style.backgroundColor = "#" + c;
-      el.style.color = lum > 0.55 ? "#000" : "#fff";
+      el.style.color = lum > 0.55 ? "#393939" : "#fff";   // site text colour on light pills
     }
   }
   /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the

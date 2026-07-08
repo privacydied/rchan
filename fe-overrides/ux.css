@@ -151,6 +151,17 @@ body .divMessage {
   word-break: break-word;
   overflow-wrap: anywhere;
 }
+/* cream: Claude-register body copy. The "depth" here is NOT a shadow (shadow on
+   reading-size text just blurs it) — it's a serif with real stroke contrast, a
+   warm near-black on the ivory ground, generous leading, and font smoothing. */
+body.theme_cream .divMessage {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #2A2620;                       /* warm charcoal, not #000 */
+  -webkit-font-smoothing: antialiased;  /* thins strokes slightly — the "book page" feel */
+  text-rendering: optimizeLegibility;   /* kerning/ligatures in the serif */
+}
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
 .linkName, .labelName { color: #3a6b2e; font-weight: 700; }
 .labelSubject { color: #0d5b73; font-weight: 700; }

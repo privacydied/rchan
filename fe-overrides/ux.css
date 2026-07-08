@@ -981,6 +981,9 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; height: auto; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }
   #quick-reply textarea, #qrbody { width: 100% !important; box-sizing: border-box; min-height: 110px; }
+  /* the floating new-thread box (board/catalog) gets the same treatment —
+     its desktop 425px + right:30px overflows a 390px viewport */
+  #rchan-qr { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; top: 48px; resize: none; }
   #rchan-nav { right: 10px; bottom: 10px; }
   body .innerPost, body .markedPost { display: block; }   /* shrink-wrap doesn't fit phones */
   body .divMessage { margin: 8px 10px; }
@@ -991,7 +994,33 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   .linkQuote, .linkReply, .linkName { padding: 3px 2px; display: inline-block; }
   /* header/nav wraps instead of overflowing */
   #dynamicHeader, nav { flex-wrap: wrap; }
+  /* the sticky status line eats a whole nav row on a phone — drop it */
+  #rchan-threadstat { display: none; }
   #rchan-nav button { width: 44px; height: 44px; line-height: 44px; } /* thumb-friendly */
+  /* reply = the primary action: promote the pen to a red FAB */
+  #rchan-nav button#rchan-penbtn { background: #c8102e; opacity: 1; }
   /* posting form fields fill the width */
   #postingForm input[type=text], #postingForm textarea { max-width: 100%; box-sizing: border-box; }
+  /* file-row controls: 14px mask icons are sub-44px tap targets — grow both
+     the icon and the hit area */
+  body .nameLink::after, body .hideFileButton::after { width: 20px; height: 20px; vertical-align: -5px; }
+  body .nameLink, body .hideFileButton { padding: 6px 4px; display: inline-block; }
+  .rchan-ris { white-space: normal; }
+  .rchan-ris a { display: inline-block; padding: 4px 3px; }
+  /* nav icon buttons (filter / expand-all) need finger room */
+  #rchan-findbtn, #rchan-expandbtn { padding: 4px 10px; }
+  #rchan-findbtn svg, #rchan-expandbtn svg { width: 18px; height: 18px; }
+  .rchan-idfunnel { padding: 4px 6px; }
+  .rchan-idfunnel svg { width: 14px; height: 14px; }
+  /* floating panels: hug the small screen instead of the desktop offsets */
+  #rchan-hist, #rchan-set { right: 8px; left: 8px; width: auto; max-height: 62vh; }
+  #rchan-find { left: 8px; right: 8px; transform: none; max-width: none; top: 46px; }
+  #rchan-find input { flex: 1; width: auto; max-width: none; min-width: 0; }
+  /* catalog toolbar dropdowns: finger-sized */
+  #rchan-cattools select { padding: 7px 10px; margin-left: 3px; }
+  #rchan-cattools label { margin: 0 2px; }
+  /* form toggle buttons */
+  #rchan-formtoggle { padding: 8px 16px; }
+  /* fmtbar buttons: taller touch targets */
+  #postingForm .rchan-fmtbar button, #quick-reply .rchan-fmtbar button { height: 32px !important; min-width: 34px !important; }
 }

@@ -87,7 +87,7 @@
       btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
     }
     if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
-      btn(SVG_PEN, "Reply / post", function () {
+      var pen = btn(SVG_PEN, "Reply / post", function () {
         var q = window.qr;
         if (q && q.qrPanel) {                                            // thread: open the floating QR
           q.qrPanel.style.display = "block";
@@ -101,6 +101,7 @@
         var m = document.querySelector("#fieldMessage, textarea[name=message]");
         if (m) { m.focus(); try { m.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
       });
+      pen.id = "rchan-penbtn";   // mobile CSS promotes it to the primary FAB
     }
     if (curThreadId() && "Notification" in window) {
       var bell = btn(SVG_BELL, "Notify me of new replies in this thread (while this tab is open)", function () {

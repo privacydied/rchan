@@ -1434,6 +1434,83 @@
       } catch (e) {}
     }
   }
+  /* ---------- Watcher sanity: throttle the poll, unwatch the dead ----------
+     The native watcher re-checks EVERY watched thread every ~10s (tuned for
+     people who watch two threads); auto-watch now adds one per post, so a
+     regular quickly reaches 30+ watched threads = 30 fetches every 10s per
+     tab, forever — including threads pruned months ago, which 404 eternally
+     because nothing ever unwatches them. Fix both:
+     - 75s cadence, skipped while hidden, and cross-tab aware (lastWatchCheck
+       is shared localStorage, so if another tab just ran the sweep this one
+       waits its turn); returning to the tab runs a stale check immediately.
+     - three consecutive failed polls (404/network) = the thread is gone:
+       unwatch it and drop its menu cell. A single blip never unwatches. */
+  function hookWatcherThrottle() {
+    var w = window.watcher;
+    if (!w || !w.runWatchedThreadsCheck || !w.iterateWatchedThreads || w.__rchanThrottle) { return; }
+    w.__rchanThrottle = true;
+    var PERIOD = 75000, DEAD_KEY = "rchan_watchdead";
+    w.scheduleWatchedThreadsCheck = function () {
+      var last = parseInt(localStorage.lastWatchCheck, 10) || 0;
+      var wait = Math.max(5000, last + PERIOD - Date.now());
+      setTimeout(function () {
+        var l2 = parseInt(localStorage.lastWatchCheck, 10) || 0;
+        if (document.hidden || Date.now() - l2 < PERIOD - 2000) {   // hidden, or another tab covered it
+          w.scheduleWatchedThreadsCheck();
+          return;
+        }
+        try { w.runWatchedThreadsCheck(); } catch (e) { w.scheduleWatchedThreadsCheck(); }
+      }, wait);
+    };
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { return; }
+      var last = parseInt(localStorage.lastWatchCheck, 10) || 0;
+      if (Date.now() - last > PERIOD) { try { w.runWatchedThreadsCheck(); } catch (e) {} }
+    });
+    function strikes() { try { return JSON.parse(localStorage.getItem(DEAD_KEY) || "{}"); } catch (e) { return {}; } }
+    function unwatchDead(b, t) {
+      try {
+        var wd = JSON.parse(localStorage.watchedData || "{}");
+        if (wd[b]) {
+          delete wd[b][t];
+          if (!Object.keys(wd[b]).length) { delete wd[b]; }
+        }
+        localStorage.watchedData = JSON.stringify(wd);
+      } catch (e) {}
+      try {   // drop the menu cell: notification span -> label -> cell -> wrapper
+        var rel = w.elementRelation && w.elementRelation[b] && w.elementRelation[b][t];
+        if (rel) {
+          var wrap = rel.parentNode && rel.parentNode.parentNode && rel.parentNode.parentNode.parentNode;
+          if (wrap && wrap.parentNode) { wrap.parentNode.removeChild(wrap); }
+          delete w.elementRelation[b][t];
+        }
+      } catch (e2) {}
+    }
+    w.iterateWatchedThreads = function (urls, index) {
+      index = index || 0;
+      if (index >= urls.length) {
+        w.updateWatcherCounter();
+        w.scheduleWatchedThreadsCheck();
+        return;
+      }
+      var u = urls[index];
+      api.localRequest("/" + u.board + "/res/" + u.thread + ".json", function (error, data) {
+        try {
+          var s = strikes(), k = u.board + "/" + u.thread;
+          if (error) {
+            s[k] = (s[k] || 0) + 1;
+            if (s[k] >= 3) { unwatchDead(u.board, String(u.thread)); delete s[k]; }
+            localStorage.setItem(DEAD_KEY, JSON.stringify(s));
+          } else if (s[k]) {
+            delete s[k];
+            localStorage.setItem(DEAD_KEY, JSON.stringify(s));
+          }
+        } catch (e) {}
+        if (error) { w.iterateWatchedThreads(urls, ++index); }
+        else { w.processThread(urls, index, data); }
+      });
+    };
+  }
   /* Watched threads: the native watcher polls every watched thread's JSON and
      tallies unread into its nav counter — but silently. Wrap the tally so a
      thread that BECOMES unread while this tab is hidden raises a system
@@ -4738,7 +4815,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, markVisitedInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,

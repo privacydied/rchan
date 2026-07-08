@@ -1747,3 +1747,35 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   /* fmtbar buttons: taller touch targets */
   #postingForm .rchan-fmtbar button, #quick-reply .rchan-fmtbar button { height: 32px !important; min-width: 34px !important; }
 }
+
+/* ---------- Print: archiving a thread should look like a document ----------
+   Print-to-PDF is how threads get archived; without this it produced fixed
+   navs over content, dark backgrounds and floating chrome. Black on white,
+   chrome gone, every post rendered (content-visibility would skip some),
+   spoilers revealed — an archive hides nothing. */
+@media print {
+  nav, #dynamicHeader, #rchan-nav, #rchan-minimap, #rchan-stickyop, #rchan-youbtn,
+  #rchan-newpill, #rchan-boardpill, #rchan-wspill, #rchan-resume, #rchan-ptrind,
+  #rchan-hint, #rchan-toast, #rchan-mstats, #quick-reply, #rchan-qr, #postingForm,
+  #rchan-formtoggle, #rchan-origform, .rchan-fmtbar, #rchan-bannerwrap, #rchan-find,
+  #rchan-conv, .rchan-qmod, .rchan-owndel, .rchan-reportbtn, .rchan-convbtn,
+  .rchan-idfunnel, .rchan-idnamebtn, .rchan-fhash, .rchan-ris, .rchan-catwatch,
+  #rchan-sitestat, #rchan-sitestat-nav, #rchan-cattools, .hideButton, .watchButton,
+  .deletionCheckBox, .linkSelf, .extraMenuButton, #sideCatalogDiv, .coloredIcon,
+  #rchan-expandbtn, #rchan-findbtn, #rchan-galbtn, footer, video, audio {
+    display: none !important;
+  }
+  html, body {
+    background: #fff !important; color: #000 !important;
+    font-size: 11pt; margin: 0 !important;
+  }
+  .innerPost, .innerOP, .markedPost {
+    display: block; background: #fff !important; color: #000 !important;
+    border: 1px solid #bbb !important; box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+  a { color: #000 !important; text-decoration: underline; }
+  span.spoiler { color: #000 !important; background: transparent !important; }
+  .imgLink img { max-width: 2.6in; height: auto; }
+  #divThreads .postCell { content-visibility: visible; contain-intrinsic-size: none; }
+}

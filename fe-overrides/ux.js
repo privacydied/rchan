@@ -171,6 +171,20 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastBox.style.display = "none"; }, 3500);
   }
+  function toastAction(msg, label, fn) {   // toast with a trailing action link ("Undo")
+    okToast(msg);
+    var a = document.createElement("a");
+    a.href = "#"; a.className = "rchan-toast-act"; a.textContent = label;
+    a.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      toastBox.style.display = "none";
+      fn();
+    });
+    toastBox.appendChild(document.createTextNode(" "));
+    toastBox.appendChild(a);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastBox.style.display = "none"; }, 8000);
+  }
   var cdTimer = null;
   function startCooldown(secs) {
     var btns = [document.getElementById("qrbutton"), document.getElementById("formButton")]
@@ -1622,6 +1636,39 @@
       }
     }
   }
+  /* ---------- Undo on hide: "Post hidden — Undo" toast ----------
+     hiding.js makes content vanish with only a tiny [Unhide] stub. Wrap
+     hidePost/hideThread so USER-initiated hides (a click inside the hide
+     menu within the last second — the same functions also re-apply stored
+     hides at load/refresh, which must stay silent) get an undo toast that
+     clicks the native unhide button. */
+  var lastHideClick = 0;
+  function hookHideUndo() {
+    var h = window.hiding;
+    if (!h || h.__rchanUndo || !h.hidePost || !h.hideThread) { return; }
+    h.__rchanUndo = true;
+    function wrap(orig, isThread) {
+      return function (linkSelf) {
+        var r = orig.apply(this, arguments);
+        try {
+          if (Date.now() - lastHideClick < 1000) {
+            lastHideClick = 0;
+            // native inserts its [Unhide] span right before the hidden element
+            var hiddenEl = isThread ? linkSelf.parentNode.parentNode.parentNode
+                                    : linkSelf.parentNode.parentNode;
+            var btn = hiddenEl.previousSibling;
+            if (btn && btn.className && String(btn.className).indexOf("unhideButton") > -1) {
+              toastAction(isThread ? "Thread hidden" : "Post hidden", "Undo", function () { btn.click(); });
+            }
+          }
+        } catch (e) {}
+        return r;
+      };
+    }
+    h.hidePost = wrap(h.hidePost, false);
+    h.hideThread = wrap(h.hideThread, true);
+  }
+
   function hookFilterStubs() {
     var h = window.hiding;
     if (!h || !h.hideForFilter || h.__rchanStub) { return; }
@@ -2383,6 +2430,11 @@
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
     document.addEventListener("keydown", onEscKey);
+    // remember hide-menu clicks so hookHideUndo can tell user hides from
+    // the silent stored-hide re-application at load/refresh
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.closest && e.target.closest(".hideMenu")) { lastHideClick = Date.now(); }
+    }, true);
     // keep the pre-paint dark hint (html.predark, set by an inline head script the
     // router injects) in sync when the user switches themes mid-session
     try { if (!/theme_dark/.test(document.body.className)) { document.documentElement.classList.remove("predark"); } } catch (e) {}
@@ -2394,7 +2446,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

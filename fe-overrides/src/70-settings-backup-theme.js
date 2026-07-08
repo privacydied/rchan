@@ -265,12 +265,19 @@
       bo.textContent = "Brutalist";
       bo.setAttribute("data-rchan-theme", "brutalist");
       sel.appendChild(bo);
+      var ao = document.createElement("option");
+      ao.textContent = "Academia";
+      ao.setAttribute("data-rchan-theme", "academia");
+      sel.appendChild(ao);
       var o = document.createElement("option");
       o.textContent = "Auto (OS)";
       o.setAttribute("data-auto", "1");
       sel.appendChild(o);
       if (autoThemeOn()) { o.selected = true; }
-      else { try { if (localStorage.selectedTheme === "brutalist") { bo.selected = true; } } catch (e0) {} }
+      else { try {
+        if (localStorage.selectedTheme === "brutalist") { bo.selected = true; }
+        else if (localStorage.selectedTheme === "academia") { ao.selected = true; }
+      } catch (e0) {} }
       // themes.js binds onchange as a property and indexes into ITS OWN theme
       // list — selecting an appended option through that handler would throw.
       var orig = sel.onchange;

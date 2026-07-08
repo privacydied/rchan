@@ -169,37 +169,58 @@
   function pad3(n) { n = String(n); return n.length >= 3 ? n : ("00" + n).slice(-3); }
   function pad4(n) { n = String(n); return n.length >= 4 ? n : ("000" + n).slice(-4); }
   function decorateCatalogCards(root) {
-    if (!isCatalog() || !document.body.classList.contains("theme_brutalist")) { return; }
+    // Two card registers share one decorator: Brutalist (instrument card, zero-
+    // padded readout, bottom strip) and Academia (eyebrow-over-serif, readout in
+    // the eyebrow). data-card stores the register so a live theme switch rebuilds.
+    var acad = document.body.classList.contains("theme_academia");
+    var brut = document.body.classList.contains("theme_brutalist");
+    if (!isCatalog() || !(acad || brut)) { return; }
+    var reg = acad ? "a" : "b";
     var b = getBoard(); if (!b) { return; }
     var tag = "/" + b.toUpperCase() + "/";
     var cells = (root || document).getElementsByClassName("catalogCell");
     for (var i = 0; i < cells.length; i++) {
       var cell = cells[i];
-      if (cell.getAttribute("data-card")) { continue; }
-      cell.setAttribute("data-card", "1");
-      var tid = catThreadId(cell);
-      // meta-strip: THR//0044 .......... /GEN/
-      var meta = document.createElement("div"); meta.className = "rchan-cardmeta";
-      var l = document.createElement("span"); l.textContent = "THR//" + pad4(tid);
-      var r = document.createElement("span"); r.textContent = tag;
-      meta.appendChild(l); meta.appendChild(r);
-      cell.insertBefore(meta, cell.firstChild);
-      // readout: zero-padded interpunct R·I·P (preserve any +N new badge)
-      var stats = cell.getElementsByClassName("threadStats")[0];
-      if (stats && !stats.getAttribute("data-fmt")) {
-        stats.setAttribute("data-fmt", "1");
-        var badge = stats.getElementsByClassName("rchan-newbadge")[0];
-        stats.innerHTML = 'R <span class="labelReplies">' + pad3(catNum(cell, "labelReplies")) +
-          '</span> · I <span class="labelImages">' + pad3(catNum(cell, "labelImages")) +
-          '</span> · P <span class="labelPage">' + pad3(catNum(cell, "labelPage")) + '</span>';
-        if (badge) { stats.appendChild(badge); }
+      if (cell.getAttribute("data-card") === reg) { continue; }
+      if (cell.getAttribute("data-card")) {                    // switched register: strip old parts, rebuild
+        var om = cell.querySelector(".rchan-cardmeta"); if (om) { om.parentNode.removeChild(om); }
+        var ob = cell.querySelector(".rchan-nofile-band"); if (ob) { ob.parentNode.removeChild(ob); }
+        cell.classList.remove("rchan-nofile");
       }
-      // no-file variant: inject a striped placeholder band in the thumb slot
+      cell.setAttribute("data-card", reg);
+      var tid = catThreadId(cell);
+      var reps = catNum(cell, "labelReplies"), imgs = catNum(cell, "labelImages"), pg = catNum(cell, "labelPage");
+      var meta = document.createElement("div"); meta.className = "rchan-cardmeta";
+      var l = document.createElement("span");
+      var r = document.createElement("span"); r.className = "rchan-cardmeta-r";
+      var stats = cell.getElementsByClassName("threadStats")[0];
+      if (acad) {
+        // eyebrow: "Nº 44 · /GEN/"  ....  "R 3 · I 2 · P 1" (plain, literary — no zero-pad)
+        l.textContent = "Nº " + tid + " · " + tag;
+        r.textContent = "R " + reps + " · I " + imgs + " · P " + pg;
+        meta.appendChild(l); meta.appendChild(r);
+        cell.insertBefore(meta, cell.firstChild);
+      } else {
+        // brutalist: THR//0044 .......... /GEN/  + zero-padded bottom readout strip
+        l.textContent = "THR//" + pad4(tid);
+        r.textContent = tag;
+        meta.appendChild(l); meta.appendChild(r);
+        cell.insertBefore(meta, cell.firstChild);
+        if (stats && !stats.getAttribute("data-fmt")) {
+          stats.setAttribute("data-fmt", "1");
+          var badge = stats.getElementsByClassName("rchan-newbadge")[0];
+          stats.innerHTML = 'R <span class="labelReplies">' + pad3(reps) +
+            '</span> · I <span class="labelImages">' + pad3(imgs) +
+            '</span> · P <span class="labelPage">' + pad3(pg) + '</span>';
+          if (badge) { stats.appendChild(badge); }
+        }
+      }
+      // no-file variant: placeholder band in the thumb slot ("TEXT ONLY" / "NO FILE")
       if (!cell.querySelector(".linkThumb img")) {
         cell.classList.add("rchan-nofile");
         if (!cell.querySelector(".rchan-nofile-band")) {
           var band = document.createElement("div"); band.className = "rchan-nofile-band";
-          var lab = document.createElement("span"); lab.textContent = "NO FILE";
+          var lab = document.createElement("span"); lab.textContent = acad ? "TEXT ONLY" : "NO FILE";
           band.appendChild(lab);
           cell.insertBefore(band, meta.nextSibling);
         }

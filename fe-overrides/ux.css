@@ -111,17 +111,21 @@ body #catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
-/* cream: board/catalog title in bold serif with a tasteful raised depth shadow
-   (light top highlight + soft drop = the "lifted off the page" look). */
+/* cream: board/catalog title in the DISPLAY optical serif (New York Large,
+   Semibold), with a tasteful raised letterpress (light top catch + soft drop). */
 body.theme_cream .boardHeader p#labelName,
 body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_cream #labelBoard {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 700;
+  font-family: "New York Large", Georgia, "Times New Roman", serif;
+  font-weight: 600;
   letter-spacing: -.5px;
   /* letterpress: crisp white edge-catch below (no blur), warm ambient drop
      below with more blur than offset. Warmed black so it reads as depth on
      the ivory, not a grey sticker. */
   text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(42,38,32,.15);
+}
+/* cream: thread subjects share the display serif (Semibold), keeping their hue */
+body.theme_cream .labelSubject {
+  font-family: "New York Large", Georgia, serif; font-weight: 600;
 }
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
@@ -151,14 +155,14 @@ body .divMessage {
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-/* cream: body copy in Arial with a whisper of white edge-catch for lift — the
-   only body-size shadow that doesn't blur reading text (no blur, no dark). */
+/* cream: body copy in New York Small (Apple's body-optical serif). Regular (400)
+   on the light ground; no shadow (a serif at reading size needs none). */
 body.theme_cream .divMessage {
-  font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;   /* = 13.33px — matches 4chan's yotsuba body (pt, not px) */
-  line-height: 1.65;
+  font-family: "New York Small", Georgia, serif;
+  font-weight: 400;
+  font-size: 15.5px;
+  line-height: 1.68;
   color: #2A2620;                       /* warm charcoal, not #000 */
-  text-shadow: 0 1px 0 rgba(255,255,255,.35);
 }
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
 .linkName, .labelName { color: #3a6b2e; font-weight: 700; }
@@ -169,6 +173,13 @@ body.theme_cream .divMessage {
 .greenText { color: #5b8a2b; }
 .redText { color: #b5341f; }
 .quoteLink, .panelBacklinks a { color: #8a2b1f !important; text-decoration: underline; }
+/* cream: greentext/redtext read as quoted PROSE — exactly the body register,
+   differing in COLOUR only. The engine sets a font on .greenText that beats the
+   inherited serif, so pull family/size/weight/style/tracking back from .divMessage. */
+body.theme_cream .divMessage .greenText, body.theme_cream .divMessage .redText {
+  font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important;
+  font-style: normal !important; letter-spacing: normal !important; line-height: inherit !important;
+}
 /* file info in Courier. NOTE: no overflow/nowrap layers here — the engine
    already ellipsizes long filenames (.originalNameLink caps at 155px and
    expands to 100% on hover); clipping the parent broke that hover reveal,
@@ -1028,6 +1039,15 @@ body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
    ========================================================================== */
 /* Linux Libertine 5.3.0 (SIL OFL 1.1) — humanist old-style serif w/ true
    italics, real bold, and small-caps. Subset to latin+punctuation, TTF->woff2. */
+/* New York (Apple optical serif, self-hosted) — Cream theme family.
+   "New York Small" = body optical size; "New York Large" = display. */
+@font-face { font-family: "New York Small"; font-weight: 400; font-style: normal; font-display: swap; src: url("/.rchan/ny-small-regular.woff2") format("woff2"); }
+@font-face { font-family: "New York Small"; font-weight: 400; font-style: italic; font-display: swap; src: url("/.rchan/ny-small-italic.woff2") format("woff2"); }
+@font-face { font-family: "New York Small"; font-weight: 500; font-style: normal; font-display: swap; src: url("/.rchan/ny-small-medium.woff2") format("woff2"); }
+@font-face { font-family: "New York Small"; font-weight: 500; font-style: italic; font-display: swap; src: url("/.rchan/ny-small-mediumitalic.woff2") format("woff2"); }
+@font-face { font-family: "New York Small"; font-weight: 600; font-style: normal; font-display: swap; src: url("/.rchan/ny-small-semibold.woff2") format("woff2"); }
+@font-face { font-family: "New York Large"; font-weight: 600; font-style: normal; font-display: swap; src: url("/.rchan/ny-large-semibold.woff2") format("woff2"); }
+@font-face { font-family: "New York Large"; font-weight: 700; font-style: normal; font-display: swap; src: url("/.rchan/ny-large-bold.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 400; font-style: normal; font-display: swap; src: url("/.rchan/ll-regular.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 400; font-style: italic;  font-display: swap; src: url("/.rchan/ll-italic.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 700; font-style: normal; font-display: swap; src: url("/.rchan/ll-bold.woff2") format("woff2"); }
@@ -2690,30 +2710,31 @@ html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-galbtn, html.rc
 html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rchan-warmdark .rchan-hist-clear,
 html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #A6C185 !important; }
 
-/* body copy: Georgia 12pt (warm-cream ink on the neutral dark, no shadow) */
+/* body copy: New York Small at Medium (500) — light-on-dark optical
+   compensation makes 500 the right body weight on the dark ground. 15.5px. */
 html.rchan-warmdark .divMessage {
-  font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.65; color: #E8E6DF !important;
+  font-family: "New York Small", Georgia, serif; font-weight: 500;
+  font-size: 15.5px; line-height: 1.68; color: #E8E6DF !important;
 }
-/* greentext/quotes read as quoted PROSE, not code: same register as the body,
-   differing in COLOUR ONLY. The engine sets a font-family on .greenText that
-   overrode the Georgia it should inherit from .divMessage — force it back, and
-   neutralise any size/style/tracking that leaked in from display styles. */
+/* greentext/quotes read as quoted PROSE, not code: EXACTLY the body register,
+   differing in COLOUR only. The engine sets a font on .greenText that beat the
+   inherited serif — pull family/size/weight/style/tracking back from .divMessage. */
 html.rchan-warmdark .divMessage .greenText,
 html.rchan-warmdark .divMessage .redText {
-  font-family: Georgia, "Times New Roman", serif !important;
-  font-style: normal !important;
-  font-size: inherit !important;
-  letter-spacing: normal !important;
+  font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important;
+  font-style: normal !important; letter-spacing: normal !important; line-height: inherit !important;
 }
 /* post/thread separators: the base cream hr (#CFCFC4) is far too bright here */
 html.rchan-warmdark hr { border-top-color: #3C3C38 !important; }
-/* board/catalog title: keep Cream's bold serif, flipped to an embossed-on-dark
-   shadow (dark crisp catch below — the sibling of Cream's light letterpress). */
+/* board/catalog title: DISPLAY optical serif (New York Large, Semibold), with the
+   embossed-on-dark shadow (dark crisp catch below — sibling of Cream's letterpress). */
 html.rchan-warmdark .boardHeader p#labelName, html.rchan-warmdark #catalogId,
 html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
-  font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -.5px;
+  font-family: "New York Large", Georgia, "Times New Roman", serif; font-weight: 600; letter-spacing: -.5px;
   color: #EFEDE6 !important; text-shadow: 0 1px 1px rgba(0,0,0,.5);
 }
+/* thread subjects share the display serif (Semibold), keeping their hue */
+html.rchan-warmdark .labelSubject { font-family: "New York Large", Georgia, serif; font-weight: 600; }
 html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
 
 /* ---------- Forced colors (Windows High Contrast) ----------

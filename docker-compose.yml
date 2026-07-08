@@ -94,6 +94,13 @@ services:
       - ./fe-overrides/ll-italic.woff2:/etc/nginx/rchan/ll-italic.woff2:ro
       - ./fe-overrides/ll-bold.woff2:/etc/nginx/rchan/ll-bold.woff2:ro
       - ./fe-overrides/ll-bolditalic.woff2:/etc/nginx/rchan/ll-bolditalic.woff2:ro
+      - ./fe-overrides/ny-small-regular.woff2:/etc/nginx/rchan/ny-small-regular.woff2:ro
+      - ./fe-overrides/ny-small-italic.woff2:/etc/nginx/rchan/ny-small-italic.woff2:ro
+      - ./fe-overrides/ny-small-medium.woff2:/etc/nginx/rchan/ny-small-medium.woff2:ro
+      - ./fe-overrides/ny-small-mediumitalic.woff2:/etc/nginx/rchan/ny-small-mediumitalic.woff2:ro
+      - ./fe-overrides/ny-small-semibold.woff2:/etc/nginx/rchan/ny-small-semibold.woff2:ro
+      - ./fe-overrides/ny-large-semibold.woff2:/etc/nginx/rchan/ny-large-semibold.woff2:ro
+      - ./fe-overrides/ny-large-bold.woff2:/etc/nginx/rchan/ny-large-bold.woff2:ro
       - ./fe-overrides/flags.json:/etc/nginx/rchan/flags.json:ro
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
       - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro

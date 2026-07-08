@@ -1,28 +1,18 @@
 [{
 	"_id": {
-		"$oid": "6a4aa8da1afc3ec1a5e9f3e9"
+		"$oid": "6a4e740c79ef0716ed634479"
 	},
-	"boardUri": "rdr",
-	"boardName": "rdr",
-	"boardDescription": "rdr 4 eva",
+	"boardUri": "gen",
+	"boardName": "General",
+	"boardDescription": "General discussion.",
 	"owner": "admin",
 	"settings": [
-		"requireThreadFile"
+		"disableIds"
 	],
-	"uniqueIps": 17,
-	"lastPostId": 121,
-	"captchaMode": 2,
-	"postsPerHour": 0,
-	"threadCount": 18,
-	"anonymousName": "",
-	"tags": [],
-	"rules": [
-		"You are responsible for your own posts.",
-		"rchan hosts posts; it does not author or endorse them.",
-		"No content that is unlawful under UK law.",
-		"No spam, flooding, or off-topic dumps.",
-		"Follow the global rules.",
-		"Report unlawful content or request removal at admin@rchan.xyz."
-	]
+	"uniqueIps": 0,
+	"lastPostId": 61,
+	"captchaMode": 0,
+	"postsPerHour": 1,
+	"threadCount": 23
 }]
 

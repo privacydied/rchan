@@ -2,8 +2,8 @@
 	"_id": {
 		"$oid": "6a4b0b8ef77897902e1214ec"
 	},
-	"boardUri": "rdr",
-	"threadId": 51,
+	"boardUri": "gen",
+	"threadId": 2,
 	"id": "a6f492",
 	"lastBump": {
 		"$date": "2026-07-06T03:40:26.673Z"
@@ -40,8 +40,8 @@
 	"_id": {
 		"$oid": "6a4b4c974f1e5feba3f9f252"
 	},
-	"boardUri": "rdr",
-	"threadId": 53,
+	"boardUri": "gen",
+	"threadId": 4,
 	"id": "f03d9e",
 	"lastBump": {
 		"$date": "2026-07-06T06:35:03.186Z"
@@ -57,17 +57,18 @@
 	"message": "email me pry@privacydied.net",
 	"email": null,
 	"page": 1,
-	"flag": "/.static/flags/us.png",
-	"flagName": "United States",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"files": null,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4b4d684f1e5feba3f9f25a"
 	},
-	"boardUri": "rdr",
-	"threadId": 54,
+	"boardUri": "gen",
+	"threadId": 5,
 	"id": "872205",
 	"lastBump": {
 		"$date": "2026-07-07T01:37:35.91Z"
@@ -106,8 +107,8 @@
 	"_id": {
 		"$oid": "6a4badf3f77897902e121559"
 	},
-	"boardUri": "rdr",
-	"threadId": 58,
+	"boardUri": "gen",
+	"threadId": 11,
 	"id": "bf4ba4",
 	"lastBump": {
 		"$date": "2026-07-08T00:00:19.463Z"
@@ -137,17 +138,17 @@
 	"page": 1,
 	"fileCount": 6,
 	"postCount": 7,
-	"flag": "/.static/flags/gb.png",
-	"flagName": "United Kingdom",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4bdcb8de97b7a9fa23c12b"
 	},
-	"boardUri": "rdr",
-	"threadId": 64,
+	"boardUri": "gen",
+	"threadId": 19,
 	"id": "94040a",
 	"lastBump": {
 		"$date": "2026-07-06T23:36:05.21Z"
@@ -177,17 +178,17 @@
 	"page": 2,
 	"fileCount": 1,
 	"postCount": 2,
-	"flag": "/.static/flags/us.png",
-	"flagName": "United States",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4bdf9a163d0091998b8a77"
 	},
-	"boardUri": "rdr",
-	"threadId": 66,
+	"boardUri": "gen",
+	"threadId": 22,
 	"id": "a569de",
 	"lastBump": {
 		"$date": "2026-07-06T17:02:18.835Z"
@@ -215,17 +216,17 @@
 		}
 	],
 	"page": 2,
-	"flag": "/.static/flags/gb.png",
-	"flagName": "United Kingdom",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4be971fcc8b1dfb9d12c97"
 	},
-	"boardUri": "rdr",
-	"threadId": 71,
+	"boardUri": "gen",
+	"threadId": 23,
 	"id": "8189b3",
 	"lastBump": {
 		"$date": "2026-07-06T17:44:17.279Z"
@@ -253,17 +254,17 @@
 		}
 	],
 	"page": 2,
-	"flag": "/.static/flags/gb.png",
-	"flagName": "United Kingdom",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4c4e67c5c566d56148aed7"
 	},
-	"boardUri": "rdr",
-	"threadId": 76,
+	"boardUri": "gen",
+	"threadId": 24,
 	"id": "5da754",
 	"lastBump": {
 		"$date": "2026-07-07T00:55:58.313Z"
@@ -293,17 +294,17 @@
 	"page": 2,
 	"fileCount": 1,
 	"postCount": 1,
-	"flag": "/.static/flags/us.png",
-	"flagName": "United States",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4c5639d577bb39ee2de948"
 	},
-	"boardUri": "rdr",
-	"threadId": 78,
+	"boardUri": "gen",
+	"threadId": 26,
 	"id": "ffaa91",
 	"lastBump": {
 		"$date": "2026-07-07T01:28:25.889Z"
@@ -319,17 +320,18 @@
 	"message": "mashed potato recipe without milk low calorie low fat tasty garlic",
 	"email": null,
 	"page": 2,
-	"flag": "/.static/flags/us.png",
-	"flagName": "United States",
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"files": null,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4c619d921c4c68a16b1410"
 	},
-	"boardUri": "rdr",
-	"threadId": 80,
+	"boardUri": "gen",
+	"threadId": 27,
 	"id": "357174",
 	"lastBump": {
 		"$date": "2026-07-07T05:52:13.54Z"
@@ -368,8 +370,8 @@
 	"_id": {
 		"$oid": "6a4c95cbc5c566d56148af7f"
 	},
-	"boardUri": "rdr",
-	"threadId": 83,
+	"boardUri": "gen",
+	"threadId": 30,
 	"id": "d8c8a0",
 	"lastBump": {
 		"$date": "2026-07-07T23:05:03.32Z"
@@ -408,8 +410,8 @@
 	"_id": {
 		"$oid": "6a4c9c86921c4c68a16b1465"
 	},
-	"boardUri": "rdr",
-	"threadId": 91,
+	"boardUri": "gen",
+	"threadId": 33,
 	"id": "6d8994",
 	"lastBump": {
 		"$date": "2026-07-08T00:26:23.944Z"
@@ -437,19 +439,19 @@
 		}
 	],
 	"page": 1,
-	"flag": "/.static/flags/us.png",
-	"flagName": "United States",
 	"autoSage": null,
 	"cyclic": false,
 	"fileCount": 1,
-	"postCount": 1
+	"postCount": 1,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4c9ee6d577bb39ee2dea3c"
 	},
-	"boardUri": "rdr",
-	"threadId": 92,
+	"boardUri": "gen",
+	"threadId": 35,
 	"id": "6fe288",
 	"lastBump": {
 		"$date": "2026-07-07T09:03:03.292Z"
@@ -488,8 +490,8 @@
 	"_id": {
 		"$oid": "6a4d1d59fc94a585f1bc2f17"
 	},
-	"boardUri": "rdr",
-	"threadId": 106,
+	"boardUri": "gen",
+	"threadId": 43,
 	"id": "904e46",
 	"lastBump": {
 		"$date": "2026-07-07T15:38:01.677Z"
@@ -504,8 +506,6 @@
 	"name": "Anonymous",
 	"message": "Nice board\r\nPic not related",
 	"email": null,
-	"flagName": "United States",
-	"flag": "/.static/flags/us.png",
 	"files": [
 		{
 			"originalName": "641866a136223.jpeg",
@@ -518,19 +518,21 @@
 			"height": 449
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4d593020f762f499fbb8bc"
 	},
-	"boardUri": "rdr",
-	"threadId": 108,
+	"boardUri": "gen",
+	"threadId": 44,
 	"id": "521417",
 	"lastBump": {
-		"$date": "2026-07-08T00:54:54.994Z"
+		"$date": "2026-07-08T04:02:13.496Z"
 	},
 	"creation": {
 		"$date": "2026-07-07T19:53:20.101Z"
@@ -542,8 +544,6 @@
 	"name": "Anonymous",
 	"message": "Who your GOAT",
 	"email": null,
-	"flagName": "Switzerland",
-	"flag": "/.static/flags/ch.png",
 	"files": [
 		{
 			"originalName": "Screenshot_20260707_145216_Instagram.jpg",
@@ -557,17 +557,19 @@
 		}
 	],
 	"page": 1,
-	"fileCount": 2,
-	"postCount": 2,
+	"fileCount": 6,
+	"postCount": 7,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/ch.png",
+	"flagName": "Switzerland"
 },
 {
 	"_id": {
 		"$oid": "6a4d66a89d1833a8244f9957"
 	},
-	"boardUri": "rdr",
-	"threadId": 110,
+	"boardUri": "gen",
+	"threadId": 52,
 	"id": "a16507",
 	"lastBump": {
 		"$date": "2026-07-07T20:50:48.021Z"
@@ -582,8 +584,6 @@
 	"name": "Anonymous",
 	"message": ">be me\r\n>watch asmongold 16hrs/day\r\n>piss jar collection hits critical mass\r\n>wendy's bags form geological strata around chair\r\n>chat reacts to my reacts to reacts\r\n>realize i'm the content now\r\n>lumpenproletariat arc complete\r\n>no work, no community, no ritual\r\n>just dopamine slurry: eat/shit/sleep/fap/repeat\r\n>piss jar isn't the problem\r\n>it's the monument to total boundary dissolution\r\n>mfw \"but you're not starving\"\r\n>calories abundant, meaning extinct\r\n>median discord rotting is just bored/atomized/overstimulated\r\n>furry jogging with piss jar is horror-meme, not average\r\n>continue scrolling",
 	"email": null,
-	"flagName": "United Kingdom",
-	"flag": "/.static/flags/gb.png",
 	"files": [
 		{
 			"originalName": "MV5BOTRiNzhkNzUtMzU3ZS00NDk5LTlkNjctMDUwNjA1OGQxZDc2XkEyXkFqcGc@._V1_QL75_UX500_CR0,0,500,281_.jpg",
@@ -598,14 +598,16 @@
 	],
 	"page": 1,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4d721b79801b400a282cd8"
 	},
-	"boardUri": "rdr",
-	"threadId": 111,
+	"boardUri": "gen",
+	"threadId": 53,
 	"id": "43b7ad",
 	"lastBump": {
 		"$date": "2026-07-07T21:39:39.636Z"
@@ -620,8 +622,6 @@
 	"name": "Anonymous",
 	"message": ">That Asmongold lumpenization — that's going to continue to rise, right? That's not because people are starving, it's because people are devoid of structure and purpose in their life. So they are literally accumulating piss jars, and the rhythm and routines of them pissing, shitting and ejaculating and feeling and, I don't know, getting sunlight [are] scrambled — so that one day you're going to wake up, you're going to go outside, and there's going to be a guy who looks like Asmongold jacking off while he's running, jogging with a piss jar in his hand that he's going to pour on himself while wearing a furry costume. That's the chaos and misalignment in the structure of people's lives that I'm talking about. And if it's too grotesque and TMI — too much info — for you, you need to hear it anyway, because that's where we're fucking headed.\r\n>He has a jar of piss. The most fundamental thing that makes us human, according to so many fucking anthropologists, is our ability to know where to separate how we eat and how we shit. American lumpenization is becoming so fucking acute and so fucking extreme. You have unshowered men with a piss jar next to their computer where they eat Wendy's — [the ability] to distinguish basic habits, basic rhythms, basic routines, basic discipline, basic structure — all of it's gone. They're just purely dopamine: playing video games, scoring the points, jacking off, watching porn. You're not showering, you're not grooming yourself, you're just purely reacting to the most immediate hedonistic inputs and sensibilities and feelings. That's the hell that is lumpenization. These people aren't starving — they're just self-destructive nihilists who have been detached from reality.\r\n\r\nlowkey cooking",
 	"email": null,
-	"flagName": "United Kingdom",
-	"flag": "/.static/flags/gb.png",
 	"files": [
 		{
 			"originalName": "MV5BOTRiNzhkNzUtMzU3ZS00NDk5LTlkNjctMDUwNjA1OGQxZDc2XkEyXkFqcGc@._V1_QL75_UX500_CR0,0,500,281_.jpg",
@@ -636,14 +636,16 @@
 	],
 	"page": 1,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4d857679801b400a282cf3"
 	},
-	"boardUri": "rdr",
-	"threadId": 112,
+	"boardUri": "gen",
+	"threadId": 54,
 	"id": "6591ab",
 	"lastBump": {
 		"$date": "2026-07-07T23:04:57.465Z"
@@ -658,8 +660,6 @@
 	"name": "Anonymous",
 	"message": "In my loneliness, I’ve taken to messaging old acquaintances and friends I haven’t spoken to in years, high school classmates, etc, asking if they want to hang out\r\n\r\nIt’s been very effective. All of them are pleasantly surprised and many want to keep it going. There’s all this talk about alienation and I think a lot of it is this feeling of emotional paralysis that leads to inaction. Anyway, try it if you feel lonely; you may have more influence than you think. I think we tend to underestimate how welcome our outreach will be.",
 	"email": null,
-	"flagName": "United Kingdom",
-	"flag": "/.static/flags/gb.png",
 	"files": [
 		{
 			"originalName": "1626875691395.jpg",
@@ -676,14 +676,16 @@
 	"fileCount": 0,
 	"postCount": 1,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/gb.png",
+	"flagName": "United Kingdom"
 },
 {
 	"_id": {
 		"$oid": "6a4d8a5038df03a881b19e5c"
 	},
-	"boardUri": "rdr",
-	"threadId": 115,
+	"boardUri": "gen",
+	"threadId": 56,
 	"id": "79d8c2",
 	"lastBump": {
 		"$date": "2026-07-07T23:22:56.588Z"
@@ -698,8 +700,6 @@
 	"name": "Anonymous",
 	"message": "Whenever I start ruminating on some past mistake or betrayal I just tell myself \"alright, but you gotta get over it\" and it actually helps a lot.",
 	"email": null,
-	"flagName": "United States",
-	"flag": "/.static/flags/us.png",
 	"files": [
 		{
 			"originalName": "pepe-toast.gif",
@@ -714,14 +714,16 @@
 	],
 	"page": 1,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4d92791d40f971106eb0f4"
 	},
-	"boardUri": "rdr",
-	"threadId": 116,
+	"boardUri": "gen",
+	"threadId": 57,
 	"id": "c2c708",
 	"lastBump": {
 		"$date": "2026-07-08T00:55:49.837Z"
@@ -736,8 +738,6 @@
 	"name": "Anonymous",
 	"message": "ralo famgoon pic unrelated",
 	"email": null,
-	"flagName": "United States",
-	"flag": "/.static/flags/us.png",
 	"files": [
 		{
 			"originalName": "image.jpeg",
@@ -754,14 +754,16 @@
 	"fileCount": 1,
 	"postCount": 1,
 	"autoSage": null,
-	"cyclic": false
+	"cyclic": false,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States"
 },
 {
 	"_id": {
 		"$oid": "6a4da2e3feeb624a550ad6bd"
 	},
-	"boardUri": "rdr",
-	"threadId": 121,
+	"boardUri": "gen",
+	"threadId": 59,
 	"id": "6bf8fb",
 	"lastBump": {
 		"$date": "2026-07-08T01:07:47.564Z"
@@ -776,8 +778,6 @@
 	"name": "Anonymous",
 	"message": "So much of that cohort is just coasting, lives with their parents, can't drive, working dead-end service industry jobs at best ... which is normally fine for people in their 20s. Still, I don't think the economy will continue to do a good job absorbing \"young professionals\" who didn't play every card right before attending/graduating from college, as it used to when there were more entry points and cleaner internal ladders.\r\n\r\nRight now, the severity of that situation is kind of hidden by the fact that parents raised a lot of those almost-NEETs (and continue to receive support/housing from parents) whose net worths are high enough to cover for a lot of their kids' young adult needs, but not enough money to fund retirement/end-of-life care for the parents plus perpetual financial support for their adult children. Many of those adult children also have student debt.\r\n\r\nThis is a problem everyone is basically aware of, and which is discussed online incessantly, but usually with vague and alarming abstractions (like \"they'll be serfs forever,\" \"it'll be like Brazil,\" etc.). But my genuine question is like... what do people think it'll actually look like? I can't imagine people actually imagining massive breadlines filled with people with computer science degrees, or a mass suicide epidemic? Are those actual, plausible outcomes? If not, what is? Specific predictions, not vague abstractions.",
 	"email": null,
-	"flagName": "Portugal",
-	"flag": "/.static/flags/pt.png",
 	"files": [
 		{
 			"originalName": "EkOrIlQU8AELz5R.jpg",
@@ -791,6 +791,86 @@
 		}
 	],
 	"page": 1,
+	"autoSage": null,
+	"cyclic": false,
+	"flag": "/.static/flags/pt.png",
+	"flagName": "Portugal"
+},
+{
+	"_id": {
+		"$oid": "6a4dc9102eaceac44c61936f"
+	},
+	"boardUri": "gen",
+	"threadId": 60,
+	"id": "8c3dcc",
+	"lastBump": {
+		"$date": "2026-07-08T03:54:00.608Z"
+	},
+	"creation": {
+		"$date": "2026-07-08T03:50:40.36Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "\"TIME to put off the world and go somewhere\r\nAnd find my health again in the sea air,'\r\nytboi to ytboi cried, being frenzy-struck,\r\n\"And make my soul before my pate is bare.-\r\n\"And get a comfortable wife and house\r\nTo rid me of the devil in my shoes,'\r\nytboi to ytboi cried, being frenzy-struck,\r\n\"And the worse devil that is between my thighs.'\r\nAnd though I'd marry with a comely lass,\r\nShe need not be too comely — let it pass,'\r\nytboi to ytboi cried, being frenzy-struck,\r\n\"But there's a devil in a looking-glass.'\r\n\"Nor should she be too rich, because the rich\r\nAre driven by wealth as ytbois by the itch,'\r\nytboi to ytboi cried, being frenzy-struck,\r\n\"And cannot have a humorous happy speech.'\r\n\"And there I'll grow respected at my ease,\r\nAnd hear amid the garden's nightly peace.'\r\nytboi to ytboi cried, being frenzy-struck,\r\n\"The wind-blown clamour of the barnacle-geese.'",
+	"email": null,
+	"files": [
+		{
+			"originalName": "images.jpg",
+			"path": "/.media/0e8da909fd319e81d333c131748f894fdd7c75a3a21a2dbb76f7427df8b8aef9.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_0e8da909fd319e81d333c131748f894fdd7c75a3a21a2dbb76f7427df8b8aef9",
+			"size": 17401,
+			"sha256": "0e8da909fd319e81d333c131748f894fdd7c75a3a21a2dbb76f7427df8b8aef9",
+			"width": 576,
+			"height": 432
+		}
+	],
+	"page": 1,
+	"fileCount": 1,
+	"postCount": 1,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States",
+	"autoSage": null,
+	"cyclic": false
+},
+{
+	"_id": {
+		"$oid": "6a4e7e8479ef0716ed634498"
+	},
+	"boardUri": "gen",
+	"threadId": 1,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-08T16:44:52.327Z"
+	},
+	"creation": {
+		"$date": "2026-07-08T16:44:51.501Z"
+	},
+	"subject": "How fucked is America?",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Like will they have warlords in a few years or will they just get more and more corrupt and shitty in a normal way?",
+	"email": null,
+	"files": [
+		{
+			"originalName": "IMG_7226.png",
+			"path": "/.media/a9f8e96e84feb70b8dc6ecec0474c3d46c4bdeddd3a4beb0c91ccc1d29714ccd.png",
+			"mime": "image/png",
+			"thumb": "/.media/t_a9f8e96e84feb70b8dc6ecec0474c3d46c4bdeddd3a4beb0c91ccc1d29714ccd",
+			"size": 552523,
+			"sha256": "a9f8e96e84feb70b8dc6ecec0474c3d46c4bdeddd3a4beb0c91ccc1d29714ccd",
+			"width": 500,
+			"height": 508
+		}
+	],
+	"page": 1,
+	"flag": "/.static/flags/us.png",
+	"flagName": "United States",
 	"autoSage": null,
 	"cyclic": false
 }]

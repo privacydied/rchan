@@ -1480,6 +1480,22 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   border-bottom: 1px solid #CFCFC466;
 }
 .theme_dark .rchan-set-news { border-color: #2c2f3666; }
+/* collapsible settings groups */
+.rchan-set-group summary {
+  cursor: pointer; padding: 6px 8px; font-weight: 700; font-size: .833rem;
+  background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
+  list-style: none; display: flex; align-items: center; gap: 6px;
+  -webkit-user-select: none; user-select: none;
+}
+.rchan-set-group summary::before { content: "▸"; font-size: x-small; opacity: .6; }
+.rchan-set-group[open] summary::before { content: "▾"; }
+.rchan-set-group summary::-webkit-details-marker { display: none; }
+.rchan-set-grpcount {
+  margin-left: auto; padding: 0 6px; font-size: x-small; font-weight: 700;
+  background: #CFCFC4; color: #393939;
+}
+.theme_dark .rchan-set-group summary { background: #262a31; border-color: #2c2f36; }
+.theme_dark .rchan-set-grpcount { background: #2c2f36; color: #c9ccd1; }
 
 /* ---------- Sticky OP bar (thread context while scrolled deep) ---------- */
 #rchan-stickyop {

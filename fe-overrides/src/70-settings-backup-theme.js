@@ -13,36 +13,36 @@
     if (b) { b.classList.toggle("rchan-on", on); }
   }
   var SET_ROWS = [
-    { k: "hoverzoom", t: "Image hover zoom", d: "Full-size floating preview while hovering a thumbnail" },
-    { k: "vidpop", t: "Video hover pop-out", d: "Muted autoplay preview while hovering a video thumbnail" },
-    { k: "catprev", t: "Catalog thread previews", d: "Last replies shown when hovering (or tapping) a catalog card" },
-    { k: "inlinequote", t: "Inline quote expansion", d: "Click a >>quote to embed the post instead of jumping to it" },
-    { k: "keys", t: "Keyboard shortcuts", d: "j/k posts · t/b top/bottom · c catalog · r reply — press ? for the full list" },
-    { k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
-    { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
-    { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
-    { k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
-    { k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
-    { k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
-    { t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
+    { g: "Media", k: "hoverzoom", t: "Image hover zoom", d: "Full-size floating preview while hovering a thumbnail" },
+    { g: "Media", k: "vidpop", t: "Video hover pop-out", d: "Muted autoplay preview while hovering a video thumbnail" },
+    { g: "Reading", k: "catprev", t: "Catalog thread previews", d: "Last replies shown when hovering (or tapping) a catalog card" },
+    { g: "Reading", k: "inlinequote", t: "Inline quote expansion", d: "Click a >>quote to embed the post instead of jumping to it" },
+    { g: "Advanced", k: "keys", t: "Keyboard shortcuts", d: "j/k posts · t/b top/bottom · c catalog · r reply — press ? for the full list" },
+    { g: "Posting", k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
+    { g: "Advanced", k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
+    { g: "Appearance", k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
+    { g: "Reading", k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
+    { g: "Reading", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
+    { g: "Reading", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
+    { g: "Media", t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },
-    { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
-    { k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
-    { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
-    { k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
-    { k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },
-    { t: "Board accent colors", d: "Each board tints its title with its own stable hue",
+    { g: "Media", k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { g: "Posting", k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
+    { g: "Notifications", k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
+    { g: "Posting", k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
+    { g: "Posting", k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },
+    { g: "Appearance", t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
-    { t: "Auto theme (follow OS)", d: "Dark when your system is dark, cream otherwise — switches live",
+    { g: "Appearance", t: "Auto theme (follow OS)", d: "Dark when your system is dark, cream otherwise — switches live",
       get: autoThemeOn,
       set: function (on) {
         try { on ? localStorage.setItem(THEME_AUTO_KEY, "1") : localStorage.removeItem(THEME_AUTO_KEY); } catch (e) {}
         if (on) { applyAutoTheme(); }
         syncAutoThemeOption();
       } },
-    { t: "Loop videos", d: "Restart videos when they end (native players)",
+    { g: "Media", t: "Loop videos", d: "Restart videos when they end (native players)",
       get: function () { try { return !JSON.parse(localStorage.noAutoLoop || "false"); } catch (e) { return true; } },
       set: function (on) {
         try { localStorage.noAutoLoop = JSON.stringify(!on); } catch (e) {}
@@ -51,7 +51,7 @@
           if (vids[i].id !== "rchan-vidzoom") { vids[i].loop = on; }
         }
       } },
-    { t: "Relative timestamps", d: "“14 minutes ago” next to post dates",
+    { g: "Reading", t: "Relative timestamps", d: "“14 minutes ago” next to post dates",
       get: function () { try { return JSON.parse(localStorage.relativeTime || "true"); } catch (e) { return true; } },
       set: function (on) {
         try { localStorage.relativeTime = on ? "true" : "false"; } catch (e) {}
@@ -60,7 +60,7 @@
         var els = document.getElementsByClassName("relativeTime");
         for (var i = els.length - 1; i >= 0; i--) { els[i].parentNode.removeChild(els[i]); }
       } },
-    { t: "Desktop notifications", d: "System notification when a hidden tab gets replies — this thread or any watched thread (same as the bell button)",
+    { g: "Notifications", t: "Desktop notifications", d: "System notification when a hidden tab gets replies — this thread or any watched thread (same as the bell button)",
       get: function () { try { return localStorage.getItem(NOTIFY_KEY) === "1"; } catch (e) { return false; } },
       set: function (on, report) {
         if (!on) {
@@ -386,9 +386,31 @@
     var list = setPanel.children[1];                              // rebuild → checkboxes reflect live state
     list.innerHTML = "";
     var news = document.createElement("div"); news.className = "rchan-set-news";
-    news.textContent = "Recently added: auto-watch on post · replies-to-you inbox · Ctrl+Enter · sage · work-safe mode · gallery (g) · Ctrl+K palette";
+    news.textContent = "Recently added: connection dot · watch from catalog · text size · ID names · your-threads strip (see each section)";
     list.appendChild(news);
-    SET_ROWS.forEach(function (row) { list.appendChild(buildSetRow(row)); });
+    // grouped into collapsible sections — 20+ flat toggles had become a wall.
+    // Open/closed state persists per group; first visit opens Reading only.
+    var SET_GROUPS = ["Reading", "Media", "Posting", "Notifications", "Appearance", "Advanced"];
+    SET_GROUPS.forEach(function (gname) {
+      var rows = SET_ROWS.filter(function (r) { return (r.g || "Advanced") === gname; });
+      if (!rows.length) { return; }
+      var det = document.createElement("details");
+      det.className = "rchan-set-group";
+      var saved = null;
+      try { saved = localStorage.getItem("rchan_setgrp_" + gname); } catch (e) {}
+      det.open = saved === null ? gname === "Reading" : saved === "1";
+      var sum = document.createElement("summary");
+      sum.textContent = gname + " ";
+      var cnt = document.createElement("span"); cnt.className = "rchan-set-grpcount";
+      cnt.textContent = String(rows.length);
+      sum.appendChild(cnt);
+      det.appendChild(sum);
+      rows.forEach(function (row) { det.appendChild(buildSetRow(row)); });
+      det.addEventListener("toggle", function () {
+        try { localStorage.setItem("rchan_setgrp_" + gname, det.open ? "1" : "0"); } catch (e) {}
+      });
+      list.appendChild(det);
+    });
     buildFilterSection(setPanel.children[2]);
     buildCssSection(setPanel.children[3]);
     setPanel.style.display = "block";

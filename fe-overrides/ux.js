@@ -468,11 +468,42 @@
       vidzoom.style.width = Math.round(nw * s) + "px"; vidzoom.style.height = Math.round(nh * s) + "px";
       vidzoom.dataset.sized = "1";
     } else { vidzoom.style.width = ""; vidzoom.style.height = ""; vidzoom.dataset.sized = "0"; }
+    // opt-in sound on the hover preview; volume follows the site-wide saved level
+    var snd = setOn("vidpopsound", false);
+    vidzoom.muted = !snd;
+    if (snd) {
+      var sv = loadVol();
+      try { vidzoom.volume = (sv && typeof sv.v === "number") ? sv.v : 0.5; } catch (e2) {}
+    }
     vidzoom.style.display = "block";
     var p = vidzoom.play(); if (p && p.catch) { p.catch(function () {}); }
     placeFloat(vidzoom, e);
   }
   function onVidOut(e) { if (e.target && e.target.tagName === "IMG") { hideVidZoom(); } }
+
+  /* ---------- Video QoL: volume + mute persist site-wide ----------
+     The engine's players forget volume on every page. Remember the last
+     volume/mute the user set on any native player and apply it the first
+     time each player starts. (The hover pop-out is excluded: it manages
+     its own muted state via the "Sound on video hover" setting.) */
+  var VOL_KEY = "rchan_vol";
+  function loadVol() { try { return JSON.parse(localStorage.getItem(VOL_KEY) || "null"); } catch (e) { return null; } }
+  function hookVolumePersistence() {
+    document.addEventListener("volumechange", function (e) {
+      var el = e.target;
+      if (!el || (el.tagName !== "VIDEO" && el.tagName !== "AUDIO") || el.id === "rchan-vidzoom") { return; }
+      if (!el.__rchanVol) { return; }                  // ignore our own initial application
+      try { localStorage.setItem(VOL_KEY, JSON.stringify({ v: el.volume, m: el.muted })); } catch (e2) {}
+    }, true);
+    document.addEventListener("play", function (e) {
+      var el = e.target;
+      if (!el || (el.tagName !== "VIDEO" && el.tagName !== "AUDIO") || el.id === "rchan-vidzoom") { return; }
+      if (el.__rchanVol) { return; }
+      var s = loadVol();
+      if (s && typeof s.v === "number") { try { el.volume = s.v; el.muted = !!s.m; } catch (e2) {} }
+      el.__rchanVol = true;                            // set AFTER applying: the apply above must not persist
+    }, true);
+  }
 
   /* ---------- qr.showQr patch: greentext EVERY line of the selection ----------
      Native showQr already appends the selection but only prefixes '>' on the
@@ -2678,9 +2709,9 @@
      at event time, so changes apply instantly — no reload. Two rows bridge
      NATIVE storage (relativeTime, rchan_notify) instead of duplicating it. */
   var SET_NS = "rchan_set_";
-  function setOn(k) {
-    try { var v = localStorage.getItem(SET_NS + k); return v === null ? true : v === "1"; }
-    catch (e) { return true; }
+  function setOn(k, def) {                             // def defaults to true; pass false for opt-in features
+    try { var v = localStorage.getItem(SET_NS + k); return v === null ? def !== false : v === "1"; }
+    catch (e) { return def !== false; }
   }
   function setPut(k, on) { try { localStorage.setItem(SET_NS + k, on ? "1" : "0"); } catch (e) {} }
   function syncBell(on) {
@@ -2696,6 +2727,16 @@
     { k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
+    { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { t: "Loop videos", d: "Restart videos when they end (native players)",
+      get: function () { try { return !JSON.parse(localStorage.noAutoLoop || "false"); } catch (e) { return true; } },
+      set: function (on) {
+        try { localStorage.noAutoLoop = JSON.stringify(!on); } catch (e) {}
+        var vids = document.getElementsByTagName("video");
+        for (var i = 0; i < vids.length; i++) {
+          if (vids[i].id !== "rchan-vidzoom") { vids[i].loop = on; }
+        }
+      } },
     { t: "Relative timestamps", d: "“14 minutes ago” next to post dates",
       get: function () { try { return JSON.parse(localStorage.relativeTime || "true"); } catch (e) { return true; } },
       set: function (on) {
@@ -2827,7 +2868,7 @@
     var d = document.createElement("span"); d.className = "rchan-set-desc"; d.textContent = row.d;
     txt.appendChild(t); txt.appendChild(d);
     var cb = document.createElement("input"); cb.type = "checkbox";
-    cb.checked = row.get ? !!row.get() : setOn(row.k);
+    cb.checked = row.get ? !!row.get() : setOn(row.k, row.def);
     cb.addEventListener("change", function () {
       if (row.set) { row.set(cb.checked, function (v) { cb.checked = !!v; }); }
       else { setPut(row.k, cb.checked); }
@@ -3003,7 +3044,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });

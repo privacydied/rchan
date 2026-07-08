@@ -169,7 +169,13 @@ body nav, body #dynamicHeader {
 body #navLinkSpan a::after, body #navOptionsSpan a::after { content: ''; }
 #navLinkSpan > span, #navOptionsSpan > span { display: none; }
 body #dynamicHeader a, body nav a { display: inline-block; }
-body #navLinkSpan, body #navBoardsSpan, body #navOptionsSpan { margin-right: 10px; }
+/* nav layout: board links pinned LEFT, site links (+theme picker) pushed RIGHT,
+   settings rightmost. DOM order is navLinkSpan, navBoardsSpan, navOptionsSpan —
+   flex `order` swaps them without touching the engine markup. */
+body nav, body #dynamicHeader { display: flex; flex-wrap: wrap; align-items: center; }
+body #navBoardsSpan { order: 0; margin-right: auto; }
+body #navLinkSpan { order: 1; margin-right: 10px; }
+body #navOptionsSpan { order: 2; }
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
 /* footer (4chan #absbot: x-small) */
@@ -391,7 +397,10 @@ body .floatingMenu, body .hideMenu, body .extraMenu, body #watchedMenu {
 /* ---------- Quick Reply (qr.js #quick-reply) ----------
    The engine's threadPage.css pins width:300px and loads after this sheet,
    so sizing needs the body prefix. resize:both + overflow:auto = native
-   resize handle; draggable by its header as before. */
+   resize handle; draggable by its header as before.
+   Restyled to MATCH the floating new-thread box (#rchan-qr): flat cream
+   panel, #DCDCCF sticky header with the close button on the right, 6-8px
+   gutters, dashed dropzone, bordered Reply button. */
 body #quick-reply {
   width: 400px; height: 680px;
   min-width: 340px; max-width: 96vw; max-height: 92vh;
@@ -399,9 +408,66 @@ body #quick-reply {
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
   background: #E6E6DA; border: 1px solid #CFCFC4;
 }
-body #quick-reply table { width: 100%; background: #E6E6DA; }
-#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 90px; }
+body #quick-reply #post-form-inner { min-width: 0; }
+body #quick-reply table {
+  width: 100%; background: #E6E6DA;
+  border-collapse: separate; border-spacing: 0; padding: 0;
+}
+/* header row = #rchan-qr-header twin: sticky, draggable, close on the right */
+body #quick-reply th {
+  position: sticky; top: 0; z-index: 2;
+  background: #DCDCCF; border: none; border-bottom: 1px solid #CFCFC4;
+  padding: 3px 8px; text-align: left;
+  font-size: 10pt; font-weight: 700; color: #393939;
+}
+body #quick-reply th .handle {
+  float: none; width: auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-direction: row-reverse;   /* close-btn is the FIRST child -> send it right */
+  user-select: none;
+}
+body #quick-reply th .close-btn { float: none; padding: 0 3px; font-size: 13px; cursor: pointer; }
+/* body cells get the #rchan-qr-body gutter */
+body #quick-reply td { padding: 2px 8px; }
+body #quick-reply tbody:last-child tr:last-child td { padding-bottom: 8px; }
+#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 90px; resize: vertical; }
+/* dropzone: dashed cream instead of the engine's grey slab */
+body #quick-reply .dropzone {
+  border: 1px dashed #CFCFC4; background: #EEEEE4; color: #393939;
+  margin: 4px 0; padding: 10px 6px; text-align: center;
+  font-size: x-small; font-weight: 700; opacity: .85; cursor: pointer;
+}
+body #quick-reply .dropzone:hover { border-color: #c8102e; opacity: 1; }
+/* captcha: framed image + small reload button, like the rest of the system */
+body #quick-reply .captchaImage {
+  display: block; width: 100%; box-sizing: border-box;
+  background: #fff; border: 1px solid #CFCFC4;
+}
+body #quick-reply .reloadCaptchaButton {
+  border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer;
+  font: inherit; font-size: x-small; font-weight: 700; padding: 2px 8px;
+}
+body #quick-reply .reloadCaptchaButton:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+/* "Extra" / mobile "Files" / "Captcha" reveal rows read as links */
+body #quick-reply td.small { color: #274a6b; cursor: pointer; font-weight: 700; }
+body #quick-reply td.small:hover { color: #c8102e; }
+/* Reply button: #rchan-formtoggle twin */
+body #quick-reply #qrbutton {
+  width: auto; margin: 4px auto 2px; padding: 3px 16px;
+  border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer;
+  font: inherit; font-size: 10pt; font-weight: 700; color: #393939;
+}
+body #quick-reply #qrbutton:hover:not(:disabled) { background: #c8102e; color: #fff; border-color: #c8102e; }
+body #quick-reply #qrbutton:disabled { opacity: .6; cursor: default; }
+body #quick-reply .spoilerCheckbox { font-size: x-small; }
+/* dark theme */
 body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f2126 !important; border-color: #2c2f36; }
+.theme_dark #quick-reply th { background: #262a31 !important; color: #c9ccd1; border-color: #2c2f36 !important; }
+.theme_dark #quick-reply .dropzone { background: #16171b; color: #c9ccd1; border-color: #2c2f36; }
+.theme_dark #quick-reply .reloadCaptchaButton, .theme_dark #quick-reply #qrbutton {
+  background: #262a31; color: #c9ccd1; border-color: #333;
+}
+.theme_dark #quick-reply td.small { color: #7fb0e0; }
 
 /* ---------- Gallery lightbox ---------- */
 .modalPanel { backdrop-filter: blur(2px); }
@@ -515,6 +581,53 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
+/* ---------- Toast (styled alert() replacement) ---------- */
+#rchan-toast {
+  position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
+  z-index: 10010; display: none; cursor: pointer;
+  max-width: min(560px, 92vw);
+  background: #2e2e2e; color: #fdfdfb; font-size: 10pt; font-weight: 700;
+  line-height: 1.35; padding: 8px 14px;
+  border: 1px solid rgba(0,0,0,.15); box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+}
+#rchan-toast.rchan-toast-err { background: #c8102e; color: #fff; }
+.theme_dark #rchan-toast { background: #0f1013; color: #e6e8ec; border-color: #2c2f36; }
+.theme_dark #rchan-toast.rchan-toast-err { background: #8f0c21; }
+
+/* ---------- Own-post flash after a successful reply ---------- */
+@keyframes rchan-flashbg { 0% { background: #c8102e33; } 100% { background: transparent; } }
+.rchan-flash { animation: rchan-flashbg 2.4s ease-out; }
+
+/* ---------- "▼ N new posts" pill ---------- */
+#rchan-newpill {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: none; cursor: pointer;
+  border: 0; padding: 7px 14px; font: inherit; font-size: 10pt; font-weight: 700;
+  background: #2ea043; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+}
+#rchan-newpill:hover { filter: brightness(1.08); }
+
+/* ---------- Inline quote expansion ---------- */
+.rchan-inline-quote { display: block; margin: 4px 0 4px 14px; }
+.rchan-inline-quote .innerPost, .rchan-inline-quote .innerOP {
+  display: table; background: #E6E6DA;
+  border: 1px solid #CFCFC4; border-left: none; border-top: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1); padding: 2px;
+}
+.theme_dark .rchan-inline-quote .innerPost, .theme_dark .rchan-inline-quote .innerOP {
+  background: #1f2126; border-color: #2c2f36;
+}
+a.rchan-inlined { font-weight: 700; }
+a.rchan-inlined::after { content: " ▲"; font-size: x-small; }
+
+/* ---------- Relative timestamps ("(14 minutes ago)" next to the date) ---------- */
+.relativeTime { font-size: x-small; opacity: .72; }
+
+/* ---------- Long-thread rendering: skip offscreen posts ---------- */
+@supports (content-visibility: auto) {
+  #divThreads .postCell { content-visibility: auto; contain-intrinsic-size: auto 140px; }
+}
+
 /* ---------- Reduced motion / spoilers / code ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -540,8 +653,18 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 .theme_dark .rchan-skel { background-image: linear-gradient(90deg, #ffffff08 25%, #ffffff14 37%, #ffffff08 63%); }
 @keyframes rchan-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 
+/* ---------- Catalog preview as a bottom sheet on phones (tap-to-preview) ---------- */
+#rchan-catprev.rchan-catprev-sheet {
+  left: 8px !important; right: 8px; top: auto !important; bottom: 8px;
+  width: auto; max-height: 45vh;
+}
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
+  /* 16px inputs: anything smaller makes iOS force-zoom the viewport on focus */
+  body input, body select, body textarea, #quick-reply textarea, #qrbody { font-size: 16px; }
+  /* message text is unreadable at 10pt arial on a phone; nothing else changes */
+  body .divMessage { font-size: 14px; line-height: 1.45; }
   /* bigger, full-width Quick Reply so it's usable on phones */
   body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; height: auto; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }

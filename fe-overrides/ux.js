@@ -114,6 +114,7 @@
       var img = imgs[i];
       if (img.getAttribute("data-skel")) { continue; }
       img.setAttribute("data-skel", "1");
+      if (!img.getAttribute("loading")) { img.setAttribute("loading", "lazy"); img.setAttribute("decoding", "async"); }
       if (img.complete && img.naturalWidth > 0) { continue; }     // already loaded
       var wrap = img.parentNode;
       if (wrap && wrap.classList) { wrap.classList.add("rchan-skel"); }
@@ -131,12 +132,120 @@
     return q ? (q.textContent || "").replace(/\D/g, "") : null;
   }
 
+  /* ---------- Toast notifications (styled replacement for alert()) ----------
+     LynxChan's FE reports every posting error/notice via alert(). Convert those
+     into a dismissable toast; flood errors ("wait N more seconds") additionally
+     start a live cooldown countdown on the Post/Reply buttons. */
+  var toastBox = null, toastTimer = null;
+  function toast(msg, isErr) {
+    if (!toastBox) {
+      toastBox = document.createElement("div"); toastBox.id = "rchan-toast";
+      toastBox.setAttribute("role", "alert");
+      toastBox.addEventListener("click", function () { toastBox.style.display = "none"; });
+      document.body.appendChild(toastBox);
+    }
+    toastBox.textContent = msg;
+    toastBox.classList.toggle("rchan-toast-err", !!isErr);
+    toastBox.style.display = "block";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastBox.style.display = "none"; }, 7000);
+  }
+  var cdTimer = null;
+  function startCooldown(secs) {
+    var btns = [document.getElementById("qrbutton"), document.getElementById("formButton")]
+      .filter(Boolean).map(function (b) { return { el: b, txt: b.textContent }; });
+    if (!btns.length) { return; }
+    clearInterval(cdTimer);
+    var left = secs;
+    function tick() {
+      if (left <= 0) {
+        clearInterval(cdTimer); cdTimer = null;
+        btns.forEach(function (b) { b.el.disabled = false; b.el.textContent = b.txt; });
+        return;
+      }
+      btns.forEach(function (b) { b.el.disabled = true; b.el.textContent = b.txt + " (" + left + "s)"; });
+      left--;
+    }
+    tick();
+    cdTimer = setInterval(tick, 1000);
+  }
+  function hookAlerts() {
+    var nativeAlert = window.alert;
+    window.alert = function (msg) {
+      try {
+        msg = String(msg == null ? "" : msg).replace(/:\s*(null|undefined|\{\}|"")\s*$/, "");
+        var m = msg.match(/wait (\d+) more second/i);
+        if (m) { startCooldown(parseInt(m[1], 10)); }
+        var err = /error|fail|flood|banned|wait|invalid|expired|wrong|mandatory|too long|not allowed|denied/i.test(msg);
+        toast(msg, err);
+      } catch (e) { nativeAlert.call(window, msg); }
+    };
+  }
+
+  /* ---------- Draft autosave (per board/thread, cleared on successful post) ---------- */
+  var DRAFT_NS = "rchan_draft:";
+  function draftKey() {
+    var b = getBoard(); if (!b || b.charAt(0) === ".") { return null; }
+    return DRAFT_NS + b + "/" + (curThreadId() || "index");
+  }
+  var draftT = null;
+  function saveDraftFrom(el) {
+    clearTimeout(draftT);
+    draftT = setTimeout(function () {
+      var key = draftKey(); if (!key) { return; }
+      try {
+        var v = el.value || "";
+        if (v.trim()) { localStorage.setItem(key, v); } else { localStorage.removeItem(key); }
+      } catch (e) {}
+    }, 400);
+  }
+  function clearDraft() {
+    var key = draftKey(); if (!key) { return; }
+    try { localStorage.removeItem(key); } catch (e) {}   // native replyCallback clears the fields
+  }
+  function initDrafts() {
+    var key = draftKey(); if (!key) { return; }
+    var msg = document.getElementById("fieldMessage");
+    if (!msg || msg.getAttribute("data-draft")) { return; }
+    msg.setAttribute("data-draft", "1");
+    try {
+      var d = localStorage.getItem(key);
+      if (d && !msg.value) {
+        msg.value = d;
+        msg.dispatchEvent(new Event("input", { bubbles: true }));  // syncs #qrbody + counters
+      }
+    } catch (e) {}
+    msg.addEventListener("input", function () { saveDraftFrom(msg); });
+  }
+  function hookQrDraft() {  // #qrbody is built lazily by qr.js; its input doesn't re-fire on #fieldMessage
+    var ta = document.getElementById("qrbody");
+    if (!ta || ta.getAttribute("data-draft")) { return; }
+    ta.setAttribute("data-draft", "1");
+    ta.addEventListener("input", function () { saveDraftFrom(ta); });
+  }
+
   /* ---------- "(You)" — record your own posts, then highlight ---------- */
+  var flashId = null, flashDeadline = 0;
   function addYou(id) {
     id = String(id).replace(/\D/g, "");
     if (!id) { return; }
+    clearDraft();                                   // post landed — the draft served its purpose
+    flashId = id; flashDeadline = Date.now() + 20000;
     var a = load(YOU_KEY);
     if (a.indexOf(id) < 0) { a.push(id); save(YOU_KEY, a); refresh(); }
+  }
+  // After a successful reply, scroll to your post once it renders and flash it.
+  function tryFlashOwnPost() {
+    if (!flashId) { return; }
+    if (Date.now() > flashDeadline) { flashId = null; return; }
+    if (!curThreadId()) { return; }                 // new-thread posts navigate away anyway
+    var el = document.getElementById(flashId);
+    if (!el) { return; }
+    var inner = el.querySelector(".innerPost, .innerOP") || el;
+    flashId = null;
+    try { el.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {}
+    inner.classList.add("rchan-flash");
+    setTimeout(function () { inner.classList.remove("rchan-flash"); }, 2600);
   }
   function hookPostCapture() {
     var re = /\/(replyThread|newThread)\.js/;
@@ -320,6 +429,91 @@
   }
   function onVidOut(e) { if (e.target && e.target.tagName === "IMG") { hideVidZoom(); } }
 
+  /* ---------- qr.showQr patch: greentext EVERY line of the selection ----------
+     Native showQr already appends the selection but only prefixes '>' on the
+     first line; re-implement with per-line greentext (same side effects). */
+  function patchShowQr() {
+    var q = window.qr;
+    if (!q || !q.showQr || q.__rchanShowQr) { return; }
+    q.__rchanShowQr = true;
+    q.showQr = function (quote) {
+      q.qrPanel.style.display = "block";
+      if (q.qrPanel.getBoundingClientRect().top < 0) { q.qrPanel.style.top = "25px"; }
+      var body = document.getElementById("qrbody");
+      var field = document.getElementById("fieldMessage");
+      if (!body) { return; }
+      var txt = ">>" + quote + "\n";
+      var sel = String(window.getSelection() || "");
+      if (sel.trim()) {
+        txt += sel.replace(/\r/g, "").split("\n").map(function (l) { return ">" + l; }).join("\n") + "\n";
+      }
+      body.value += txt;
+      if (field) { field.value = body.value; }
+      body.dispatchEvent(new Event("input", { bubbles: true }));   // char counters + draft
+      try { if (window.postCommon && postCommon.updateCurrentChar) { postCommon.updateCurrentChar(); } } catch (e) {}
+      body.focus();
+    };
+  }
+
+  /* ---------- Inline quote expansion: click a >>quote to embed the post ----------
+     Plain left-click on a quoteLink/backlink toggles the quoted post inline
+     (4chan-X style) instead of jumping. Reuses tooltips.js's loadedContent
+     cache + loadQuote fetcher (its checkHeight() sets style.top, which is a
+     no-op on a static-positioned div). Modified clicks (ctrl/middle/…) keep
+     native navigation. This is also how touch users read quote chains. */
+  function onQuoteClick(e) {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
+    var a = e.target && e.target.closest ? e.target.closest(".quoteLink, .panelBacklinks a") : null;
+    if (!a || a.closest(".quoteTooltip")) { return; }         // inside a hover preview: leave native
+    var open = a.__rchanInline;
+    if (open) {                                               // toggle closed
+      e.preventDefault(); e.stopPropagation();
+      if (open.parentNode) { open.parentNode.removeChild(open); }
+      a.__rchanInline = null; a.classList.remove("rchan-inlined");
+      return;
+    }
+    var tt = window.tooltips;
+    if (!tt || (!tt.loadedContent && !tt.loadQuote)) { return; }  // no machinery: native jump
+    e.preventDefault(); e.stopPropagation();
+    // touch fires mouseenter (spawning the hover tooltip) with no mouseout to
+    // clean it up — drop any lingering hover previews before expanding inline
+    var tips = document.getElementsByClassName("quoteTooltip");
+    for (var i = tips.length - 1; i >= 0; i--) { tips[i].remove(); }
+    var box = document.createElement("div");
+    box.className = "rchan-inline-quote";
+    var url = a.href;
+    if (tt.loadedContent && tt.loadedContent[url]) {
+      box.innerHTML = tt.loadedContent[url];
+    } else {
+      box.textContent = "Loading…";
+      try { tt.loadQuote(box, url); } catch (err) { box.textContent = "Couldn't load post."; }
+    }
+    a.parentNode.insertBefore(box, a.nextSibling);
+    a.__rchanInline = box; a.classList.add("rchan-inlined");
+  }
+
+  /* ---------- Relative timestamps, default ON (native supports it, opt-in) ----------
+     posting.js honours localStorage.relativeTime/localTime but only reads them
+     during ITS init, which ran before this script. Default both on for users
+     who never touched the setting (settings menu still overrides), and apply
+     immediately on this page load. */
+  var relTimer = null;
+  function enableRelativeTimes() {
+    try {
+      if (localStorage.relativeTime === undefined) { localStorage.relativeTime = "true"; }
+      if (localStorage.localTime === undefined) { localStorage.localTime = "true"; }
+      var P = window.posting;
+      if (!P || !P.updateAllRelativeTimes || !JSON.parse(localStorage.relativeTime)) { return; }
+      if (!P.localTimes && JSON.parse(localStorage.localTime)) {
+        var times = document.getElementsByClassName("labelCreated");
+        for (var i = 0; i < times.length; i++) { try { P.setLocalTime(times[i]); } catch (e1) {} }
+        P.localTimes = true;
+      }
+      P.updateAllRelativeTimes();
+      if (!relTimer) { relTimer = setInterval(function () { try { P.updateAllRelativeTimes(); } catch (e2) {} }, 60000); }
+    } catch (e) {}
+  }
+
   /* ---------- Keyboard shortcuts ---------- */
   function typing(e) {
     var t = e.target, g = t && t.tagName;
@@ -483,6 +677,7 @@
   var catPrev = null, catPrevFor = null, catPrevCache = {};
   function escHtml(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
   function hideCatPreview() { if (catPrev) { catPrev.style.display = "none"; } catPrevFor = null; }
+  var TOUCH_ONLY = !!(window.matchMedia && matchMedia("(hover: none)").matches);
   function renderCatPreview(cell, data) {
     if (!catPrev) { catPrev = document.createElement("div"); catPrev.id = "rchan-catprev"; document.body.appendChild(catPrev); }
     var posts = (data.posts || []).slice(-5);
@@ -496,6 +691,12 @@
     }
     catPrev.innerHTML = html;
     catPrev.style.display = "block";
+    if (window.innerWidth < 480) {                 // phones: bottom sheet instead of side panel
+      catPrev.classList.add("rchan-catprev-sheet");
+      catPrev.style.left = ""; catPrev.style.top = "";
+      return;
+    }
+    catPrev.classList.remove("rchan-catprev-sheet");
     var r = cell.getBoundingClientRect(), w = 360;
     var x = r.right + 8, y = r.top;
     if (x + w > window.innerWidth - 8) { x = Math.max(8, r.left - w - 8); }   // flip to the left edge
@@ -505,7 +706,10 @@
     if (y + h > window.innerHeight - 8) { y = Math.max(8, window.innerHeight - h - 8); }
     catPrev.style.top = y + "px";
   }
-  function onCatPrevOver(e) {
+  function onCatPrevOver(e, fromTap) {
+    // touch taps fire a synthesized mouseover BEFORE click; if that path set
+    // catPrevFor, the tap handler would think it's the 2nd tap and navigate.
+    if (TOUCH_ONLY && !fromTap) { return; }
     if (!isCatalog()) { return; }
     var cell = e.target && e.target.closest ? e.target.closest(".catalogCell") : null;
     if (!cell || catPrevFor === cell) { return; }
@@ -526,6 +730,21 @@
     var to = e.relatedTarget;
     if (to && cell.contains(to)) { return; }
     hideCatPreview();
+  }
+  // Touch devices have no hover: first tap on a catalog thumb shows the
+  // last-replies preview, second tap (same cell) navigates into the thread.
+  // Tapping anywhere else dismisses the preview.
+  function onCatTap(e) {
+    if (!TOUCH_ONLY || !isCatalog()) { return; }
+    var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
+    if (!a) {
+      if (!(e.target.closest && e.target.closest("#rchan-catprev"))) { hideCatPreview(); }
+      return;
+    }
+    var cell = a.closest(".catalogCell");
+    if (!cell || catPrevFor === cell) { return; }  // second tap: fall through to navigation
+    e.preventDefault(); e.stopPropagation();
+    onCatPrevOver(e, true);                        // renders + caches, sets catPrevFor
   }
 
   /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
@@ -597,6 +816,47 @@
 
   /* ---------- New-since-last-visit (thread + catalog) + replies-to-you ---------- */
   var SEEN_KEY = "rchan_seen", NOTIFY_KEY = "rchan_notify";
+  // Tab-title unread counter: "(3) /rdr/ - thread" while the tab is hidden.
+  var baseTitle = document.title, unseenCount = 0;
+  function bumpTitleUnread(n) {
+    unseenCount += n;
+    document.title = "(" + unseenCount + ") " + baseTitle;
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && unseenCount) { unseenCount = 0; document.title = baseTitle; }
+  });
+  // "▼ N new" pill when new posts land outside the viewport; hides once seen.
+  var newPill = null, pillIO = null, pillTotal = 0;
+  function hideNewPill() {
+    if (newPill) { newPill.style.display = "none"; }
+    if (pillIO) { pillIO.disconnect(); pillIO = null; }
+    pillTotal = 0;
+  }
+  function showNewPill(count, target) {
+    pillTotal += count;
+    if (!newPill) {
+      newPill = document.createElement("button");
+      newPill.id = "rchan-newpill"; newPill.type = "button";
+      newPill.addEventListener("click", function () {
+        var t = document.getElementById("rchan-newline") || newPill.__target;
+        if (t) { try { t.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
+        hideNewPill();
+      });
+      document.body.appendChild(newPill);
+    }
+    newPill.__target = target;
+    newPill.textContent = "▼ " + pillTotal + " new post" + (pillTotal > 1 ? "s" : "");
+    newPill.style.display = "block";
+    if (window.IntersectionObserver) {
+      if (pillIO) { pillIO.disconnect(); }
+      pillIO = new IntersectionObserver(function (entries) {
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].isIntersecting) { hideNewPill(); return; }
+        }
+      });
+      pillIO.observe(target);
+    }
+  }
   function seenAll() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch (e) { return {}; } }
   function seenSave(o) { try { localStorage.setItem(SEEN_KEY, JSON.stringify(o)); } catch (e) {} }
   function curThreadId() {
@@ -635,6 +895,12 @@
     }
     all[key] = { maxId: curMax, replies: posts.length };
     seenSave(all);
+    if (newCount > 0) {
+      if (document.hidden) { bumpTitleUnread(newCount); }
+      // pill only when the first new post is fully outside the viewport
+      var fr = firstNew.getBoundingClientRect();
+      if (fr.top > window.innerHeight || fr.bottom < 0) { showNewPill(newCount, firstNew); }
+    }
     // Foreground desktop notification when new posts land while the tab is hidden (opt-in via 🔔).
     if (newCount > 0 && document.hidden && "Notification" in window &&
         Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1") {
@@ -957,7 +1223,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
@@ -976,6 +1242,9 @@
     // so no fresh mouseover fires) — drop the floating previews so they never stick.
     document.addEventListener("click", hideZoom, true);
     document.addEventListener("click", hideVidZoom, true);
+    // inline quote expansion (click a >>quote) + touch catalog tap-preview
+    document.addEventListener("click", onQuoteClick, true);
+    document.addEventListener("click", onCatTap, true);
     // instant styled tooltips for [data-tooltip] icons
     document.addEventListener("mouseover", onTipOver, true);
     document.addEventListener("mouseout", onTipOut, true);
@@ -984,9 +1253,18 @@
     document.addEventListener("scroll", hideTip, true);
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
+    // keep the pre-paint dark hint (html.predark, set by an inline head script the
+    // router injects) in sync when the user switches themes mid-session
+    try { if (!/theme_dark/.test(document.body.className)) { document.documentElement.classList.remove("predark"); } } catch (e) {}
+    document.addEventListener("change", function (e) {
+      if (e.target && e.target.id === "themeSelector") {
+        try { document.documentElement.classList.toggle("predark", localStorage.selectedTheme === "dark"); } catch (e2) {}
+      }
+    });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
-     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply
+     function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
+     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

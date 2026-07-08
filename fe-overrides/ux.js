@@ -1838,6 +1838,39 @@
     }
   }
 
+  /* ---------- Report shortcut: a visible lever on every post ----------
+     The native flow (⋮ menu → Report) is invisible to people who don't
+     already know it exists — and users can't help you moderate if they
+     can't find the lever. Surface a hover-revealed flag on each post
+     header that opens the NATIVE report modal (reason + captcha handling
+     included); the modal itself is restyled to the design system in css. */
+  var SVG_FLAG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6h-5.6z"/></svg>';
+  function decorateReportButtons(root) {
+    if (!window.postingMenu || !postingMenu.showReport) { return; }
+    var infos = (root || document).querySelectorAll(".innerPost .postInfo.title, .innerOP .opHead.title");
+    for (var i = 0; i < infos.length; i++) {
+      var info = infos[i];
+      if (info.getAttribute("data-report")) { continue; }
+      info.setAttribute("data-report", "1");
+      if (info.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var cell = info.closest(".postCell, .opCell");
+      var ids = cell && qmodIds(cell);
+      if (!ids) { continue; }
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rchan-reportbtn";
+      b.innerHTML = SVG_FLAG;
+      b.setAttribute("data-tooltip", "Report this post");
+      b.setAttribute("aria-label", "Report post " + (ids.post || ids.thread));
+      b.addEventListener("click", (function (d) {
+        return function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          try { postingMenu.showReport(d.board, d.thread, d.post); } catch (e) {}
+        };
+      })(ids));
+      info.appendChild(b);
+    }
+  }
+
   /* ---------- Staff quick-mod: one-click actions on post hover ----------
      The native ⋮ menu buries delete/ban under menu → modal → submit. For
      staff (body.rchan-staff, the same globalRole<=1 gate as the flag
@@ -2869,7 +2902,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateQuickMod(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -2924,7 +2957,7 @@
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
-     function () { decorateConvButtons(document); }, buildActiveThreads
+     function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

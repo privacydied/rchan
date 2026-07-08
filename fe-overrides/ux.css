@@ -655,6 +655,45 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 }
 .theme_dark #quick-reply td.small { color: #7fb0e0; }
 
+/* ---------- Report shortcut flag (hover-revealed per post) ---------- */
+.rchan-reportbtn {
+  border: 0; background: none; cursor: pointer; padding: 0 3px;
+  margin-left: 6px; color: #274a6b; opacity: 0; transition: opacity .1s ease;
+  vertical-align: -1px;
+}
+.innerPost:hover .rchan-reportbtn, .innerOP:hover .rchan-reportbtn,
+.rchan-reportbtn:focus-visible { opacity: .55; }
+.rchan-reportbtn:hover { opacity: 1 !important; color: #c8102e; }
+.rchan-reportbtn svg { display: inline-block; vertical-align: middle; }
+.theme_dark .rchan-reportbtn { color: #9fc4e8; }
+
+/* ---------- Native modal (report / ban / captcha): design-system pass ---------- */
+.modalInnerPanel {
+  background: #EEEEE4 !important; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); border-radius: 0;
+  font-size: .833rem; color: #393939;
+}
+.modalHeader {
+  display: block; background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
+  padding: 3px 8px; font-weight: 700; text-align: left;
+}
+.modalTableBody th {
+  background: transparent; border: none; text-align: right;
+  font-size: .833rem; font-weight: 700; color: #393939; padding: 2px 8px;
+}
+.modalTableBody td { padding: 2px 8px 2px 0; }
+.modalInnerPanel input[type=button] {
+  cursor: pointer; margin: 6px 4px 8px 8px; padding: 3px 14px;
+  border: 1px solid #CFCFC4; background: #E6E6DA; color: #393939;
+  font: inherit; font-size: .833rem; font-weight: 700;
+}
+.modalInnerPanel input[type=button]:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.modalInnerPanel .captchaImage { background: #fff; border: 1px solid #CFCFC4; margin: 6px 8px 0; }
+.theme_dark .modalInnerPanel { background: #1f2126 !important; border-color: #2c2f36; color: #c9ccd1; }
+.theme_dark .modalHeader { background: #262a31; border-color: #2c2f36; }
+.theme_dark .modalTableBody th { color: #c9ccd1; }
+.theme_dark .modalInnerPanel input[type=button] { background: #262a31; color: #c9ccd1; border-color: #333; }
+
 /* ---------- Gallery lightbox ---------- */
 .modalPanel { backdrop-filter: blur(2px); }
 .galleryImage { max-width: 92vw; max-height: 86vh; box-shadow: 4px 4px 0 rgba(0,0,0,.18); }

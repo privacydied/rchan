@@ -51,6 +51,11 @@
   }
   var SVG_GRID = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
   var SVG_LIST = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>';
+  var SVG_UP = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  var SVG_DOWN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg>';
+  var SVG_PEN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+  var SVG_BELL = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>';
+  var SVG_CLOCK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg>';
   function isCatalog() { return /\/catalog(\.html)?$/.test(location.pathname); }
   function toggleCatalog() {
     var b = getBoard();
@@ -71,13 +76,13 @@
       wrap.appendChild(b);
       return b;
     }
-    btn("↑", "Top", function () { window.scrollTo({ top: 0, behavior: SB }); });
+    btn(SVG_UP, "Top", function () { window.scrollTo({ top: 0, behavior: SB }); });
     if (getBoard()) {
       var onCat = isCatalog();
       btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
     }
     if (document.querySelector("#fieldMessage, #qrbody, textarea[name=message]")) {
-      btn("✎", "Reply / post", function () {
+      btn(SVG_PEN, "Reply / post", function () {
         var q = window.qr;
         if (q && q.qrPanel) {                                            // thread: open the floating QR
           q.qrPanel.style.display = "block";
@@ -93,7 +98,7 @@
       });
     }
     if (curThreadId() && "Notification" in window) {
-      var bell = btn("🔔", "Notify me of new replies in this thread (while this tab is open)", function () {
+      var bell = btn(SVG_BELL, "Notify me of new replies in this thread (while this tab is open)", function () {
         if (localStorage.getItem(NOTIFY_KEY) === "1") { localStorage.removeItem(NOTIFY_KEY); bell.classList.remove("rchan-on"); return; }
         Notification.requestPermission().then(function (p) {
           if (p === "granted") { localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on"); }
@@ -101,8 +106,8 @@
       });
       if (localStorage.getItem(NOTIFY_KEY) === "1") { bell.classList.add("rchan-on"); }
     }
-    btn("🕘", "Recently visited threads", toggleHistPanel);
-    btn("↓", "Bottom", function () {
+    btn(SVG_CLOCK, "Recently visited threads", toggleHistPanel);
+    btn(SVG_DOWN, "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
     });
     document.body.appendChild(wrap);

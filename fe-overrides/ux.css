@@ -854,6 +854,25 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-idfunnel:hover { opacity: 1; color: #c8102e; }
 .rchan-idfunnel svg { display: inline-block; vertical-align: middle; }
 
+/* ---------- Conversation view (isolate a quote chain) ---------- */
+#rchan-conv {
+  position: fixed; top: 42px; left: 50%; transform: translateX(-50%);
+  z-index: 10007; display: none; align-items: center; gap: 10px;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+  padding: 6px 10px; max-width: 94vw;
+  font-size: .833rem; font-weight: 700;
+}
+.theme_dark #rchan-conv { background: #16171b; border-color: #2c2f36; }
+.rchan-convhide { display: none !important; }
+.rchan-convbtn {
+  border: 0; background: none; cursor: pointer; padding: 0 3px;
+  margin-left: 4px; color: #274a6b; opacity: .4; vertical-align: -1px;
+}
+.rchan-convbtn:hover { opacity: 1; color: #c8102e; }
+.rchan-convbtn svg { display: inline-block; vertical-align: middle; }
+.theme_dark .rchan-convbtn { color: #9fc4e8; }
+
 /* ---------- Unified settings panel (gear in the nav column) ---------- */
 #rchan-set {
   position: fixed; right: 60px; bottom: 12px; z-index: 10006;

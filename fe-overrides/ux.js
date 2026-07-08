@@ -1611,6 +1611,7 @@
   }
   function toggleFind(preset) {
     if (!curThreadId()) { return; }
+    closeConv();                                       // the two collapse modes are exclusive
     if (findBar && findBar.style.display === "flex" && preset == null) { closeFind(); return; }
     if (!findBar) {
       findBar = document.createElement("div"); findBar.id = "rchan-find";
@@ -1648,6 +1649,113 @@
     b.setAttribute("aria-label", "Filter posts in this thread");
     b.addEventListener("click", function () { toggleFind(); });
     nav.insertBefore(b, document.getElementById("navOptionsSpan") || null);
+  }
+
+  /* ---------- Conversation view: isolate one quote chain ----------
+     The structural reading primitive find-in-thread can't give you: a per-post
+     control that collapses the thread to just that post's ancestors (what it
+     quotes, transitively) + descendants (what quotes it, transitively). Three
+     interleaved arguments become one readable conversation. Same collapse
+     mechanics as the find bar; the two modes are mutually exclusive. */
+  var SVG_CONV = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8v-2z"/></svg>';
+  var convRoot = null, convBar = null;
+  function quoteGraph() {
+    var cells = document.querySelectorAll(".opCell, .postCell");
+    var quotes = {}, children = {};
+    for (var i = 0; i < cells.length; i++) {
+      var id = String(postIdOf(cells[i]) || "");
+      if (!id) { continue; }
+      var inner = cells[i].querySelector(".innerPost, .innerOP");
+      if (!inner) { continue; }
+      var qs = inner.getElementsByClassName("quoteLink");
+      var list = [];
+      for (var j = 0; j < qs.length; j++) {
+        if (qs[j].closest && qs[j].closest(".rchan-inline-quote")) { continue; }
+        var m = (qs[j].getAttribute("href") || "").match(/(\d+)\s*$/);
+        if (m && list.indexOf(m[1]) < 0) { list.push(m[1]); }
+      }
+      quotes[id] = list;
+      for (var k = 0; k < list.length; k++) {
+        (children[list[k]] = children[list[k]] || []).push(id);
+      }
+    }
+    return { quotes: quotes, children: children };
+  }
+  function convMembers(root) {
+    var g = quoteGraph(), set = {};
+    set[root] = 1;
+    var stack = [root], cur, arr, i;
+    while (stack.length) {                             // ancestors: what it quotes
+      arr = g.quotes[stack.pop()] || [];
+      for (i = 0; i < arr.length; i++) { if (!set[arr[i]]) { set[arr[i]] = 1; stack.push(arr[i]); } }
+    }
+    stack = [root];
+    while (stack.length) {                             // descendants: what quotes it
+      arr = g.children[stack.pop()] || [];
+      for (i = 0; i < arr.length; i++) { if (!set[arr[i]]) { set[arr[i]] = 1; stack.push(arr[i]); } }
+    }
+    return set;
+  }
+  function applyConv() {
+    if (!convRoot) { return; }
+    var set = convMembers(convRoot);
+    var posts = document.getElementsByClassName("postCell");
+    var n = 0;
+    for (var i = 0; i < posts.length; i++) {
+      var hit = !!set[String(postIdOf(posts[i]) || "")];
+      posts[i].classList.toggle("rchan-convhide", !hit);
+      if (hit) { n++; }
+    }
+    if (convBar) {                                     // +1: the OP is always visible
+      convBar.firstChild.textContent = "Conversation around No." + convRoot + " · " + (n + 1) + " posts";
+    }
+  }
+  function closeConv() {
+    convRoot = null;
+    if (convBar) { convBar.style.display = "none"; }
+    var hidden = document.getElementsByClassName("rchan-convhide");
+    for (var i = hidden.length - 1; i >= 0; i--) { hidden[i].classList.remove("rchan-convhide"); }
+  }
+  function openConv(rootId) {
+    closeFind();                                       // the two collapse modes are exclusive
+    convRoot = String(rootId);
+    if (!convBar) {
+      convBar = document.createElement("div"); convBar.id = "rchan-conv";
+      convBar.appendChild(document.createElement("span"));
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.title = "Exit conversation view";
+      x.setAttribute("aria-label", "Exit conversation view");
+      x.addEventListener("click", closeConv);
+      convBar.appendChild(x);
+      document.body.appendChild(convBar);
+    }
+    convBar.style.display = "flex";
+    applyConv();
+    var rootEl = document.getElementById(convRoot);
+    if (rootEl) { try { rootEl.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {} }
+  }
+  function decorateConvButtons(root) {
+    if (!curThreadId()) { return; }
+    var infos = (root || document).querySelectorAll(".innerPost .postInfo.title, .innerOP .opHead.title");
+    for (var i = 0; i < infos.length; i++) {
+      var info = infos[i];
+      if (info.getAttribute("data-conv")) { continue; }
+      info.setAttribute("data-conv", "1");
+      if (info.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }   // embedded copies
+      var cell = info.closest(".postCell, .opCell");
+      if (!cell) { continue; }
+      var id = postIdOf(cell);
+      if (!id) { continue; }
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rchan-convbtn";
+      b.innerHTML = SVG_CONV;
+      b.setAttribute("data-tooltip", "Show this conversation only");
+      b.setAttribute("aria-label", "Show only the conversation around post " + id);
+      b.addEventListener("click", (function (pid) {
+        return function (ev) { ev.preventDefault(); ev.stopPropagation(); openConv(pid); };
+      })(id));
+      info.appendChild(b);
+    }
   }
 
   /* ---------- Auto-filters: filename rules, stubs, recursive hiding ----------
@@ -2484,6 +2592,7 @@
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
+    if (convRoot) { closeConv(); return; }
     if (findBar && findBar.style.display === "flex") { closeFind(); return; }
     if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; return; }
     if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
@@ -2499,7 +2608,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -2553,7 +2662,8 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, buildActiveThreads
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
+     function () { decorateConvButtons(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

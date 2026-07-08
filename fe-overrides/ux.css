@@ -1015,6 +1015,114 @@ body.theme_brutalist .rchan-catprev-name { color: #000 !important; font-family: 
 body.theme_brutalist .rchan-catprev-id { color: #000 !important; font-family: var(--brutal-mono) !important; }
 body.theme_brutalist .rchan-catprev-msg, body.theme_brutalist .rchan-catprev-empty { color: #000 !important; }
 
+/* ==========================================================================
+   CRAFT PASS — hierarchy, type scale, spacing rhythm. Swiss-brutalist, not a
+   wireframe: ≤3 border weights (3px major frame, 2px interactive, 1px hairline),
+   MOST elements borderless and separated by whitespace. Type scale 32/20/15/13/11.
+   ========================================================================== */
+body.theme_brutalist {
+  --b-t1: 32px; --b-t2: 20px; --b-t3: 15px; --b-t4: 13px; --b-meta: 11px;
+  --b-s2: 8px; --b-s3: 16px; --b-s4: 24px; --b-s5: 32px;
+  font-size: var(--b-t3);
+}
+body.theme_brutalist .divMessage { font-size: var(--b-t3) !important; line-height: 1.5; }
+
+/* demote the machine layer to 11px and DE-BORDER minor chrome (chips/pills/flags/thumbs) */
+body.theme_brutalist .linkQuote, body.theme_brutalist .labelCreated, body.theme_brutalist .labelId,
+body.theme_brutalist .uploadDetails, body.theme_brutalist .originalNameLink, body.theme_brutalist .rchan-ris,
+body.theme_brutalist .threadStats, body.theme_brutalist .labelReplies, body.theme_brutalist .labelImages,
+body.theme_brutalist .labelPage, body.theme_brutalist .panelBacklinks { font-size: var(--b-meta) !important; }
+body.theme_brutalist .labelId { border: 0 !important; background: transparent !important; color: #000 !important; padding: 0 3px; }
+body.theme_brutalist .rchan-ts-chip, body.theme_brutalist .rchan-flagchip {
+  border: 0 !important; background: transparent !important; color: rgba(0,0,0,.6) !important; padding: 0 4px 0 0;
+}
+body.theme_brutalist .rchan-ts-warn, body.theme_brutalist .rchan-flagchip.rchan-ts-warn { background: transparent !important; color: var(--brutal-red) !important; border: 0 !important; font-weight: 700; }
+body.theme_brutalist .imgLink img, body.theme_brutalist .linkThumb img { border: 0 !important; }
+
+/* ---- PAGE TITLE: anchor the page (32px, tight, breathing room); star at baseline ---- */
+body.theme_brutalist .boardHeader p#labelName, body.theme_brutalist #labelName, body.theme_brutalist #catalogId {
+  font-size: var(--b-t1) !important; letter-spacing: -1.5px; line-height: 1.05; margin: var(--b-s4) 0 var(--b-s2) !important;
+}
+body.theme_brutalist #favouriteButton, body.theme_brutalist .checkedFavouriteButton { font-size: 16px !important; vertical-align: baseline; }
+
+/* ---- TOP NAV: 48px, vertically centered, 3px rule, 16px icons on one baseline ---- */
+body.theme_brutalist nav, body.theme_brutalist #dynamicHeader {
+  min-height: 48px !important; display: flex !important; align-items: center; gap: 12px;
+  border-bottom: 3px solid #000 !important; padding: 0 var(--b-s3) !important;
+}
+body.theme_brutalist nav .coloredIcon, body.theme_brutalist #dynamicHeader .coloredIcon { font-size: 16px !important; }
+body.theme_brutalist #watcherButton span { font-size: var(--b-meta) !important; }
+
+/* ---- FLOATING SIDE BUTTONS: 36px segmented unit, shared 1px borders, flush to the edge ---- */
+body.theme_brutalist #rchan-nav { right: 0 !important; bottom: 24px; gap: 0 !important; }
+body.theme_brutalist #rchan-nav button {
+  width: 36px !important; height: 36px !important; line-height: 1 !important; padding: 0 !important;
+  border: 1px solid #000 !important; margin: -1px 0 0 !important; background: #fff !important; color: #000 !important;
+}
+body.theme_brutalist #rchan-nav button:hover, body.theme_brutalist #rchan-nav button.rchan-on { background: #000 !important; color: #fff !important; }
+body.theme_brutalist #rchan-nav button#rchan-penbtn { background: #fff !important; color: #000 !important; }
+body.theme_brutalist #rchan-nav button svg { width: 17px; height: 17px; }
+
+/* ---- BUTTONS: 2px, padded, bold caps 13px, instant invert ---- */
+body.theme_brutalist button, body.theme_brutalist input[type=submit], body.theme_brutalist input[type=button],
+body.theme_brutalist #qrbutton, body.theme_brutalist #formButton, body.theme_brutalist #rchan-formtoggle {
+  border: 2px solid #000 !important; padding: 6px 16px !important;
+  font-family: var(--brutal-sans) !important; font-size: var(--b-t4) !important; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .02em;
+}
+
+/* ---- CATALOG: borderless cells, 24px gutters, fixed 150 thumb, reorder, type scale ---- */
+body.theme_brutalist.rchan-cat-s #divThreads, body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads {
+  gap: var(--b-s4) !important; padding: var(--b-s4) !important;
+}
+body.theme_brutalist.rchan-cat-s #divThreads, body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads { grid-template-columns: repeat(auto-fill, 200px) !important; }
+body.theme_brutalist .catalogCell {
+  border: 0 !important; padding: 0 !important; background: #fff !important;
+  display: flex !important; flex-direction: column; align-items: center; gap: var(--b-s2);
+  height: 330px !important; max-height: 330px !important; overflow: hidden !important; outline: 0 !important;
+}
+body.theme_brutalist .catalogCell:hover { outline: 0 !important; }
+body.theme_brutalist .catalogCell > a.linkThumb {
+  order: 1; width: 150px; height: 150px; flex: none; display: flex; align-items: center; justify-content: center;
+}
+body.theme_brutalist .catalogCell > a.linkThumb img { max-width: 150px !important; max-height: 150px !important; width: auto; height: auto; object-fit: contain; }
+body.theme_brutalist .catalogCell > p:not(.threadStats) { order: 2; margin: 0; flex: none; width: 100%; }
+body.theme_brutalist .catalogCell .labelSubject { font-size: 14px !important; font-weight: 700; text-transform: uppercase; color: #000 !important; text-align: center; display: block; }
+body.theme_brutalist .catalogCell > .divMessage {
+  order: 3; font-size: var(--b-t4) !important; color: #000 !important; text-align: left; width: 100%; margin: 0;
+  flex: 1 1 auto; min-height: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical;
+}
+body.theme_brutalist .catalogCell > .divMessage .greenText { font-size: var(--b-t4) !important; }
+body.theme_brutalist .catalogCell > p.threadStats {
+  order: 4; margin: 0; flex: none; font-family: var(--brutal-mono) !important; font-size: var(--b-meta) !important;
+  letter-spacing: .05em; color: rgba(0,0,0,.6) !important;
+}
+body.theme_brutalist .catalogCell > p.threadStats span { color: rgba(0,0,0,.6) !important; }
+
+/* ---- CATALOG CONTROL BAR: count left, flat selects right, one full-width 3px rule ---- */
+body.theme_brutalist #rchan-cattools {
+  display: flex !important; align-items: baseline; gap: var(--b-s3);
+  border-bottom: 3px solid #000 !important; padding: var(--b-s2) var(--b-s4) !important; margin: 0 !important;
+}
+body.theme_brutalist #rchan-catcount { margin-right: auto; font-family: var(--brutal-sans); font-weight: 700; font-size: var(--b-t4); text-transform: uppercase; letter-spacing: .04em; }
+body.theme_brutalist #rchan-cattools select { border: 2px solid #000 !important; background: #fff !important; font-family: var(--brutal-mono) !important; font-size: var(--b-meta) !important; padding: 3px 6px; }
+
+/* ---- BOARD INDEX / THREAD: kill the content-visibility gaps; OP owns it, replies unboxed ---- */
+body.theme_brutalist #divThreads .postCell { content-visibility: visible !important; contain-intrinsic-size: auto !important; }
+body.theme_brutalist .opCell { display: flow-root !important; margin: 0 0 var(--b-s5) 0 !important; }
+body.theme_brutalist .innerOP { border: 0 !important; border-left: 4px solid #000 !important; padding-left: var(--b-s3) !important; }
+body.theme_brutalist .divPosts { margin-left: var(--b-s4) !important; }
+body.theme_brutalist .postCell { margin: 0 !important; }
+body.theme_brutalist .innerPost { border: 0 !important; border-top: 1px solid #d9d9d9 !important; padding: var(--b-s2) 0 !important; margin: 0 !important; }
+/* thread subject 20, name 13, header on one tight line */
+body.theme_brutalist .opHead .labelSubject, body.theme_brutalist .postInfo .labelSubject { font-size: var(--b-t2) !important; }
+body.theme_brutalist .postInfo, body.theme_brutalist .opHead { border-bottom: 0 !important; font-size: var(--b-t4) !important; }
+body.theme_brutalist .linkName, body.theme_brutalist .labelName { font-size: var(--b-t4) !important; }
+/* file info line: quiet 11px mono @60%, RIS links plain-blue until hover */
+body.theme_brutalist .uploadDetails, body.theme_brutalist .originalNameLink { color: rgba(0,0,0,.6) !important; }
+body.theme_brutalist .rchan-ris a { text-decoration: none; color: var(--brutal-blue) !important; }
+body.theme_brutalist .rchan-ris a:hover { text-decoration: underline; background: transparent !important; color: var(--brutal-blue) !important; }
+
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
    '(Show file)'). Replace with currentColor mask icons — external-link,

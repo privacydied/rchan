@@ -119,6 +119,10 @@
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
+    var count = document.createElement("span"); count.id = "rchan-catcount";   // "N threads" (left of the controls)
+    var nc = catCells().length;
+    count.textContent = nc + (nc === 1 ? " thread" : " threads");
+    bar.appendChild(count);
     bar.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
     bar.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
     // "Index" = the REAL old-school board index (OP + last replies, pages) at

@@ -1869,6 +1869,20 @@
     var d = new Date(v + (window.posting && posting.localTimes ? "" : " UTC"));
     return +d || 0;
   }
+  // Icons instead of words: "412 💬 · 96 🖼 · 31 🏷 · 3m 🕐 · 2 👤" — each
+  // segment carries the full sentence as tooltip + aria-label, so nothing is
+  // lost to screen readers or the curious hover.
+  var TS_SVG = {
+    reply: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>',
+    file: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
+    id: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.22-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>',
+    clock: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg>',
+    anon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
+  };
+  function tsSeg(text, svg, label) {
+    return '<span class="rchan-ts-seg" data-tooltip="' + escHtml(label) + '" aria-label="' +
+           escHtml(label) + '">' + escHtml(text) + " " + svg + "</span>";
+  }
   function updateThreadStat() {
     if (!curThreadId()) { return; }
     var nav = document.querySelector("nav, #dynamicHeader");
@@ -1893,11 +1907,14 @@
       if (t > last) { last = t; }
     }
     var ago = last ? fmtAgo(last) : "";
-    el.textContent = replies + (replies === 1 ? " reply" : " replies") +
-      " · " + files + (files === 1 ? " file" : " files") +
-      (idCount ? " · " + idCount + (idCount === 1 ? " ID" : " IDs") : "") +
-      (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "") +
-      (presenceCount ? " · " + presenceCount + (presenceCount === 1 ? " anon here" : " anons here") : "");
+    var segs = [
+      tsSeg(String(replies), TS_SVG.reply, replies + (replies === 1 ? " reply" : " replies")),
+      tsSeg(String(files), TS_SVG.file, files + (files === 1 ? " file" : " files"))
+    ];
+    if (idCount) { segs.push(tsSeg(String(idCount), TS_SVG.id, idCount + (idCount === 1 ? " unique ID" : " unique IDs"))); }
+    if (last) { segs.push(tsSeg(ago, TS_SVG.clock, "updated " + (ago === "now" ? "just now" : ago + " ago"))); }
+    if (presenceCount) { segs.push(tsSeg(String(presenceCount), TS_SVG.anon, presenceCount + (presenceCount === 1 ? " anon here now" : " anons here now"))); }
+    el.innerHTML = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
   }
 
   /* ---------- Find-in-thread: live post filter ----------

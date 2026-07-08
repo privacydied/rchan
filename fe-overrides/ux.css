@@ -220,7 +220,11 @@ body #navLinkSpan { order: 2; }
   padding: 0 18px;   /* guaranteed gap to the nav clusters even when the flex auto-margins collapse */
   font-size: x-small; font-weight: 700; opacity: .85;
   white-space: nowrap; align-self: center;
+  display: inline-flex; align-items: center;
 }
+#rchan-threadstat .rchan-ts-seg { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
+#rchan-threadstat .rchan-ts-seg svg { display: block; flex: none; opacity: .7; }
+#rchan-threadstat .rchan-ts-dot { margin: 0 6px; opacity: .55; }
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
 /* footer (4chan #absbot: x-small) */

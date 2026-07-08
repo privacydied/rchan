@@ -1209,11 +1209,26 @@
         for (var j = 0; j < id.length; j++) { h = (h * 31 + id.charCodeAt(j)) >>> 0; }
         c = ("00000" + (h & 0xffffff).toString(16)).slice(-6);
       }
-      var r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
-      var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      // Mute the raw ID colour (the engine inlines background:#<id>, which is
+      // often neon): keep the HUE so IDs stay distinguishable, but cap
+      // saturation and pin lightness to a soft band that sits with the cream
+      // palette. Our style assignment overwrites the engine's inline value.
+      var r = parseInt(c.slice(0, 2), 16) / 255, g = parseInt(c.slice(2, 4), 16) / 255, b = parseInt(c.slice(4, 6), 16) / 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      var h = 0;
+      if (d) {
+        if (max === r) { h = ((g - b) / d) % 6; }
+        else if (max === g) { h = (b - r) / d + 2; }
+        else { h = (r - g) / d + 4; }
+        h = Math.round(h * 60); if (h < 0) { h += 360; }
+      }
+      var l = (max + min) / 2;
+      var s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+      s = Math.min(s, 0.30);                               // cap saturation: earthy, not neon
+      l = Math.min(Math.max(l, 0.58), 0.74);               // soft mid-light band
       el.classList.add("rchan-idpill");
-      el.style.backgroundColor = "#" + c;
-      el.style.color = lum > 0.55 ? "#393939" : "#fff";   // site text colour on light pills
+      el.style.backgroundColor = "hsl(" + h + ", " + Math.round(s * 100) + "%, " + Math.round(l * 100) + "%)";
+      el.style.color = "#393939";                          // always readable on the muted band
     }
   }
   /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the

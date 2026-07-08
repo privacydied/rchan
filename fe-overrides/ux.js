@@ -1472,6 +1472,43 @@
     }, 1000);
   }
 
+  /* ---------- Presence: "N anons here" (rides the thread status line) ----------
+     Heartbeat ping to the presence addon every 45s while the tab is visible;
+     the response is how many distinct session ids pinged this thread in the
+     last 90s. The count folds into updateThreadStat's line. */
+  var presenceCount = 0;
+  function presenceSid() {
+    try {
+      var s = sessionStorage.getItem("rchan_sid");
+      if (!s) {
+        s = Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
+        sessionStorage.setItem("rchan_sid", s);
+      }
+      return s;
+    } catch (e) { return "sidfallback" + (Date.now() % 1e8); }
+  }
+  function pingPresence() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t || document.hidden) { return; }
+    fetch("/addon.js/presence?boardUri=" + encodeURIComponent(b) + "&threadId=" +
+          encodeURIComponent(t) + "&sid=" + presenceSid())
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.status === "ok" && typeof d.count === "number") {
+          presenceCount = d.count;
+          updateThreadStat();
+        }
+      }).catch(function () {});
+  }
+  function initPresence() {
+    if (!curThreadId()) { return; }
+    pingPresence();
+    setInterval(pingPresence, 45000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) { pingPresence(); }
+    });
+  }
+
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
      "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
      worth my scroll" answer, always visible. Counts come straight from the
@@ -1510,7 +1547,8 @@
     el.textContent = replies + (replies === 1 ? " reply" : " replies") +
       " · " + files + (files === 1 ? " file" : " files") +
       (idCount ? " · " + idCount + (idCount === 1 ? " ID" : " IDs") : "") +
-      (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "");
+      (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "") +
+      (presenceCount ? " · " + presenceCount + (presenceCount === 1 ? " anon here" : " anons here") : "");
   }
 
   /* ---------- Find-in-thread: live post filter ----------
@@ -2514,7 +2552,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

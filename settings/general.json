@@ -22,7 +22,8 @@
   "addons": [
     "geoflags",
     "fixvideothumbs",
-    "flagoverride"
+    "flagoverride",
+    "presence"
   ],
   "flagOverrideMinRole": 1
 }

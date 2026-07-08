@@ -60,6 +60,9 @@ services:
       # flagoverride addon: admin-only manual flag on posts (server-side role gate;
       # threshold via flagOverrideMinRole in settings/general.json, default 1)
       - ./fe-overrides/addons/flagoverride.js:/lynxchan/src/be/addons/flagoverride.js:ro
+      # presence addon: anonymous per-thread viewer counts ("N anons here") via
+      # heartbeat pings into its own TTL'd rchanPresence collection
+      - ./fe-overrides/addons/presence.js:/lynxchan/src/be/addons/presence.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:

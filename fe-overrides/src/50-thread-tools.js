@@ -25,7 +25,7 @@
     var f = {
       name: grab(".linkName, .labelName"),
       subj: grab(".labelSubject"),
-      id: grab(".labelId").replace(/\s*\(\d+\)\s*/g, " "),
+      id: grab(".labelId").replace(/\s*\(\d+\)\s*/g, " ") + grab(".rchan-idname"),   // petnames filter too
       file: grab(".originalNameLink"),
       no: " " + (postIdOf(cell) || "")
     };

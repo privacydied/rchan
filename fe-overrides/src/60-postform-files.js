@@ -564,6 +564,51 @@
     }
   }
 
+  /* ---------- ID petnames: IDs are colors — let them be people ----------
+     On ID boards you track "the orange ID arguing with everyone" in your
+     head. A tiny ✎ next to each pill names the ID locally (per board+thread —
+     IDs recycle across threads), the name renders beside every pill of that
+     ID, and it's folded into the find-bar's id: index so you can filter by
+     it. Purely local; rides the rchan_ backup export. */
+  var IDNAMES_KEY = "rchan_idnames", IDNAMES_MAX = 500;
+  function idNamesAll() { try { return JSON.parse(localStorage.getItem(IDNAMES_KEY) || "{}"); } catch (e) { return {}; } }
+  function idNameKey(id) { return getBoard() + "/" + curThreadId() + "/" + id.toLowerCase(); }
+  function idNameOf(id) { return idNamesAll()[idNameKey(id)] || ""; }
+  function setIdName(id, name) {
+    var o = idNamesAll(), k = idNameKey(id);
+    if (name) { o[k] = name.slice(0, 24); } else { delete o[k]; }
+    var keys = Object.keys(o);
+    if (keys.length > IDNAMES_MAX) {                     // FIFO-ish cap; names are cheap to re-add
+      for (var i = 0; i < keys.length - IDNAMES_MAX; i++) { delete o[keys[i]]; }
+    }
+    try { localStorage.setItem(IDNAMES_KEY, JSON.stringify(o)); } catch (e) {}
+    refreshIdNames(id);
+  }
+  function refreshIdNames(id) {
+    var pills = document.getElementsByClassName("labelId");
+    for (var i = 0; i < pills.length; i++) {
+      if ((pills[i].textContent || "").replace(/\s*\(\d+\)\s*$/, "").trim().toLowerCase() !== id.toLowerCase()) { continue; }
+      var tag = pills[i].parentNode.querySelector(".rchan-idname");
+      var name = idNameOf(id);
+      if (!tag && name) {
+        tag = document.createElement("span");
+        tag.className = "rchan-idname";
+        pills[i].parentNode.insertBefore(tag, pills[i].nextSibling);
+      }
+      if (tag) {
+        tag.textContent = name;
+        tag.style.display = name ? "" : "none";
+      }
+      var cell = pills[i].closest(".postCell, .opCell");
+      if (cell) { delete cell.__find; }                  // find-bar re-indexes with the new name
+    }
+  }
+  function promptIdName(id) {
+    var cur = idNameOf(id);
+    var name = window.prompt("Name this ID (" + id + ") — empty clears:", cur);
+    if (name === null) { return; }
+    setIdName(id, name.trim());
+  }
   /* ---------- Poster ID pills (boards with IDs on) ----------
      LynxChan IDs are 6 hex chars — use the ID itself as the pill colour,
      text black/white by luminance. Click-to-highlight + hover post count are
@@ -614,6 +659,23 @@
           return function (ev) { ev.preventDefault(); ev.stopPropagation(); toggleFind("id:" + idText); };
         })(id.toLowerCase()));
         el.parentNode.insertBefore(fn, el.nextSibling);
+        // petname: the local label for this ID, plus the ✎ to set it
+        var pen = document.createElement("button");
+        pen.type = "button"; pen.className = "rchan-idnamebtn";
+        pen.innerHTML = SVG_PEN;
+        pen.setAttribute("data-tooltip", "Name this ID (local only)");
+        pen.setAttribute("aria-label", "Set a local name for ID " + id);
+        pen.addEventListener("click", (function (idText) {
+          return function (ev) { ev.preventDefault(); ev.stopPropagation(); promptIdName(idText); };
+        })(id));
+        el.parentNode.insertBefore(pen, fn.nextSibling);
+        var existing = idNameOf(id);
+        if (existing) {
+          var tag = document.createElement("span");
+          tag.className = "rchan-idname";
+          tag.textContent = existing;
+          el.parentNode.insertBefore(tag, el.nextSibling);
+        }
       }
     }
   }

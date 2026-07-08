@@ -1120,6 +1120,19 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 .rchan-idfunnel:hover, .rchan-idfunnel:focus-visible { opacity: 1; color: #c8102e; }
 .rchan-idfunnel svg { display: inline-block; vertical-align: middle; }
+/* ID petnames: local label + the ✎ that sets it */
+.rchan-idnamebtn {
+  border: 0; background: none; cursor: pointer; padding: 0 2px;
+  margin-left: 1px; color: inherit; opacity: .45; vertical-align: -1px;
+}
+.rchan-idnamebtn:hover, .rchan-idnamebtn:focus-visible { opacity: 1; color: #c8102e; }
+.rchan-idnamebtn svg { display: inline-block; vertical-align: middle; width: 11px; height: 11px; }
+.rchan-idname {
+  margin-left: 4px; padding: 0 5px; vertical-align: middle;
+  background: #DCDCCF; color: #393939; border: 1px solid #CFCFC4;
+  font-size: x-small; font-weight: 700; font-style: italic;
+}
+.theme_dark .rchan-idname { background: #262a31; color: #c9ccd1; border-color: #333; }
 
 /* ---------- Staff quick-mod strip (hover-revealed, armed confirm) ---------- */
 .rchan-qmod { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }

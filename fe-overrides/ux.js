@@ -3998,7 +3998,7 @@
     }, { passive: true });
   }
   // Long-press action sheet
-  var sheet = null, lpTimer = null, lpCell = null, lpSuppressClick = 0;
+  var sheet = null, lpTimer = null, lpCell = null, lpArmed = false, lpSheetAt = 0, lpReleasedAt = 0;
   function closeSheet() { if (sheet) { sheet.style.display = "none"; } }
   function sheetBtn(label, fn) {
     var b = document.createElement("button");
@@ -4081,13 +4081,16 @@
       var x0 = e.touches[0].clientX, y0 = e.touches[0].clientY;
       lpCell = cell;
       lpTimer = setTimeout(function () {
-        if (lpCell) { lpSuppressClick = Date.now(); openSheet(lpCell); }
+        if (lpCell) { lpArmed = true; lpSheetAt = Date.now(); openSheet(lpCell); }
       }, 500);
       var cancel = function (ev) {
         if (ev.type === "touchmove" && ev.touches.length === 1) {
           var dx = ev.touches[0].clientX - x0, dy = ev.touches[0].clientY - y0;
           if (dx * dx + dy * dy < 100) { return; }       // <10px wobble: still a press
         }
+        // the ghost click fires at RELEASE (touchend), which can be long after
+        // the 500ms timer — stamp the release so the swallower keys off it
+        if (lpArmed && ev.type !== "touchmove") { lpReleasedAt = Date.now(); lpArmed = false; }
         clearTimeout(lpTimer); lpCell = null;
         document.removeEventListener("touchmove", cancel);
         document.removeEventListener("touchend", cancel);
@@ -4097,13 +4100,18 @@
       document.addEventListener("touchend", cancel, { passive: true });
       document.addEventListener("touchcancel", cancel, { passive: true });
     }, { passive: true });
-    // the tap that ends a long-press also fires a click — swallow it
+    // the release that ends a long-press also fires a click — swallow it unless
+    // it's a deliberate tap on the sheet's own buttons
     document.addEventListener("click", function (e) {
-      if (Date.now() - lpSuppressClick < 700) { e.preventDefault(); e.stopPropagation(); }
+      if (Date.now() - lpReleasedAt < 500 &&
+          !(e.target.closest && e.target.closest(".rchan-sheet-box"))) {
+        e.preventDefault(); e.stopPropagation();
+      }
     }, true);
-    // block the OS context menu while the sheet is up (Android long-press)
+    // block the OS context menu around the long-press (Android fires it ~the
+    // same moment our timer does; lpArmed covers held-down, the stamp covers release)
     document.addEventListener("contextmenu", function (e) {
-      if (Date.now() - lpSuppressClick < 700) { e.preventDefault(); }
+      if (lpArmed || Date.now() - lpSheetAt < 1200) { e.preventDefault(); }
     });
   }
   // Pull-to-refresh (board index/catalog; threads live-update over the WS already)

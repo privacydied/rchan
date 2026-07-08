@@ -708,6 +708,7 @@
     }
     else if (e.key === "f") { toggleFind(); e.preventDefault(); }
     else if (e.key === "e") { toggleKbExpand(); e.preventDefault(); }
+    else if (e.key === "g") { toggleGallery(); e.preventDefault(); }
     else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       if (window.gallery && gallery.viewingGallery) { return; }   // native gallery owns the arrows
       navFilePosts(e.key === "ArrowRight" ? 1 : -1);
@@ -3099,6 +3100,7 @@
     ["j / k", "Next / previous post"],
     ["← / →", "Previous / next post with a file"],
     ["e", "Expand / collapse the selected post's image"],
+    ["g", "Gallery mode — every file on the page, fullscreen"],
     ["t", "Jump to top"],
     ["b", "Jump to bottom"],
     ["c", "Toggle catalog ↔ index view"],
@@ -3140,6 +3142,204 @@
     });
     keysOverlay.style.display = "flex";
   }
+  /* ---------- Gallery mode: media-first fullscreen overlay (g) ----------
+     The native gallery is desktop-only, image-only and bare (no filmstrip, no
+     videos, no way back to the post). This one: current media centered, a
+     thumbnail filmstrip along the bottom, ←/→ (and clicks) to step, Home/End,
+     Esc closes AND drops you at the post you were looking at. Works on
+     thread, index and catalog pages; videos play with the site-wide saved
+     volume. Touch swipe rides the same show()/step() machinery. */
+  var gal = null, galItems = [], galIdx = 0, galOpen = false, galMedia = null;
+  function galCollect() {
+    var items = [], seen = {};
+    function push(url, type, thumb, cell, name) {
+      if (!url || seen[url]) { return; }
+      seen[url] = 1;
+      items.push({ url: url, type: type, thumb: thumb, cell: cell, name: name || url.split("/").pop() });
+    }
+    // NOTE: native thumbs.js rewrites video posts so the imgLink class sits on
+    // the THUMB IMG (inside a plain <a href="/.media/x.mp4">), not the anchor —
+    // collect both shapes and normalise to the anchor.
+    var nodes = document.querySelectorAll("a.imgLink[href], a.linkThumb[href], img.imgLink");
+    var links = [];
+    for (var n0 = 0; n0 < nodes.length; n0++) {
+      var cand = nodes[n0].tagName === "IMG" ? (nodes[n0].closest && nodes[n0].closest("a[href]")) : nodes[n0];
+      if (cand && links.indexOf(cand) < 0) { links.push(cand); }
+    }
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.closest(".quoteTooltip, .rchan-inline-quote, #rchan-gallery")) { continue; }
+      var cell = a.closest(".postCell, .opCell, .catalogCell");
+      if (cell && cell.offsetParent === null) { continue; }        // hidden/filtered post
+      var img = a.querySelector("img");
+      var thumb = img ? img.getAttribute("src") : null;
+      var href = a.getAttribute("href") || "";
+      var nameEl = null, up = a.closest(".uploadCell");
+      if (up) { nameEl = up.querySelector(".originalNameLink"); }
+      var nm = nameEl ? nameEl.textContent : null;
+      if (isImg(href)) { push(href, "img", thumb, cell, nm); continue; }
+      if (VID_RE.test(href)) {                                     // thread/index video (skip audio)
+        var box = a.parentNode;
+        if (box && box.getElementsByTagName && box.getElementsByTagName("audio").length) { continue; }
+        push(href, "video", thumb, cell, nm); continue;
+      }
+      if (a.classList.contains("linkThumb") && img) {              // catalog: derive from mime + thumb hash
+        var full = resolveFull(img, a, href);
+        if (full) { push(full, "img", thumb, cell, nm); continue; }
+        var vi = videoUrlFor(img);
+        if (vi) { push(vi.url, "video", thumb, cell, nm); }
+      }
+    }
+    return items;
+  }
+  function galStopMedia() {
+    if (galMedia && galMedia.tagName === "VIDEO") {
+      try { galMedia.pause(); } catch (e) {}
+      galMedia.removeAttribute("src"); try { galMedia.load(); } catch (e2) {}
+    }
+  }
+  function galShow(i) {
+    if (!galOpen || !galItems.length) { return; }
+    galIdx = Math.max(0, Math.min(galItems.length - 1, i));
+    var it = galItems[galIdx];
+    var main = gal.querySelector(".rchan-gal-main");
+    galStopMedia();
+    main.innerHTML = "";
+    if (it.type === "video") {
+      var v = document.createElement("video");
+      v.controls = true; v.autoplay = true; v.loop = true; v.playsInline = true;
+      v.setAttribute("playsinline", "");
+      var sv = loadVol();
+      if (sv && typeof sv.v === "number") { try { v.volume = sv.v; v.muted = !!sv.m; } catch (e) {} }
+      v.__rchanVol = true;                       // volume persistence hook may now record user changes
+      v.src = it.url;
+      galMedia = v;
+    } else {
+      var im = document.createElement("img");
+      im.src = it.url; im.alt = it.name;
+      galMedia = im;
+    }
+    main.appendChild(galMedia);
+    // preload neighbours (images only — videos buffer on demand)
+    [galIdx - 1, galIdx + 1].forEach(function (n) {
+      var nx = galItems[n];
+      if (nx && nx.type === "img") { var p = new Image(); p.src = nx.url; }
+    });
+    var meta = gal.querySelector(".rchan-gal-meta");
+    meta.firstChild.textContent = (galIdx + 1) + " / " + galItems.length + " · " + it.name;
+    // filmstrip: highlight + keep the current thumb in view
+    var strips = gal.querySelectorAll(".rchan-gal-thumb");
+    for (var s = 0; s < strips.length; s++) {
+      strips[s].classList.toggle("rchan-gal-cur", s === galIdx);
+    }
+    var curThumb = strips[galIdx];
+    if (curThumb && curThumb.scrollIntoView) {
+      try { curThumb.scrollIntoView({ behavior: SB, block: "nearest", inline: "center" }); } catch (e3) {}
+    }
+    var pv = gal.querySelector(".rchan-gal-prev"), nb = gal.querySelector(".rchan-gal-next");
+    if (pv) { pv.disabled = galIdx === 0; }
+    if (nb) { nb.disabled = galIdx === galItems.length - 1; }
+  }
+  function galStep(dir) { galShow(galIdx + dir); }
+  function closeGallery(jump) {
+    if (!galOpen) { return; }
+    galOpen = false;
+    galStopMedia();
+    if (gal) { gal.style.display = "none"; }
+    document.documentElement.classList.remove("rchan-noscroll");
+    var it = galItems[galIdx];
+    if (jump && it && it.cell && document.contains(it.cell)) {
+      try { it.cell.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {}
+      if (it.cell.classList.contains("postCell") || it.cell.classList.contains("opCell")) { kbSelect(it.cell); }
+    }
+  }
+  function galKeydown(e) {
+    if (!galOpen) { return; }
+    if (e.key === "Escape") { closeGallery(true); }
+    else if (e.key === "ArrowLeft") { galStep(-1); }
+    else if (e.key === "ArrowRight") { galStep(1); }
+    else if (e.key === "Home") { galShow(0); }
+    else if (e.key === "End") { galShow(galItems.length - 1); }
+    else if (e.key === "g" && !typing(e)) { closeGallery(false); }
+    else { return; }
+    e.preventDefault(); e.stopPropagation();
+  }
+  function buildGallery() {
+    if (gal) { return; }
+    gal = document.createElement("div");
+    gal.id = "rchan-gallery";
+    gal.setAttribute("role", "dialog"); gal.setAttribute("aria-label", "Media gallery");
+    var main = document.createElement("div"); main.className = "rchan-gal-main";
+    // click outside the media (the empty main area) closes, like a lightbox backdrop
+    main.addEventListener("click", function (e) { if (e.target === main) { closeGallery(true); } });
+    var meta = document.createElement("div"); meta.className = "rchan-gal-meta";
+    meta.appendChild(document.createElement("span"));
+    var jump = document.createElement("a"); jump.href = "#"; jump.textContent = "open post";
+    jump.addEventListener("click", function (e) { e.preventDefault(); closeGallery(true); });
+    meta.appendChild(jump);
+    var x = document.createElement("button"); x.type = "button"; x.className = "rchan-gal-x";
+    x.innerHTML = "✕"; x.setAttribute("aria-label", "Close gallery");
+    x.addEventListener("click", function () { closeGallery(false); });
+    var prev = document.createElement("button"); prev.type = "button"; prev.className = "rchan-gal-prev";
+    prev.innerHTML = "‹"; prev.setAttribute("aria-label", "Previous file");
+    prev.addEventListener("click", function () { galStep(-1); });
+    var next = document.createElement("button"); next.type = "button"; next.className = "rchan-gal-next";
+    next.innerHTML = "›"; next.setAttribute("aria-label", "Next file");
+    next.addEventListener("click", function () { galStep(1); });
+    var strip = document.createElement("div"); strip.className = "rchan-gal-strip";
+    gal.appendChild(main); gal.appendChild(meta); gal.appendChild(strip);
+    gal.appendChild(x); gal.appendChild(prev); gal.appendChild(next);
+    document.body.appendChild(gal);
+    document.addEventListener("keydown", galKeydown, true);       // capture: owns keys while open
+  }
+  function openGallery(startIdx) {
+    galItems = galCollect();
+    if (!galItems.length) { toast("No images or videos on this page"); return; }
+    buildGallery();
+    var strip = gal.querySelector(".rchan-gal-strip");
+    strip.innerHTML = "";
+    galItems.forEach(function (it, i) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rchan-gal-thumb";
+      b.setAttribute("aria-label", "File " + (i + 1) + ": " + it.name);
+      if (it.thumb) {
+        var im = document.createElement("img"); im.src = it.thumb; im.alt = ""; im.loading = "lazy";
+        b.appendChild(im);
+      } else { b.textContent = it.type === "video" ? "▶" : "…"; }
+      if (it.type === "video") { b.classList.add("rchan-gal-vid"); }
+      b.addEventListener("click", function () { galShow(i); });
+      strip.appendChild(b);
+    });
+    gal.style.display = "flex";
+    galOpen = true;
+    document.documentElement.classList.add("rchan-noscroll");
+    var start = 0;
+    if (typeof startIdx === "number") { start = startIdx; }
+    else if (kbCurEl && document.contains(kbCurEl)) {             // start at the selected post's file
+      for (var i = 0; i < galItems.length; i++) {
+        if (galItems[i].cell === kbCurEl) { start = i; break; }
+      }
+    }
+    galShow(start);
+  }
+  function toggleGallery() { if (galOpen) { closeGallery(false); } else { openGallery(); } }
+  var SVG_GAL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+  function buildGalleryButton() {
+    if (document.getElementById("rchan-galbtn")) { return; }
+    var nav = document.querySelector("nav, #dynamicHeader");
+    if (!nav || !document.querySelector("a.imgLink, a.linkThumb")) { return; }
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "rchan-galbtn";
+    b.innerHTML = SVG_GAL;
+    b.setAttribute("data-tooltip", "Gallery mode (g)");
+    b.setAttribute("aria-label", "Open the media gallery");
+    b.addEventListener("click", function () { toggleGallery(); });
+    nav.insertBefore(b, document.getElementById("rchan-expandbtn") || document.getElementById("rchan-findbtn") || document.getElementById("navOptionsSpan") || null);
+    // native gallery icon (thread pages, desktop): point it at ours instead
+    var natLink = document.getElementById("galleryLink");
+    if (natLink) { natLink.onclick = function () { toggleGallery(); return false; }; }
+  }
+
   function onEscKey(e) {
     if (e.key !== "Escape") { return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
@@ -3159,7 +3359,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); if (expandAllOn) { setExpandAll(true); } }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); decorateSideCatalog(); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); if (expandAllOn) { setExpandAll(true); } }, 80); }
   // native watcher renders its unread count as "(3)" text — strip the parens
   // so the CSS badge (#watcherButton span) reads as a clean red counter
   function tidyWatcherBadge() {
@@ -3216,7 +3416,7 @@
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, applyBoardAccent,
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });

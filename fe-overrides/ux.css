@@ -723,6 +723,66 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 .modalPanel { backdrop-filter: blur(2px); }
 .galleryImage { max-width: 92vw; max-height: 86vh; box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
 
+/* ---------- Gallery mode (g): fullscreen media overlay + filmstrip ---------- */
+html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
+#rchan-gallery {
+  position: fixed; inset: 0; z-index: 10010; display: none;
+  flex-direction: column; background: rgba(10, 10, 12, .94);
+  color: #e8e8e8; -webkit-user-select: none; user-select: none;
+}
+.rchan-gal-main {
+  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+  padding: 8px;
+}
+.rchan-gal-main img, .rchan-gal-main video {
+  max-width: 96vw; max-height: calc(100vh - 132px);
+  object-fit: contain; box-shadow: 0 0 24px rgba(0,0,0,.6);
+}
+.rchan-gal-meta {
+  flex: none; display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 4px 56px; font-size: .833rem; min-height: 22px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rchan-gal-meta a { color: #9fc4e8; text-decoration: underline; cursor: pointer; }
+.rchan-gal-strip {
+  flex: none; display: flex; gap: 6px; align-items: center;
+  padding: 8px 10px; overflow-x: auto; overflow-y: hidden;
+  background: rgba(0,0,0,.5); scrollbar-width: thin;
+}
+.rchan-gal-thumb {
+  flex: none; width: 64px; height: 64px; padding: 0; cursor: pointer;
+  background: #1a1b1f; border: 2px solid transparent; color: #e8e8e8;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+  opacity: .7; transition: opacity .12s ease;
+}
+.rchan-gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rchan-gal-thumb:hover { opacity: 1; }
+.rchan-gal-thumb.rchan-gal-cur { border-color: #c8102e; opacity: 1; }
+.rchan-gal-thumb.rchan-gal-vid { position: relative; }
+.rchan-gal-thumb.rchan-gal-vid::after {
+  content: "▶"; position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; color: #fff; font-size: 1rem;
+  text-shadow: 0 0 6px rgba(0,0,0,.9); pointer-events: none;
+}
+#rchan-gallery .rchan-gal-x, #rchan-gallery .rchan-gal-prev, #rchan-gallery .rchan-gal-next {
+  position: absolute; z-index: 2; border: 0; cursor: pointer;
+  background: rgba(0,0,0,.55); color: #fff; font: inherit;
+  width: 44px; height: 44px; line-height: 44px; text-align: center; padding: 0;
+}
+#rchan-gallery .rchan-gal-x { top: 10px; right: 10px; font-size: 1.1rem; }
+.rchan-gal-prev, .rchan-gal-next {
+  top: 50%; transform: translateY(-50%); font-size: 1.8rem;
+}
+.rchan-gal-prev { left: 10px; }
+.rchan-gal-next { right: 10px; }
+.rchan-gal-prev:disabled, .rchan-gal-next:disabled { opacity: .25; cursor: default; }
+#rchan-gallery button:hover:not(:disabled) { background: #c8102e; }
+@media (max-width: 640px) {
+  .rchan-gal-thumb { width: 52px; height: 52px; }
+  .rchan-gal-main img, .rchan-gal-main video { max-height: calc(100vh - 116px); }
+  .rchan-gal-meta { padding: 4px 48px; }
+}
+
 /* ---------- j/k keyboard post navigation: current-post marker ---------- */
 .rchan-kbcur > .innerPost, .rchan-kbcur > .innerOP, .rchan-kbcur > .markedPost {
   outline: 2px solid rgba(200,16,46,.45); outline-offset: 2px;

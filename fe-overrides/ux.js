@@ -3776,6 +3776,7 @@
       document.body.classList.add("rchan-staff");   // reveals staff-only controls (e.g. "No location")
       try { refresh(); } catch (e0) {}              // class flip is an attribute change — the childList observer won't fire
       try { decorateQuickMod(document); } catch (e1) {}
+      try { initReportBadge(); } catch (e2) {}      // same role gate; server enforces regardless
       if (document.getElementById("rchan-flagoverride")) { return; }
       fetch("/.rchan/flags.json").then(function (r) { return r.json(); }).then(function (codes) {
         var names; try { names = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { names = null; }
@@ -3813,6 +3814,41 @@
         (msg ? msg.parentNode : form).insertBefore(row, msg || null);
       }).catch(function () {});
     }).catch(function () {});
+  }
+
+  /* ---------- Staff report badge: unhandled reports, visible from anywhere ----------
+     Mod UX ended at quick-mod: staff learned about reports by opening the
+     management pages. Poll /openReports.js?json=1 (auth-gated server-side;
+     only wired up after the same globalRole check as everything staff) and
+     bubble the count on the global-management nav icon. ---------- */
+  function initReportBadge() {
+    if (initReportBadge.__on) { return; }
+    initReportBadge.__on = true;
+    function tick() {
+      if (document.hidden) { return; }
+      fetch("/openReports.js?json=1").then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || d.status !== "ok") { return; }
+        var x = d.data, n = null;
+        if (Array.isArray(x)) { n = x.length; }
+        else if (x && Array.isArray(x.reports)) { n = x.reports.length; }
+        if (n === null) { return; }
+        var host = document.getElementById("linkGlobalManagement");
+        if (!host) { return; }
+        var b = document.getElementById("rchan-repbadge");
+        if (!b) {
+          b = document.createElement("span"); b.id = "rchan-repbadge";
+          host.style.position = "relative";
+          host.appendChild(b);
+          host.setAttribute("data-tooltip", "Global management" + (n ? " — " + n + " open report" + (n === 1 ? "" : "s") : ""));
+        } else if (host.getAttribute("data-tooltip")) {
+          host.setAttribute("data-tooltip", "Global management" + (n ? " — " + n + " open report" + (n === 1 ? "" : "s") : ""));
+        }
+        b.textContent = n ? (n > 99 ? "99+" : String(n)) : "";
+      }).catch(function () {});
+    }
+    tick();
+    setInterval(tick, 120000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { tick(); } });
   }
 
   function enhancePostForm() {

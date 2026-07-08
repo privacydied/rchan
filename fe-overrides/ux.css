@@ -1017,6 +1017,14 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   font-size: 10px; font-weight: 700; text-align: center;
 }
 #rchan-youboxbtn > span:empty { display: none; }
+/* staff: open-reports bubble on the global-management nav icon */
+#rchan-repbadge {
+  position: absolute; top: -6px; right: -8px; pointer-events: none;
+  min-width: 14px; height: 14px; line-height: 14px; padding: 0 2px;
+  border-radius: 7px; background: #c8102e; color: #fff;
+  font-size: 10px; font-weight: 700; text-align: center;
+}
+#rchan-repbadge:empty { display: none; }
 .rchan-hist-head {
   position: sticky; top: 0; z-index: 1;
   display: flex; align-items: center; justify-content: space-between;

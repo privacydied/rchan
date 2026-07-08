@@ -651,11 +651,32 @@
     var bar = body.parentNode.querySelector(".rchan-fmtbar");
     body.parentNode.insertBefore(row, bar || body);
   }
+  // Auto-grow a textarea: start at its compact min-height and expand to fit the
+  // content up to ~45vh, then scroll. Keeps the QR short by default but lets it
+  // stretch vertically as the post gets longer.
+  function autoGrowTextarea(ta) {
+    if (!ta || ta.getAttribute("data-grow")) { return; }
+    ta.setAttribute("data-grow", "1");
+    ta.rows = 1;                                            // kill the tall intrinsic rows= height; grow() sizes it
+    var grow = function () {
+      ta.style.height = "auto";                             // let it shrink back too
+      var max = Math.max(120, Math.round(window.innerHeight * 0.45));
+      var h = Math.min(ta.scrollHeight, max);
+      ta.style.height = h + "px";
+      ta.style.overflowY = ta.scrollHeight > max ? "auto" : "hidden";
+    };
+    ta.addEventListener("input", grow);
+    ta.addEventListener("focus", grow);                     // catch quote-inserts (>>123) that skip input
+    grow();                                                 // size to any restored draft
+    ta._rchanGrow = grow;                                   // so external edits can retrigger
+  }
+
   function enhanceQuickReply() {
     buildQrFlagOverride();
     var ta = document.getElementById("qrbody");
     if (!ta || ta.getAttribute("data-fmt")) { return; }
     ta.setAttribute("data-fmt", "1");
+    autoGrowTextarea(ta);
     ta.parentNode.insertBefore(buildFmtBar(ta), ta);
     // board flags are a visible identity choice on the main form but the QR
     // buries them in the collapsed "Extra" section — promote the row up next

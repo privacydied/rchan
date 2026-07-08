@@ -1679,7 +1679,8 @@ body #quick-reply th .close-btn { float: none; padding: 0 3px; font-size: .8125r
 /* body cells get the #rchan-qr-body gutter */
 body #quick-reply td { padding: 2px 8px; }
 body #quick-reply tbody:last-child tr:last-child td { padding-bottom: 8px; }
-#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 90px; resize: vertical; }
+/* compact default; ux.js auto-grows it to fit content (capped, then scrolls) */
+#quick-reply textarea, #qrbody { width: 100%; box-sizing: border-box; min-height: 40px; resize: vertical; }
 /* dropzone: dashed cream instead of the engine's grey slab */
 body #quick-reply .dropzone {
   border: 1px dashed #CFCFC4; background: #EEEEE4; color: #393939;

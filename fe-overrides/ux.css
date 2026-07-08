@@ -875,6 +875,7 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
 .rchan-kbcur > .innerPost, .rchan-kbcur > .innerOP, .rchan-kbcur > .markedPost {
   outline: 2px solid rgba(200,16,46,.45); outline-offset: 2px;
 }
+.catalogCell.rchan-kbcur { outline: 2px solid rgba(200,16,46,.6); outline-offset: 2px; }
 
 /* ---------- New-since-last-visit + replies-to-you ---------- */
 .postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043, 2px 2px 0 rgba(0,0,0,.1) !important; }

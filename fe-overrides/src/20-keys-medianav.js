@@ -160,10 +160,49 @@
     nav.insertBefore(b, document.getElementById("rchan-findbtn") || document.getElementById("navOptionsSpan") || null);
   }
 
+  // Catalog keyboard nav: the powers j/k grant on threads, on the scanning
+  // surface too. Same selection ring, same viewport re-sync semantics.
+  function navCatalog(dir) {
+    var list = catCells().filter(function (c) { return c.offsetParent !== null; });   // skip search-hidden
+    if (!list.length) { return; }
+    var idx = -1;
+    if (kbCurEl && document.contains(kbCurEl)) {
+      var r = kbCurEl.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < window.innerHeight) { idx = list.indexOf(kbCurEl); }
+    }
+    if (idx < 0) {
+      for (var i = 0; i < list.length; i++) {
+        var rr = list[i].getBoundingClientRect();
+        if (rr.bottom > 60) { idx = i; break; }
+      }
+      if (idx < 0) { idx = list.length - 1; }
+      kbSelect(list[idx]);
+      return;
+    }
+    kbSelect(list[Math.max(0, Math.min(list.length - 1, idx + dir))]);
+  }
+  function catKey(e) {                                 // -> true when handled
+    if (e.key === "j") { navCatalog(1); }
+    else if (e.key === "k") { navCatalog(-1); }
+    else if (e.key === "Enter" && kbCurEl && kbCurEl.classList.contains("catalogCell")) {
+      var a = kbCurEl.querySelector("a.linkThumb");
+      if (a && a.href) { location.href = a.href; }
+    }
+    else if (e.key === "e" && kbCurEl && kbCurEl.classList.contains("catalogCell")) {
+      if (catPrevFor === kbCurEl) { hideCatPreview(); } else { showCatPreviewFor(kbCurEl); }
+    }
+    else if (e.key === "w" && kbCurEl && kbCurEl.classList.contains("catalogCell")) {
+      toggleCatalogWatch(kbCurEl, kbCurEl.querySelector(".rchan-catwatch"));
+    }
+    else { return false; }
+    e.preventDefault();
+    return true;
+  }
   function onKey(e) {
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) { return; }
     if (e.key === "?") { toggleKeysOverlay(); e.preventDefault(); return; }   // always available
     if (!setOn("keys")) { return; }
+    if (isCatalog() && catKey(e)) { return; }
     if (e.key === "t") { window.scrollTo({ top: 0, behavior: SB }); }
     else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: SB }); }
     else if (e.key === "c") { toggleCatalog(); }

@@ -451,7 +451,8 @@
   }
   /* "?" cheat-sheet overlay (works even with shortcuts toggled off) */
   var KEYS_LIST = [
-    ["j / k", "Next / previous post"],
+    ["j / k", "Next / previous post — on the catalog: next / previous thread"],
+    ["Enter / e / w", "Catalog: open · preview replies · watch the selected thread"],
     ["← / →", "Previous / next post with a file"],
     ["e", "Expand / collapse the selected post's image"],
     ["g", "Gallery mode — every file on the page, fullscreen"],

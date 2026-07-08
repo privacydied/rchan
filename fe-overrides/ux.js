@@ -1303,6 +1303,56 @@
     };
   }
 
+  /* ---------- Per-thread scroll resume ----------
+     Jump-to-new answers "what's unread"; this answers "where was I".
+     Last scroll position is saved per thread (only after a real user
+     scroll, so a glance at the top never clobbers a deep bookmark) and a
+     quiet pill offers to jump back on the next visit. Auto-dismisses when
+     you scroll most of the way there yourself. */
+  var SCROLL_KEY = "rchan_scrollpos", SCROLL_MAX = 100, scrollSaveT = null;
+  function scrollMap() { try { return JSON.parse(localStorage.getItem(SCROLL_KEY) || "{}"); } catch (e) { return {}; } }
+  function saveScrollPos() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t) { return; }
+    var map = scrollMap();
+    map[b + "/" + t] = { y: Math.round(window.scrollY || 0), ts: Date.now() };
+    var keys = Object.keys(map);
+    if (keys.length > SCROLL_MAX) {                    // prune oldest
+      keys.sort(function (a, b2) { return (map[a].ts || 0) - (map[b2].ts || 0); });
+      for (var i = 0; i < keys.length - SCROLL_MAX; i++) { delete map[keys[i]]; }
+    }
+    try { localStorage.setItem(SCROLL_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+  function initScrollResume() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t) { return; }
+    var armed = false;                                 // only save after a real user scroll
+    window.addEventListener("scroll", function () {
+      armed = true;
+      clearTimeout(scrollSaveT); scrollSaveT = setTimeout(saveScrollPos, 300);
+    }, { passive: true });
+    window.addEventListener("pagehide", function () { if (armed) { saveScrollPos(); } });
+    if (location.hash) { return; }                     // deep link wins
+    var rec = scrollMap()[b + "/" + t];
+    if (!rec || rec.y < window.innerHeight) { return; }
+    var pill = document.createElement("button");
+    pill.id = "rchan-resume"; pill.type = "button";
+    pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg><span>Resume reading</span>';
+    function hidePill() { if (pill.parentNode) { pill.parentNode.removeChild(pill); } }
+    pill.addEventListener("click", function () {
+      window.scrollTo({ top: rec.y, behavior: SB });
+      hidePill();
+    });
+    document.body.appendChild(pill);
+    setTimeout(hidePill, 20000);
+    window.addEventListener("scroll", function selfScrolled() {
+      if ((window.scrollY || 0) > rec.y * 0.8) {       // found their own way back
+        hidePill();
+        window.removeEventListener("scroll", selfScrolled);
+      }
+    }, { passive: true });
+  }
+
   /* ---------- Proactive captcha lifecycle ----------
      The native loop only reacts AT expiry (auto-reload, which eats typed
      answers — hookCaptchaReload toasts after the fact). Get ahead of it:
@@ -2344,7 +2394,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

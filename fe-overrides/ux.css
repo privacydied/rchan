@@ -942,6 +942,18 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 @keyframes rchan-flashbg { 0% { background: #c8102e33; } 100% { background: transparent; } }
 .rchan-flash { animation: rchan-flashbg 2.4s ease-out; }
 
+/* ---------- "Resume reading" pill (per-thread scroll resume) ---------- */
+#rchan-resume {
+  position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+  z-index: 9998; cursor: pointer;
+  border: 0; padding: 7px 14px; font: inherit; font-size: 10pt; font-weight: 700;
+  background: #274a6b; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  display: inline-flex; align-items: center; gap: 6px;
+  opacity: .92;
+}
+#rchan-resume svg { display: block; flex: none; }
+#rchan-resume:hover { opacity: 1; }
+
 /* ---------- "▼ N new posts" pill ---------- */
 #rchan-newpill {
   position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);

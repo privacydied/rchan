@@ -901,6 +901,111 @@ body.theme_brutalist #rchan-gallery .rchan-gal-x, body.theme_brutalist .rchan-ga
   background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
 }
 
+/* ====== COMPLETENESS PASS: beat every surviving legacy color / unthemed region ======
+   The engine defaults (#D6DAF0 lavender, #34345C links, #FFB300 star) and the per-board
+   accent are NOT theme-scoped, so they leaked through the first pass. These force the
+   theme onto everything it missed. A theme skin, so !important is fair game. */
+
+/* --- board title: the REAL selectors, and kill the per-board accent tint (the "maroon") --- */
+body.theme_brutalist .boardHeader p#labelName, body.theme_brutalist #labelName,
+body.theme_brutalist #catalogId, body.theme_brutalist #catalogId .title, body.theme_brutalist #labelBoard,
+body.theme_brutalist #labelDescription, body.theme_brutalist .boardHeader p#labelDescription,
+body.theme_brutalist .rchan-empty-title {
+  color: #000 !important; text-shadow: none !important;
+  font-family: var(--brutal-sans) !important; font-weight: 700; text-transform: uppercase; letter-spacing: -1px;
+}
+body.theme_brutalist #labelDescription, body.theme_brutalist .boardHeader p#labelDescription { font-weight: 400; letter-spacing: 0; text-transform: none; }
+
+/* --- neutralize every engine #D6DAF0 region -> white --- */
+body.theme_brutalist .floatingMenu, body.theme_brutalist #quick-reply table, body.theme_brutalist #panelReferences,
+body.theme_brutalist .postCell, body.theme_brutalist .opCell, body.theme_brutalist #divPages,
+body.theme_brutalist .navHeader, body.theme_brutalist #navTopBoardsSpan, body.theme_brutalist #navFadeMask,
+body.theme_brutalist header {
+  background: #fff !important; background-color: #fff !important;
+}
+
+/* --- engine link color (#34345C) + icon-font glyphs -> blue / black --- */
+body.theme_brutalist a, body.theme_brutalist a:visited, body.theme_brutalist #divPages a,
+body.theme_brutalist #panelReferences a, body.theme_brutalist #navOptionsSpan a {
+  color: var(--brutal-blue) !important; text-decoration: underline;
+}
+body.theme_brutalist .coloredIcon, body.theme_brutalist .glowOnHover, body.theme_brutalist .unhideButton { color: #000 !important; }
+body.theme_brutalist .coloredIcon:hover, body.theme_brutalist .glowOnHover:hover { color: var(--brutal-blue) !important; background: transparent !important; }
+/* favourite star: no gold */
+body.theme_brutalist .checkedFavouriteButton:before, body.theme_brutalist #favouriteButton,
+body.theme_brutalist .checkedFavouriteButton { color: var(--brutal-blue) !important; }
+
+/* --- machine register, asserted globally (file info, ids, times, quotes, stats, pages, IDs) --- */
+body.theme_brutalist .uploadDetails, body.theme_brutalist .originalNameLink, body.theme_brutalist .linkQuote,
+body.theme_brutalist .labelCreated, body.theme_brutalist .quoteLink, body.theme_brutalist .panelBacklinks,
+body.theme_brutalist .panelBacklinks a, body.theme_brutalist .labelReplies, body.theme_brutalist .labelImages,
+body.theme_brutalist .labelPage, body.theme_brutalist .threadStats, body.theme_brutalist .labelId,
+body.theme_brutalist .pagelist, body.theme_brutalist #watcherButton span, body.theme_brutalist .panelRange,
+body.theme_brutalist .labelFileSize {
+  font-family: var(--brutal-mono) !important;
+}
+
+/* --- SIDE CATALOG: white/black hard cells, mono stats, hard-invert hover (was lavender/pink) --- */
+body.theme_brutalist #sideCatalogDiv { background: #fff !important; border-left: 3px solid #000 !important; }
+body.theme_brutalist #sideCatalogHeader { border-bottom: 3px solid #000 !important; }
+body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell {
+  background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+  padding: 6px !important; margin-bottom: 8px !important; overflow: hidden;
+}
+body.theme_brutalist .sideCatalogMarkedCell { border: 3px solid var(--brutal-blue) !important; }
+body.theme_brutalist .sideCatalogCell:hover { background: #000 !important; color: #fff !important; }
+body.theme_brutalist .sideCatalogCell:hover a, body.theme_brutalist .sideCatalogCell:hover span { color: #fff !important; }
+body.theme_brutalist #sideCatalogBody img { border: 2px solid #000 !important; }
+body.theme_brutalist .sideCatalogCellText span { font-family: var(--brutal-mono) !important; }
+body.theme_brutalist .sideCatalogCellText span:first-child { font-family: var(--brutal-sans) !important; font-weight: 700; }
+body.theme_brutalist #closeSideCatalogButton, body.theme_brutalist #sideCatalogRefreshButton {
+  color: #000 !important; border: 2px solid #000 !important; background: #fff !important; padding: 0 5px;
+}
+body.theme_brutalist #closeSideCatalogButton:hover, body.theme_brutalist #sideCatalogRefreshButton:hover {
+  background: #000 !important; color: #fff !important;
+}
+
+/* --- CATALOG GRID: a strict wall of identical rectangles --- */
+body.theme_brutalist.rchan-cat-s #divThreads, body.theme_brutalist.rchan-cat-l #divThreads,
+body.theme_brutalist.rchan-cat-xl #divThreads {
+  display: grid !important; gap: 0 !important; justify-content: start; align-items: stretch; padding: 0 !important;
+}
+body.theme_brutalist.rchan-cat-s #divThreads { grid-template-columns: repeat(auto-fill, 180px); }
+body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads { grid-template-columns: repeat(auto-fill, 290px); }
+body.theme_brutalist .catalogCell {
+  width: auto !important; max-width: none !important; margin: 0 !important; box-sizing: border-box;
+  border: 2px solid #000 !important; background: #fff !important; color: #000 !important;
+  display: flex !important; flex-direction: column; align-items: center; overflow: hidden !important;
+}
+body.theme_brutalist.rchan-cat-s .catalogCell { height: 250px !important; max-height: 250px !important; }
+body.theme_brutalist.rchan-cat-l .catalogCell, body.theme_brutalist.rchan-cat-xl .catalogCell { height: 410px !important; max-height: 410px !important; }
+body.theme_brutalist .catalogCell .labelSubject {
+  font-family: var(--brutal-sans) !important; font-weight: 700; text-transform: uppercase; color: #000 !important;
+  text-align: center; width: 100%; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body.theme_brutalist .catalogCell .divMessage {
+  color: #000 !important; width: 100%; flex: 1 1 auto; min-height: 0; overflow: hidden !important;
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
+}
+body.theme_brutalist .catalogCell .linkThumb img { border: 2px solid #000 !important; flex: none; }
+
+/* --- checkboxes: square, hard, no native chrome --- */
+body.theme_brutalist input[type=checkbox] {
+  -webkit-appearance: none; appearance: none; width: 15px; height: 15px; cursor: pointer;
+  border: 2px solid #000 !important; background: #fff !important; vertical-align: -3px;
+}
+body.theme_brutalist input[type=checkbox]:checked { background: #000 !important; }
+
+/* --- floating pills: activity/nav = hard black CTA; (You) stays red (attention) --- */
+body.theme_brutalist #rchan-newpill, body.theme_brutalist #rchan-boardpill, body.theme_brutalist #rchan-wspill,
+body.theme_brutalist #rchan-resume { background: #000 !important; color: #fff !important; border: 2px solid #000 !important; }
+body.theme_brutalist #rchan-nav button#rchan-penbtn { background: #fff !important; color: #000 !important; }
+
+/* --- thread view: OP 3px, replies 2px, no nested border on the fileinfo row --- */
+body.theme_brutalist .innerOP { border: 3px solid #000 !important; }
+body.theme_brutalist .innerPost { border: 2px solid #000 !important; }
+body.theme_brutalist .uploadCell, body.theme_brutalist .opUploadPanel { border: 0 !important; padding: 0 !important; }
+
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
    '(Show file)'). Replace with currentColor mask icons — external-link,

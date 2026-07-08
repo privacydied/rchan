@@ -1510,6 +1510,7 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 }
 .theme_dark .rchan-set-group summary { background: #262a31; border-color: #2c2f36; }
 .theme_dark .rchan-set-grpcount { background: #2c2f36; color: #c9ccd1; }
+.rchan-set-select { font: inherit; font-size: x-small; align-self: center; flex: none; }
 
 /* ---------- Sticky OP bar (thread context while scrolled deep) ---------- */
 #rchan-stickyop {

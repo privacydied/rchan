@@ -4190,6 +4190,13 @@
     { g: "Appearance", t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
+    { g: "Appearance", t: "Text size", d: "Scales every piece of text (the rem scale) without zooming the whole page",
+      options: [["s", "Small"], ["m", "Default"], ["l", "Large"], ["xl", "Extra large"]],
+      get: function () { try { return localStorage.getItem(TEXTSIZE_KEY) || "m"; } catch (e) { return "m"; } },
+      set: function (v) {
+        try { v === "m" ? localStorage.removeItem(TEXTSIZE_KEY) : localStorage.setItem(TEXTSIZE_KEY, v); } catch (e) {}
+        applyTextSize();
+      } },
     { g: "Appearance", t: "Auto theme (follow OS)", d: "Dark when your system is dark, cream otherwise — switches live",
       get: autoThemeOn,
       set: function (on) {
@@ -4475,6 +4482,19 @@
     box.appendChild(save);
   }
 
+  /* ---------- Text size: the comfort knob the rem scale earned ----------
+     The whole type scale is rem-based, so one root font-size adjustment
+     scales every piece of text (browser page-zoom scales all the chrome
+     too; this scales just the type). Applied pre-init AND live. */
+  var TEXTSIZE_KEY = "rchan_textsize";
+  var TEXT_SIZES = { s: "14px", m: "", l: "18px", xl: "20px" };
+  function applyTextSize() {
+    var v = "m";
+    try { v = localStorage.getItem(TEXTSIZE_KEY) || "m"; } catch (e) {}
+    if (!(v in TEXT_SIZES)) { v = "m"; }
+    document.documentElement.style.fontSize = TEXT_SIZES[v];
+  }
+
   var setPanel = null;
   function buildSetRow(row) {
     var lab = document.createElement("label"); lab.className = "rchan-set-row";
@@ -4482,6 +4502,19 @@
     var t = document.createElement("span"); t.className = "rchan-set-title"; t.textContent = row.t;
     var d = document.createElement("span"); d.className = "rchan-set-desc"; d.textContent = row.d;
     txt.appendChild(t); txt.appendChild(d);
+    if (row.options) {                               // select row (e.g. text size)
+      var sel = document.createElement("select");
+      sel.className = "rchan-set-select";
+      row.options.forEach(function (o) {
+        var op = document.createElement("option");
+        op.value = o[0]; op.textContent = o[1];
+        sel.appendChild(op);
+      });
+      sel.value = row.get ? row.get() : "";
+      sel.addEventListener("change", function () { if (row.set) { row.set(sel.value); } });
+      lab.appendChild(txt); lab.appendChild(sel);
+      return lab;
+    }
     var cb = document.createElement("input"); cb.type = "checkbox";
     cb.checked = row.get ? !!row.get() : setOn(row.k, row.def);
     cb.addEventListener("change", function () {
@@ -5624,7 +5657,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint, initBackupNudge, pruneOnceStamps
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

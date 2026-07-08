@@ -1063,8 +1063,32 @@
     histPanel.style.display = "block";
   }
 
-  /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ---------- */
+  /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ----------
+     IMPORTANT: the engine uploads ONLY from postCommon.selectedFiles (its own
+     array, rendered as .selectedCell chips) — it never reads input.files at
+     submit, and its picker even wipes #inputFiles after consuming it. So every
+     paste/drop we accept MUST go through postCommon.addSelectedFile; the
+     DataTransfer/input.files path below is only a fallback for pages where
+     postCommon isn't wired (it previously ATE dropped files silently). */
   var MAX_FILE = 32 * 1048576;   // maxFileSizeMB
+  function nativeFilePipe() {
+    return !!(window.postCommon && postCommon.addSelectedFile && postCommon.selectedDiv);
+  }
+  function engineAddFiles(files) {  // -> true when the engine's pipeline took them
+    if (!nativeFilePipe()) { return false; }
+    for (var i = 0; i < files.length; i++) {
+      try { postCommon.addSelectedFile(files[i]); } catch (e) { return false; }
+    }
+    return true;
+  }
+  function collectPastedFiles(e) {
+    var items = e.clipboardData && e.clipboardData.items, add = [];
+    if (!items) { return add; }
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].kind === "file") { var f = items[i].getAsFile(); if (f) { add.push(f); } }
+    }
+    return add;
+  }
   function bytesHuman(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : n >= 1024 ? Math.round(n / 1024) + " KB" : n + " B"; }
   function mimeOk(input, file) {
     var acc = (input.getAttribute("accept") || "").toLowerCase().split(",").map(function (s) { return s.trim(); }).filter(Boolean);
@@ -1139,6 +1163,49 @@
     if (!ta || ta.getAttribute("data-fmt")) { return; }
     ta.setAttribute("data-fmt", "1");
     ta.parentNode.insertBefore(buildFmtBar(ta), ta);
+    // paste an image straight into the QR textarea
+    ta.addEventListener("paste", function (e) {
+      var add = collectPastedFiles(e);
+      if (add.length) { engineAddFiles(add); }
+    });
+    // and accept drops anywhere on the QR panel, not just its little dropzone
+    var panel = document.getElementById("quick-reply");
+    if (panel && !panel.getAttribute("data-drop")) {
+      panel.setAttribute("data-drop", "1");
+      panel.addEventListener("dragover", function (e) { e.preventDefault(); });
+      panel.addEventListener("drop", function (e) {
+        e.preventDefault();
+        var fs = e.dataTransfer && e.dataTransfer.files;
+        if (fs && fs.length) { engineAddFiles(Array.prototype.slice.call(fs)); }
+      });
+    }
+  }
+
+  /* ---------- Poster ID pills (boards with IDs on) ----------
+     LynxChan IDs are 6 hex chars — use the ID itself as the pill colour,
+     text black/white by luminance. Click-to-highlight + hover post count are
+     native (posting.processIdLabel swaps .innerPost -> .markedPost); the CSS
+     side makes .markedPost actually visible in our themes. */
+  function decorateIdPills(root) {
+    var ids = (root || document).getElementsByClassName("labelId");
+    for (var i = 0; i < ids.length; i++) {
+      var el = ids[i];
+      if (el.getAttribute("data-pill")) { continue; }
+      el.setAttribute("data-pill", "1");
+      var id = (el.textContent || "").trim();
+      var c;
+      if (/^[0-9a-f]{6}$/i.test(id)) { c = id.toLowerCase(); }
+      else {                                       // non-hex ID: stable hash -> colour
+        var h = 0;
+        for (var j = 0; j < id.length; j++) { h = (h * 31 + id.charCodeAt(j)) >>> 0; }
+        c = ("00000" + (h & 0xffffff).toString(16)).slice(-6);
+      }
+      var r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+      var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      el.classList.add("rchan-idpill");
+      el.style.backgroundColor = "#" + c;
+      el.style.color = lum > 0.55 ? "#000" : "#fff";
+    }
   }
   /* ---------- Admin-only flag override (cosmetic half — the ENFORCEMENT is the
      flagoverride addon server-side). LynxChan serves one cached page to every
@@ -1302,31 +1369,37 @@
       msg.parentNode.insertBefore(buildFmtBar(msg), msg);
       if (input) {
         msg.addEventListener("paste", function (e) {
-          var items = e.clipboardData && e.clipboardData.items; if (!items) { return; }
-          var add = [];
-          for (var i = 0; i < items.length; i++) { if (items[i].kind === "file") { var f = items[i].getAsFile(); if (f) { add.push(f); } } }
-          if (add.length) { addFiles(input, add); }
+          var add = collectPastedFiles(e);
+          if (add.length && !engineAddFiles(add)) { addFiles(input, add); }
         });
       }
     }
     if (input) {
-      var tray = document.createElement("div"); tray.id = "rchan-filetray"; tray.className = "rchan-filetray";
-      (input.parentNode || form).appendChild(tray);
-      input.addEventListener("change", function () { renderTray(input); });
+      // drops anywhere on the form feed the engine's pipeline (the native
+      // dropzone stopPropagation()s its own drops, so no double-add there)
       form.addEventListener("dragover", function (e) { e.preventDefault(); form.classList.add("rchan-dragover"); });
       form.addEventListener("dragleave", function (e) { if (e.target === form) { form.classList.remove("rchan-dragover"); } });
       form.addEventListener("drop", function (e) {
         e.preventDefault(); form.classList.remove("rchan-dragover");
         var fs = e.dataTransfer && e.dataTransfer.files;
-        if (fs && fs.length) { addFiles(input, Array.prototype.slice.call(fs)); }
+        if (!fs || !fs.length) { return; }
+        var arr = Array.prototype.slice.call(fs);
+        if (!engineAddFiles(arr)) { addFiles(input, arr); }
       });
-      renderTray(input);
+      // custom chip tray ONLY as the fallback UI — with the native pipeline the
+      // engine renders its own .selectedCell chips (and resets input.files)
+      if (!nativeFilePipe()) {
+        var tray = document.createElement("div"); tray.id = "rchan-filetray"; tray.className = "rchan-filetray";
+        (input.parentNode || form).appendChild(tray);
+        input.addEventListener("change", function () { renderTray(input); });
+        renderTray(input);
+      }
     }
   }
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
@@ -1367,7 +1440,8 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit
+     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
+     function () { decorateIdPills(document); }
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

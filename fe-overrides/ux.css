@@ -581,6 +581,50 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
+/* ---------- Recently visited threads panel (🕘 in the nav column) ---------- */
+#rchan-hist {
+  position: fixed; right: 60px; bottom: 12px; z-index: 10004;
+  width: 340px; max-width: 92vw; max-height: 60vh;
+  display: none; overflow: auto;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+  font-size: 10pt;
+}
+.rchan-hist-head {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
+  padding: 3px 8px; font-weight: 700;
+}
+.rchan-hist-clear {
+  border: 0; background: none; cursor: pointer; padding: 0 2px;
+  font: inherit; font-size: x-small; font-weight: 700; color: #274a6b;
+  text-decoration: underline;
+}
+.rchan-hist-clear:hover { color: #c8102e; }
+.rchan-hist-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px; border-bottom: 1px solid #CFCFC466;
+}
+.rchan-hist-row:hover { background: rgba(200,16,46,.08); }
+.rchan-hist-title {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rchan-hist-meta { font-size: x-small; opacity: .7; flex: none; }
+.rchan-hist-row .rchan-newbadge { margin-left: 0; flex: none; }
+.rchan-hist-x {
+  border: 0; background: none; cursor: pointer; padding: 0 2px; flex: none;
+  font-size: 10pt; font-weight: 700; line-height: 1; opacity: .5;
+}
+.rchan-hist-x:hover { opacity: 1; color: #c8102e; }
+.rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .8; text-align: center; }
+.theme_dark #rchan-hist { background: #16171b; border-color: #2c2f36; }
+.theme_dark .rchan-hist-head { background: #262a31; border-color: #2c2f36; }
+.theme_dark .rchan-hist-row { border-color: #2c2f3666; }
+.theme_dark .rchan-hist-row:hover { background: rgba(224,108,117,.1); }
+.theme_dark .rchan-hist-clear { color: #7fb0e0; }
+
 /* ---------- Toast (styled alert() replacement) ---------- */
 #rchan-toast {
   position: fixed; top: 48px; left: 50%; transform: translateX(-50%);

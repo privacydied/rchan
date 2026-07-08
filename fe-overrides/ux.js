@@ -101,6 +101,7 @@
       });
       if (localStorage.getItem(NOTIFY_KEY) === "1") { bell.classList.add("rchan-on"); }
     }
+    btn("🕘", "Recently visited threads", toggleHistPanel);
     btn("↓", "Bottom", function () {
       window.scrollTo({ top: document.body.scrollHeight, behavior: SB });
     });
@@ -960,6 +961,108 @@
     youBtn.textContent = "↩ " + youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
   }
 
+  /* ---------- Recently visited threads: history panel (🕘 in the nav column) ----------
+     Every thread view is recorded (board, id, OP subject/snippet, when, reply
+     count). The panel lists them newest-first with a "+N new" badge computed
+     from ONE catalog.json fetch per distinct board, diffed against the reply
+     counts rchan_seen already tracks. */
+  var HIST_KEY = "rchan_hist", HIST_MAX = 50;
+  function histLoad() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch (e) { return []; } }
+  function histSave(a) { try { localStorage.setItem(HIST_KEY, JSON.stringify(a.slice(0, HIST_MAX))); } catch (e) {} }
+  function threadTitle() {
+    var s = document.querySelector(".innerOP .labelSubject");
+    if (s && s.textContent.trim()) { return s.textContent.trim().slice(0, 70); }
+    var m = document.querySelector(".innerOP .divMessage");
+    if (m && m.textContent.trim()) { return m.textContent.trim().replace(/\s+/g, " ").slice(0, 70); }
+    return "Thread " + curThreadId();
+  }
+  function recordVisit() {
+    var b = getBoard(), t = curThreadId();
+    if (!b || !t || b.charAt(0) === ".") { return; }
+    var a = histLoad().filter(function (e) { return !(e.b === b && e.t === t); });
+    a.unshift({ b: b, t: t, s: threadTitle(), ts: Date.now() });
+    histSave(a);
+  }
+  function fmtAgo(ts) {
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) { return "now"; }
+    if (m < 60) { return m + "m"; }
+    var h = Math.round(m / 60);
+    if (h < 24) { return h + "h"; }
+    return Math.round(h / 24) + "d";
+  }
+  var histPanel = null;
+  function renderHist() {
+    var list = histPanel.lastChild;
+    var a = histLoad();
+    list.innerHTML = "";
+    if (!a.length) {
+      var empty = document.createElement("div"); empty.className = "rchan-hist-empty";
+      empty.textContent = "No threads visited yet";
+      list.appendChild(empty);
+      return;
+    }
+    var seen = seenAll(), rows = [];
+    a.forEach(function (e) {
+      var row = document.createElement("a");
+      row.className = "rchan-hist-row";
+      row.href = "/" + e.b + "/res/" + e.t;
+      var title = document.createElement("span"); title.className = "rchan-hist-title";
+      title.textContent = "/" + e.b + "/ · " + (e.s || ("Thread " + e.t));
+      var badge = document.createElement("span"); badge.className = "rchan-newbadge"; badge.style.display = "none";
+      var meta = document.createElement("span"); meta.className = "rchan-hist-meta"; meta.textContent = fmtAgo(e.ts);
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-hist-x"; x.textContent = "×"; x.title = "Remove from history";
+      x.addEventListener("click", function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        histSave(histLoad().filter(function (o) { return !(o.b === e.b && o.t === e.t); }));
+        renderHist();
+      });
+      row.appendChild(title); row.appendChild(badge); row.appendChild(meta); row.appendChild(x);
+      list.appendChild(row);
+      rows.push({ e: e, badge: badge });
+    });
+    // unread badges: one catalog fetch per distinct board in the list
+    var boards = {};
+    a.forEach(function (e) { boards[e.b] = 1; });
+    Object.keys(boards).forEach(function (b) {
+      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (cat) {
+        var counts = {};
+        (cat || []).forEach(function (t) { counts[t.threadId] = t.postCount || 0; });
+        rows.forEach(function (ro) {
+          if (ro.e.b !== b || counts[ro.e.t] == null) { return; }
+          var rec = seen[b + "/" + ro.e.t];
+          var diff = counts[ro.e.t] - ((rec && rec.replies) || 0);
+          if (rec && diff > 0) {
+            ro.badge.textContent = "+" + diff + " new";
+            ro.badge.style.display = "";
+          }
+        });
+      }).catch(function () {});
+    });
+  }
+  function toggleHistPanel() {
+    if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
+    if (!histPanel) {
+      histPanel = document.createElement("div"); histPanel.id = "rchan-hist";
+      var head = document.createElement("div"); head.className = "rchan-hist-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Recent threads";
+      var clr = document.createElement("button"); clr.type = "button"; clr.className = "rchan-hist-clear"; clr.textContent = "Clear";
+      clr.addEventListener("click", function () { histSave([]); renderHist(); });
+      head.appendChild(ttl); head.appendChild(clr);
+      histPanel.appendChild(head);
+      histPanel.appendChild(document.createElement("div"));   // list container (lastChild)
+      document.body.appendChild(histPanel);
+      document.addEventListener("click", function (ev) {      // click-away closes
+        if (histPanel.style.display !== "block") { return; }
+        var t = ev.target;
+        if (histPanel.contains(t) || (t.closest && t.closest("#rchan-nav"))) { return; }
+        histPanel.style.display = "none";
+      }, true);
+    }
+    renderHist();
+    histPanel.style.display = "block";
+  }
+
   /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ---------- */
   var MAX_FILE = 32 * 1048576;   // maxFileSizeMB
   function bytesHuman(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : n >= 1024 ? Math.round(n / 1024) + " KB" : n + " B"; }
@@ -1264,7 +1367,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes
+     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }

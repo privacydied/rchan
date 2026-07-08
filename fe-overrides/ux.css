@@ -857,6 +857,40 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   display: flex; gap: 14px; flex-wrap: wrap;
   padding: 6px 8px; font-size: x-small; font-weight: 700;
 }
+/* auto-filter manager (inside the settings panel) */
+.rchan-set-sub {
+  padding: 5px 8px 3px; font-weight: 700;
+  border-top: 1px solid #CFCFC4; margin-top: 2px;
+}
+.rchan-filter-none { padding: 2px 8px 6px; }
+.rchan-filter-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 8px; border-bottom: 1px solid #CFCFC466;
+}
+.rchan-filter-type { flex: none; font-size: x-small; font-weight: 700; opacity: .8; min-width: 58px; }
+.rchan-filter-pat {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: "Roboto Mono", ui-monospace, monospace; font-size: x-small;
+}
+.rchan-filter-form {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  padding: 6px 8px;
+}
+.rchan-filter-form select, .rchan-filter-form input[type=text], .rchan-filter-form button {
+  font: inherit; font-size: x-small; padding: 3px 5px;
+}
+.rchan-filter-form input[type=text] { flex: 1; min-width: 90px; }
+.rchan-filter-form button { cursor: pointer; border: 1px solid #CFCFC4; background: #E6E6DA; font-weight: 700; }
+.rchan-filter-form button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+.rchan-filter-relab { display: inline-flex; align-items: center; gap: 3px; font-size: x-small; cursor: pointer; }
+.theme_dark .rchan-set-sub { border-color: #2c2f36; }
+.theme_dark .rchan-filter-row { border-color: #2c2f3666; }
+.theme_dark .rchan-filter-form button { background: #262a31; color: #c9ccd1; border-color: #333; }
+/* one-line stub left where a filtered post was */
+.rchan-filterstub {
+  margin: 4px 0; font-size: x-small; opacity: .75;
+}
+.rchan-filterstub a { text-decoration: underline; }
 .rchan-set-foot a { text-decoration: underline; }
 .theme_dark #rchan-set { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-set-head { background: #262a31; border-color: #2c2f36; }

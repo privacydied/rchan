@@ -1087,6 +1087,7 @@
       title.textContent = "/" + e.b + "/ · " + (e.s || ("Thread " + e.t));
       var badge = document.createElement("span"); badge.className = "rchan-newbadge"; badge.style.display = "none";
       var meta = document.createElement("span"); meta.className = "rchan-hist-meta"; meta.textContent = fmtAgo(e.ts);
+      meta.setAttribute("data-ts", e.ts);                    // live time-ago ticker reads this
       var x = document.createElement("button"); x.type = "button"; x.className = "rchan-hist-x"; x.textContent = "×"; x.title = "Remove from history";
       x.addEventListener("click", function (ev) {
         ev.preventDefault(); ev.stopPropagation();
@@ -1142,6 +1143,15 @@
           try { sessionStorage.setItem(HIST_SCROLL, String(histPanel.scrollTop)); } catch (e) {}
         }, 150);
       });
+      // live time-ago: tick the row timestamps while the panel is open
+      setInterval(function () {
+        if (histPanel.style.display !== "block") { return; }
+        var metas = histPanel.getElementsByClassName("rchan-hist-meta");
+        for (var i = 0; i < metas.length; i++) {
+          var ts = parseInt(metas[i].getAttribute("data-ts"), 10);
+          if (ts) { metas[i].textContent = fmtAgo(ts); }
+        }
+      }, 30000);
     }
     renderHist();
     histPanel.style.display = "block";

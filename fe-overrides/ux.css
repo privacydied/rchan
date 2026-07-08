@@ -1076,6 +1076,17 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #rchan-newpill svg { display: block; flex: none; }
 #rchan-newpill:hover { filter: brightness(1.08); }
 
+/* ---------- Board liveness pill ("N new — refresh" on index/catalog) ---------- */
+#rchan-boardpill {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; display: none; cursor: pointer;
+  border: 0; padding: 7px 14px; font: inherit; font-size: .833rem; font-weight: 700;
+  background: #2ea043; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  align-items: center; gap: 6px;
+}
+#rchan-boardpill svg { display: block; flex: none; }
+#rchan-boardpill:hover { filter: brightness(1.08); }
+
 /* ---------- Inline quote expansion ---------- */
 .rchan-inline-quote { display: block; margin: 4px 0 4px 14px; }
 .rchan-inline-quote .innerPost, .rchan-inline-quote .innerOP {

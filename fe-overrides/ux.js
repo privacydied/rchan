@@ -1552,6 +1552,54 @@
     }, 1000);
   }
 
+  /* ---------- Board liveness: index/catalog pages stop being frozen ----------
+     Threads live-update over the websocket; board surfaces are a snapshot
+     from page load. Diff catalog.json against the load-time snapshot every
+     60s (visible tabs only) and offer a gentle "N new — refresh" pill
+     instead of silently going stale. */
+  function initBoardLiveness() {
+    var b = getBoard();
+    if (!b || b.charAt(0) === "." || curThreadId()) { return; }
+    if (!document.getElementById("divThreads")) { return; }        // board index or catalog only
+    var base = null, pill = null;
+    function snapshot(list) {
+      var m = { total: 0, threads: {} };
+      (list || []).forEach(function (t) {
+        m.total += (t.postCount || 0) + 1;                         // +1: the OP itself
+        m.threads[t.threadId] = 1;
+      });
+      return m;
+    }
+    function check() {
+      if (document.hidden) { return; }
+      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
+        var cur = snapshot(list);
+        if (!base) { base = cur; return; }
+        var newThreads = 0;
+        Object.keys(cur.threads).forEach(function (id) { if (!base.threads[id]) { newThreads++; } });
+        var newPosts = Math.max(0, cur.total - base.total) - newThreads;
+        if (newThreads <= 0 && newPosts <= 0) { if (pill) { pill.style.display = "none"; } return; }
+        if (!pill) {
+          pill = document.createElement("button");
+          pill.id = "rchan-boardpill"; pill.type = "button";
+          pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
+          pill.setAttribute("aria-label", "New activity — refresh the page");
+          pill.addEventListener("click", function () { location.reload(); });
+          document.body.appendChild(pill);
+        }
+        var txt = [];
+        if (newThreads > 0) { txt.push(newThreads + " new thread" + (newThreads > 1 ? "s" : "")); }
+        if (newPosts > 0) { txt.push(newPosts + " new post" + (newPosts > 1 ? "s" : "")); }
+        pill.lastChild.textContent = txt.join(" · ") + " — refresh";
+        pill.style.display = "inline-flex";
+      }).catch(function () {});
+    }
+    fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
+      .then(function (list) { base = snapshot(list); }).catch(function () {});
+    setInterval(check, 60000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { check(); } });
+  }
+
   /* ---------- Presence: "N anons here" (rides the thread status line) ----------
      Heartbeat ping to the presence addon every 45s while the tab is visible;
      the response is how many distinct session ids pinged this thread in the
@@ -2955,7 +3003,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); }, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });

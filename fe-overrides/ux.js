@@ -1303,6 +1303,44 @@
     };
   }
 
+  /* ---------- Proactive captcha lifecycle ----------
+     The native loop only reacts AT expiry (auto-reload, which eats typed
+     answers — hookCaptchaReload toasts after the fact). Get ahead of it:
+     - field EMPTY and <6s left  -> silently swap in a fresh captcha now
+       (nothing to lose; the manual-reload path, so no expiry toast fires),
+     - field TYPED and <12s left -> warn once so the user can submit before
+       the native timer wipes the answer. */
+  function initCaptchaLifecycle() {
+    if (initCaptchaLifecycle.__on || !window.captchaUtils || !captchaUtils.reloadCaptcha ||
+        !window.api || !api.getCookies) { return; }
+    if (!document.getElementsByClassName("captchaField").length) { return; }
+    initCaptchaLifecycle.__on = true;
+    var warnedFor = 0, freshenedFor = 0;
+    setInterval(function () {
+      try {
+        var fields = document.getElementsByClassName("captchaField");
+        if (!fields.length) { return; }
+        var c = api.getCookies();
+        if (!c.captchaexpiration) { return; }
+        var exp = new Date(c.captchaexpiration).getTime();
+        if (!exp) { return; }
+        var left = exp - Date.now();
+        if (left <= 1500 || left > 12500) { return; }   // native handles actual expiry
+        var typed = false;
+        for (var i = 0; i < fields.length; i++) { if (fields[i].value.trim()) { typed = true; break; } }
+        if (typed) {
+          if (warnedFor !== exp) {
+            warnedFor = exp;
+            toast("Captcha expires in " + Math.round(left / 1000) + "s — post now or it will reload", true);
+          }
+        } else if (freshenedFor !== exp && left <= 6500) {
+          freshenedFor = exp;
+          captchaUtils.reloadCaptcha();                 // silent early swap: nothing typed to lose
+        }
+      } catch (e) {}
+    }, 1000);
+  }
+
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
      "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
      worth my scroll" answer, always visible. Counts come straight from the
@@ -2306,7 +2344,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, hookFilterStubs, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

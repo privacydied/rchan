@@ -4762,6 +4762,79 @@
      site's own actions (settings, gallery, filter, backup…). Fuzzy match:
      substring beats subsequence, earlier beats later. ↑/↓ + Enter or click. */
   var pal = null, palInput = null, palListEl = null, palSel = 0, palResults = [], palBoards = null;
+  var palFixed = null;                                   // non-null: showing fixed results (cross-board search)
+  /* Cross-board deep search: on a site this size the client can afford what
+     big sites need servers for — fetch every board's catalog, then every
+     thread's JSON (cached per session), and match the term against every
+     post's subject/name/message/filenames. Results render in the palette
+     itself, deep-linking to the matching post. */
+  var xbCache = {};                                      // "board/threadId" -> parsed thread JSON
+  function xbText(p) {
+    return ((p.subject || "") + " " + (p.name || "") + " " + (p.message || "") + " " +
+            (p.files || []).map(function (f) { return f.originalName || ""; }).join(" ")).toLowerCase();
+  }
+  function xbMatch(d, term) {                            // -> {p, s} of the first matching post, or null
+    function snip(msg, from) {
+      var s = String(msg || "").replace(/\s+/g, " ").trim();
+      var start = Math.max(0, from - 30);
+      return (start ? "…" : "") + s.slice(start, start + 90);
+    }
+    if (xbText(d).indexOf(term) > -1) {
+      return { p: d.threadId, s: snip(d.message || d.subject, 0) };
+    }
+    var posts = d.posts || [];
+    for (var i = 0; i < posts.length; i++) {
+      if (xbText(posts[i]).indexOf(term) > -1) {
+        var idx = String(posts[i].message || "").toLowerCase().indexOf(term);
+        return { p: posts[i].postId, s: snip(posts[i].message, idx > -1 ? idx : 0) };
+      }
+    }
+    return null;
+  }
+  function searchAllBoards(term) {
+    var q = term.toLowerCase();
+    palFixed = [{ kind: "search", title: "Searching every board for “" + term + "”…", sub: "", fn: function () {}, keepOpen: true }];
+    palRender();
+    fetch("/boards.js?json=1").then(function (r) { return r.json(); }).then(function (res) {
+      var boards = ((res && res.data && res.data.boards) || []).slice(0, 12)
+        .map(function (b) { return b.boardUri; });
+      var hits = [], scanned = 0;
+      return Promise.all(boards.map(function (b) {
+        return fetch("/" + b + "/catalog.json").then(function (r) { return r.ok ? r.json() : []; }).then(function (list) {
+          return Promise.all((list || []).slice(0, 60).map(function (t) {
+            var key = b + "/" + t.threadId;
+            var get = xbCache[key] ? Promise.resolve(xbCache[key])
+              : fetch("/" + b + "/res/" + t.threadId + ".json")
+                  .then(function (r) { return r.ok ? r.json() : null; })
+                  .then(function (d) { if (d) { xbCache[key] = d; } return d; });
+            return get.then(function (d) {
+              if (!d) { return; }
+              scanned++;
+              var hit = xbMatch(d, q);
+              if (hit && hits.length < 30) {
+                hits.push({
+                  kind: "hit",
+                  title: "/" + b + "/ · " + ((d.subject || d.message || ("Thread " + t.threadId)).replace(/\s+/g, " ").trim().slice(0, 50)),
+                  sub: hit.s,
+                  url: "/" + b + "/res/" + t.threadId + ".html#" + hit.p
+                });
+              }
+            }).catch(function () {});
+          }));
+        }).catch(function () {});
+      })).then(function () {
+        var head = { kind: "search", keepOpen: true, fn: function () {},
+                     title: hits.length + " match" + (hits.length === 1 ? "" : "es") + " across " + boards.length + " board" + (boards.length === 1 ? "" : "s"),
+                     sub: scanned + " threads scanned" + (hits.length >= 30 ? " · capped at 30 results" : "") };
+        palFixed = [head].concat(hits);
+        palSel = hits.length ? 1 : 0;
+        palRender();
+      });
+    }).catch(function () {
+      palFixed = [{ kind: "search", title: "Search failed — couldn't reach the board list", sub: "", fn: function () {}, keepOpen: true }];
+      palRender();
+    });
+  }
   function fuzzyScore(q, s) {
     if (!q) { return 1; }
     s = s.toLowerCase();
@@ -4778,7 +4851,7 @@
   }
   function palUnescape(s) { var d = document.createElement("textarea"); d.innerHTML = s || ""; return d.value; }
   function palGo(entry) {
-    closePalette();
+    if (!entry.keepOpen) { closePalette(); }
     if (entry.fn) { entry.fn(); return; }
     if (entry.url) { location.href = entry.url; }
   }
@@ -4850,6 +4923,9 @@
   }
   function palRender() {
     var q = (palInput.value || "").trim().toLowerCase();
+    if (palFixed) {                                     // fixed results (cross-board search) until input changes
+      palResults = palFixed.slice();
+    } else {
     var src = pal.__sources || [];
     var scored = [];
     for (var i = 0; i < src.length; i++) {
@@ -4858,15 +4934,25 @@
     }
     if (q) { scored.sort(function (a, b) { return b.s - a.s || a.i - b.i; }); }
     palResults = scored.slice(0, 14).map(function (r) { return r.e; });
-    // no destination matches: fall through to a board-wide deep search for the query
+    // no destination matches: fall through to deep search — this board, then everywhere
     var pb = getBoard();
-    if (!palResults.length && q && pb && pb.charAt(0) !== "." && !isOverboard(pb)) {
-      palResults = [{
-        kind: "search",
-        title: "Search /" + pb + "/ for “" + palInput.value.trim() + "”",
-        sub: "deep search — matches inside every reply on the board",
-        fn: (function (term) { return function () { deepSearchFor(term); }; })(palInput.value.trim())
-      }];
+    if (!palResults.length && q) {
+      var raw = palInput.value.trim();
+      if (pb && pb.charAt(0) !== "." && !isOverboard(pb)) {
+        palResults.push({
+          kind: "search",
+          title: "Search /" + pb + "/ for “" + raw + "”",
+          sub: "deep search — matches inside every reply on the board",
+          fn: (function (term) { return function () { deepSearchFor(term); }; })(raw)
+        });
+      }
+      palResults.push({
+        kind: "search", keepOpen: true,
+        title: "Search all boards for “" + raw + "”",
+        sub: "cross-board deep search, results right here",
+        fn: (function (term) { return function () { searchAllBoards(term); }; })(raw)
+      });
+    }
     }
     palSel = Math.max(0, Math.min(palSel, palResults.length - 1));
     palListEl.innerHTML = "";
@@ -4906,7 +4992,7 @@
       box.appendChild(palInput); box.appendChild(palListEl);
       pal.appendChild(box);
       pal.addEventListener("click", function (e) { if (e.target === pal) { closePalette(); } });
-      palInput.addEventListener("input", function () { palSel = 0; palRender(); });
+      palInput.addEventListener("input", function () { palFixed = null; palSel = 0; palRender(); });
       palInput.addEventListener("keydown", function (e) {
         if (e.key === "Escape") { closePalette(); e.stopPropagation(); }
         else if (e.key === "ArrowDown") { palSel = Math.min(palResults.length - 1, palSel + 1); palPaint(); e.preventDefault(); }
@@ -4924,7 +5010,7 @@
       }).catch(function () {});
     }
     pal.style.display = "flex";
-    palInput.value = ""; palSel = 0;
+    palInput.value = ""; palSel = 0; palFixed = null;
     palRender();
     dialogOpened(pal, palInput);
   }

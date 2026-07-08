@@ -1131,11 +1131,12 @@
   function setFavBadge(n) {  // favicon.js exposes the badge compositor
     try { if (window.rchanSetFaviconBadge) { rchanSetFaviconBadge(n); } } catch (e) {}
   }
-  function bumpTitleUnread(n) {
-    unseenCount += n;
-    document.title = "(" + unseenCount + ") " + baseTitle;
+  function setTitleUnread(n) {                  // absolute count (board pages diff, not accumulate)
+    unseenCount = Math.max(0, n | 0);
+    document.title = unseenCount ? "(" + unseenCount + ") " + baseTitle : baseTitle;
     setFavBadge(unseenCount);
   }
+  function bumpTitleUnread(n) { setTitleUnread(unseenCount + n); }
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden && unseenCount) { unseenCount = 0; document.title = baseTitle; setFavBadge(0); }
   });
@@ -1620,13 +1621,14 @@
       return m;
     }
     function check() {
-      if (document.hidden) { return; }
       fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
         var cur = snapshot(list);
         if (!base) { base = cur; return; }
         var newThreads = 0;
         Object.keys(cur.threads).forEach(function (id) { if (!base.threads[id]) { newThreads++; } });
         var newPosts = Math.max(0, cur.total - base.total) - newThreads;
+        // hidden tab: board pages get the same "(N)" title + favicon badge threads have
+        if (document.hidden) { setTitleUnread(newThreads + newPosts); }
         if (newThreads <= 0 && newPosts <= 0) { if (pill) { pill.style.display = "none"; } return; }
         if (!pill) {
           pill = document.createElement("button");

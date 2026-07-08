@@ -1633,6 +1633,7 @@
     }
     renderYoubox();
     youboxPanel.style.display = "block";
+    dialogOpened(youboxPanel);
   }
 
   /* ---------- Recently visited threads: history panel (🕘 in the nav column) ----------
@@ -1754,6 +1755,7 @@
     }
     renderHist();
     histPanel.style.display = "block";
+    dialogOpened(histPanel);
     try { histPanel.scrollTop = parseInt(sessionStorage.getItem(HIST_SCROLL), 10) || 0; } catch (e) {}
   }
 
@@ -2913,7 +2915,7 @@
     box.style.width = cr.w + "px"; box.style.height = cr.h + "px";
   }
   function edClose() {
-    if (edPanel) { edPanel.style.display = "none"; }
+    if (edPanel && edPanel.style.display === "flex") { edPanel.style.display = "none"; dialogClosed(edPanel); }
     if (edState && edState.url) { URL.revokeObjectURL(edState.url); }
     edState = null;
   }
@@ -3012,6 +3014,7 @@
       edState = { file: file, chip: chip, img: b.img, url: b.url, rot: 0, crop: null, scale: 1 };
       edPanel.style.display = "flex";
       edRender();
+      dialogOpened(edPanel);
     }).catch(function () { toast("Couldn't open that image", true); });
   }
   function chipFile(chip) {                      // chip -> its File via position among siblings
@@ -3781,7 +3784,7 @@
       var ttl = document.createElement("span"); ttl.textContent = "Site settings";
       var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
       x.textContent = "×"; x.title = "Close"; x.setAttribute("aria-label", "Close settings");
-      x.addEventListener("click", function () { setPanel.style.display = "none"; });
+      x.addEventListener("click", function () { setPanel.style.display = "none"; dialogClosed(setPanel); });
       head.appendChild(ttl); head.appendChild(x);
       setPanel.appendChild(head);
       setPanel.appendChild(document.createElement("div"));       // rows container
@@ -3821,6 +3824,7 @@
     buildFilterSection(setPanel.children[2]);
     buildCssSection(setPanel.children[3]);
     setPanel.style.display = "block";
+    dialogOpened(setPanel);
   }
   /* "?" cheat-sheet overlay (works even with shortcuts toggled off) */
   var KEYS_LIST = [
@@ -3849,7 +3853,7 @@
       var ttl = document.createElement("span"); ttl.textContent = "Keyboard shortcuts";
       var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
       x.textContent = "×"; x.title = "Close"; x.setAttribute("aria-label", "Close shortcuts");
-      x.addEventListener("click", function () { keysOverlay.style.display = "none"; });
+      x.addEventListener("click", function () { keysOverlay.style.display = "none"; dialogClosed(keysOverlay); });
       head.appendChild(ttl); head.appendChild(x);
       box.appendChild(head);
       var list = document.createElement("div"); list.className = "rchan-keys-list";
@@ -3870,7 +3874,47 @@
       list2.appendChild(row);
     });
     keysOverlay.style.display = "flex";
+    dialogOpened(keysOverlay);
   }
+  /* ---------- Dialog focus management: trap Tab inside, restore on close ----------
+     Every overlay we ship (gallery, palette, action sheet, image editor,
+     settings, history, inbox, cheat-sheet) is a dialog; keyboard users must
+     not Tab out into the page behind it, and closing should hand focus back
+     to wherever they came from. Click-away closes deliberately DON'T restore
+     (the user just placed focus somewhere else). */
+  function dlgFocusables(panel) {
+    var sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.prototype.filter.call(panel.querySelectorAll(sel), function (el) {
+      return el.offsetParent !== null;
+    });
+  }
+  function trapDialog(panel) {
+    if (panel.__rchanTrap) { return; }
+    panel.__rchanTrap = true;
+    panel.addEventListener("keydown", function (e) {
+      if (e.key !== "Tab") { return; }
+      var f = dlgFocusables(panel);
+      if (!f.length) { e.preventDefault(); return; }
+      var first = f[0], last = f[f.length - 1], a = document.activeElement;
+      if (e.shiftKey && (a === first || a === panel)) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && a === last) { first.focus(); e.preventDefault(); }
+    });
+  }
+  function dialogOpened(panel, focusEl) {
+    trapDialog(panel);
+    panel.__opener = document.activeElement;
+    var target = focusEl || dlgFocusables(panel)[0] || panel;
+    try { target.focus({ preventScroll: true }); } catch (e) { try { target.focus(); } catch (e2) {} }
+  }
+  function dialogClosed(panel) {
+    if (!panel) { return; }
+    var op = panel.__opener;
+    panel.__opener = null;
+    if (op && document.contains(op)) {
+      try { op.focus({ preventScroll: true }); } catch (e) { try { op.focus(); } catch (e2) {} }
+    }
+  }
+
   /* ---------- Gallery mode: media-first fullscreen overlay (g) ----------
      The native gallery is desktop-only, image-only and bare (no filmstrip, no
      videos, no way back to the post). This one: current media centered, a
@@ -3974,7 +4018,7 @@
     if (!galOpen) { return; }
     galOpen = false;
     galStopMedia();
-    if (gal) { gal.style.display = "none"; }
+    if (gal) { gal.style.display = "none"; dialogClosed(gal); }
     document.documentElement.classList.remove("rchan-noscroll");
     var it = galItems[galIdx];
     if (jump && it && it.cell && document.contains(it.cell)) {
@@ -4041,6 +4085,7 @@
     });
     gal.style.display = "flex";
     galOpen = true;
+    dialogOpened(gal, gal.querySelector(".rchan-gal-x"));
     document.documentElement.classList.add("rchan-noscroll");
     var start = 0;
     if (typeof startIdx === "number") { start = startIdx; }
@@ -4196,7 +4241,7 @@
     var rows = palListEl.getElementsByClassName("rchan-pal-row");
     for (var i = 0; i < rows.length; i++) { rows[i].classList.toggle("rchan-pal-sel", i === palSel); }
   }
-  function closePalette() { if (pal) { pal.style.display = "none"; } }
+  function closePalette() { if (pal && pal.style.display === "flex") { pal.style.display = "none"; dialogClosed(pal); } }
   function openPalette() {
     if (!pal) {
       pal = document.createElement("div"); pal.id = "rchan-palette";
@@ -4229,7 +4274,7 @@
     pal.style.display = "flex";
     palInput.value = ""; palSel = 0;
     palRender();
-    palInput.focus();
+    dialogOpened(pal, palInput);
   }
   function onPaletteKey(e) {
     if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === "k" || e.key === "K")) {
@@ -4257,12 +4302,12 @@
     if (pal && pal.style.display === "flex") { closePalette(); return; }
     if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
-    if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; return; }
-    if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
+    if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; dialogClosed(youboxPanel); return; }
+    if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; dialogClosed(keysOverlay); return; }
     if (convRoot) { closeConv(); return; }
     if (findBar && findBar.style.display === "flex") { closeFind(); return; }
-    if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; return; }
-    if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
+    if (setPanel && setPanel.style.display === "block") { setPanel.style.display = "none"; dialogClosed(setPanel); return; }
+    if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; dialogClosed(histPanel); return; }
     if (kbCurEl && document.contains(kbCurEl)) {         // collapse the selected post's expanded image
       var inner = kbCurEl.querySelector(".innerPost, .innerOP");
       var exp = inner && inner.querySelector(".imgExpanded");
@@ -4328,7 +4373,7 @@
   }
   // Long-press action sheet
   var sheet = null, lpTimer = null, lpCell = null, lpArmed = false, lpSheetAt = 0, lpReleasedAt = 0;
-  function closeSheet() { if (sheet) { sheet.style.display = "none"; } }
+  function closeSheet() { if (sheet && sheet.style.display === "flex") { sheet.style.display = "none"; dialogClosed(sheet); } }
   function sheetBtn(label, fn) {
     var b = document.createElement("button");
     b.type = "button"; b.textContent = label;
@@ -4394,6 +4439,7 @@
     box.appendChild(cancel);
     sheet.appendChild(box);
     sheet.style.display = "flex";
+    dialogOpened(sheet, box.querySelector("button"));
     try { if (navigator.vibrate) { navigator.vibrate(10); } } catch (e) {}
   }
   function initLongPress() {

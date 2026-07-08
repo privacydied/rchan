@@ -94,6 +94,7 @@ services:
       - ./fe-overrides/ll-italic.woff2:/etc/nginx/rchan/ll-italic.woff2:ro
       - ./fe-overrides/ll-bold.woff2:/etc/nginx/rchan/ll-bold.woff2:ro
       - ./fe-overrides/ll-bolditalic.woff2:/etc/nginx/rchan/ll-bolditalic.woff2:ro
+      - ./fe-overrides/hedvig-serif.woff2:/etc/nginx/rchan/hedvig-serif.woff2:ro
       - ./fe-overrides/flags.json:/etc/nginx/rchan/flags.json:ro
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
       - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro

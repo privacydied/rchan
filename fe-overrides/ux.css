@@ -225,6 +225,17 @@ body #navLinkSpan { order: 2; }
 #rchan-threadstat .rchan-ts-seg { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
 #rchan-threadstat .rchan-ts-seg svg { display: block; flex: none; opacity: .7; }
 #rchan-threadstat .rchan-ts-dot { margin: 0 6px; opacity: .55; }
+/* mobile twin of the status line: in-flow strip under the OP (see mobile block) */
+#rchan-mstats {
+  display: none; flex-wrap: wrap; align-items: center; gap: 2px 0;
+  margin: 6px 4px; padding: 4px 8px;
+  font-size: x-small; font-weight: 700; opacity: .9;
+  background: #E6E6DA; border: 1px solid #CFCFC4;
+}
+#rchan-mstats .rchan-ts-seg { display: inline-flex; align-items: center; gap: 3px; }
+#rchan-mstats .rchan-ts-seg svg { display: block; flex: none; opacity: .7; }
+#rchan-mstats .rchan-ts-dot { margin: 0 5px; opacity: .55; }
+.theme_dark #rchan-mstats { background: #1f2126; border-color: #2c2f36; }
 /* lifecycle chips (bump limit / cyclic / page position) */
 .rchan-ts-chip, .rchan-flagchip {
   display: inline-block; padding: 0 6px; vertical-align: middle;
@@ -1602,8 +1613,10 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   .linkQuote, .linkReply, .linkName { padding: 3px 2px; display: inline-block; }
   /* header/nav wraps instead of overflowing */
   #dynamicHeader, nav { flex-wrap: wrap; }
-  /* the sticky status line eats a whole nav row on a phone — drop it */
+  /* the sticky status line eats a whole nav row on a phone — drop it; its
+     twin (#rchan-mstats) renders the same segments in-flow under the OP */
   #rchan-threadstat { display: none; }
+  #rchan-mstats { display: flex; }
   #rchan-nav button { width: 44px; height: 44px; line-height: 44px; } /* thumb-friendly */
   /* reply = the primary action: promote the pen to a red FAB */
   #rchan-nav button#rchan-penbtn { background: #c8102e; opacity: 1; }

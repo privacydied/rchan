@@ -303,7 +303,22 @@
         lastPage ? "On the board's last page — will prune soon" : "Catalog page " + threadFlags.page + " of " + threadFlags.maxPage,
         lastPage));
     }
-    el.innerHTML = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
+    var html = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');
+    el.innerHTML = html;
+    // Phones hide the nav status line (the nav has no room) — which meant a
+    // phone user saw NONE of the stats/lifecycle/presence layer. Render the
+    // same segments as an in-flow strip under the OP; CSS shows it ≤640px.
+    var mEl = document.getElementById("rchan-mstats");
+    if (!mEl) {
+      var op = document.querySelector(".innerOP");
+      if (op && op.parentNode) {
+        mEl = document.createElement("div");
+        mEl.id = "rchan-mstats";
+        mEl.setAttribute("aria-hidden", "true");     // duplicate of the nav line for small screens
+        op.parentNode.insertBefore(mEl, op.nextSibling);
+      }
+    }
+    if (mEl) { mEl.innerHTML = html; }
   }
 
   /* ---------- Sticky OP: keep the thread's context while scrolled deep ----------

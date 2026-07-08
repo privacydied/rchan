@@ -281,7 +281,9 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   order: 0; margin-right: auto; padding: 0 18px;
   font-size: x-small; font-weight: 700; opacity: .85;
   white-space: nowrap; align-self: center;
+  display: inline-flex; align-items: center; gap: 3px; cursor: default;
 }
+#rchan-sitestat-nav svg { display: block; flex: none; opacity: .7; }
 .rchan-sitedot {
   display: inline-block; width: 8px; height: 8px; border-radius: 50%;
   background: #2ea043; vertical-align: baseline; margin-right: 2px;

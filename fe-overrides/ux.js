@@ -2279,7 +2279,10 @@
         el2 = document.createElement("span"); el2.id = "rchan-sitestat-nav";
         nav.insertBefore(el2, document.getElementById("navOptionsSpan") || null);
       }
-      el2.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span> ' + escHtml(txt);
+      // icon form, matching the thread status line: "1 👤" + full sentence on hover
+      el2.setAttribute("data-tooltip", txt);
+      el2.setAttribute("aria-label", txt);
+      el2.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span>' + n + " " + TS_SVG.anon;
     }
   }
   function pingSitePresence() {

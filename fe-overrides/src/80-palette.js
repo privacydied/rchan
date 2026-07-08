@@ -108,6 +108,7 @@
     // actions (context-aware)
     add("action", "Site settings", "toggles, filters, custom CSS", toggleSetPanel);
     add("action", "Feature guide", "everything rchan does, in one page", toggleGuide);
+    add("action", "Report a bug / suggest a feature", "tell the admin what's broken or missing", openFeedback);
     add("action", "Keyboard shortcuts", "the ? cheat-sheet", toggleKeysOverlay);
     if (document.querySelector("a.imgLink, a.linkThumb")) {
       add("action", "Gallery mode", "every file on this page (g)", function () { openGallery(); });

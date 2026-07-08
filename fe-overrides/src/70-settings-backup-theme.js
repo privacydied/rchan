@@ -341,6 +341,20 @@
     document.documentElement.style.fontSize = TEXT_SIZES[v];
   }
 
+  /* ---------- Feedback lever: forty features, zero ways to say one is broken ----------
+     Point FEEDBACK_THREAD at a sticky meta thread ({ board, thread }) to send
+     feedback into the board itself (the QR is one tap away there); until one
+     exists it falls back to the contact page. This link is how we find out
+     which features earn their keep — from users instead of from guessing. */
+  var FEEDBACK_THREAD = null;                          // e.g. { board: "rdr", thread: 123 }
+  function openFeedback() {
+    if (FEEDBACK_THREAD && FEEDBACK_THREAD.board && FEEDBACK_THREAD.thread) {
+      location.href = "/" + FEEDBACK_THREAD.board + "/res/" + FEEDBACK_THREAD.thread;
+      return;
+    }
+    location.href = "/.static/pages/contact";
+  }
+
   var setPanel = null;
   function buildSetRow(row) {
     var lab = document.createElement("label"); lab.className = "rchan-set-row";
@@ -409,6 +423,7 @@
       foot.appendChild(restoreInput);
       foot.appendChild(setFootLink("Copy identity", copyIdentity));
       foot.appendChild(setFootLink("Paste identity", pasteIdentity));
+      foot.appendChild(setFootLink("Report a bug / suggest", openFeedback));
       setPanel.appendChild(foot);
       document.body.appendChild(setPanel);
       document.addEventListener("click", function (ev) {          // click-away closes

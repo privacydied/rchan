@@ -53,12 +53,17 @@
      last 90s. The count folds into updateThreadStat's line. */
   var presenceCount = 0, presenceTyping = 0, lastTypedAt = 0;
   function isTypingNow() { return Date.now() - lastTypedAt < 8000; }
+  // Presence id is per-BROWSER, not per-tab: localStorage (shared across a
+  // browser's tabs) instead of sessionStorage (a fresh id per tab), so opening
+  // several tabs no longer inflates the "N browsing" count into several people.
+  // On the apex the id is seeded from the board origin via the bridge (see
+  // initSitePresence) so the same person isn't double-counted across hosts.
   function presenceSid() {
     try {
-      var s = sessionStorage.getItem("rchan_sid");
+      var s = localStorage.getItem("rchan_sid");
       if (!s) {
         s = Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
-        sessionStorage.setItem("rchan_sid", s);
+        localStorage.setItem("rchan_sid", s);
       }
       return s;
     } catch (e) { return "sidfallback" + (Date.now() % 1e8); }
@@ -145,11 +150,24 @@
       }).catch(function () {});
   }
   function initSitePresence() {
-    pingSitePresence();
-    setInterval(pingSitePresence, 60000);
-    document.addEventListener("visibilitychange", function () {
-      if (!document.hidden) { pingSitePresence(); }
-    });
+    function start() {
+      pingSitePresence();
+      setInterval(pingSitePresence, 60000);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) { pingSitePresence(); }
+      });
+    }
+    // On the apex, adopt the board origin's presence id first (boardsStorage is
+    // a direct read on the board origin, so this only bridges on rchan.xyz) —
+    // otherwise the homepage tab and a board tab would count as two people.
+    if (typeof boardsStorage === "function" && !onBoardsOrigin()) {
+      boardsStorage(["rchan_sid"], function (v) {
+        try { if (v && v.rchan_sid) { localStorage.setItem("rchan_sid", v.rchan_sid); } } catch (e) {}
+        start();
+      });
+    } else {
+      start();
+    }
   }
 
   /* ---------- Live-update health: the thread says "live" — now it says "dead" too ----------

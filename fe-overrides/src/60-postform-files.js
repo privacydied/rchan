@@ -38,6 +38,22 @@
     timer = setTimeout(function () { finish({}); }, 4000);
     document.body.appendChild(frame);
   }
+  // Apply the board origin's chosen theme on the apex homepage. Caches it into
+  // this origin's localStorage so themeLoader.js applies it early on the NEXT
+  // apex load (only the first visit flashes). No-op on the board origin, where
+  // themeLoader already handles the theme natively.
+  function applyBridgedTheme(theme) {
+    if (onBoardsOrigin()) { return; }
+    try {
+      if (theme) { localStorage.setItem("selectedTheme", theme); }
+      else { localStorage.removeItem("selectedTheme"); }
+    } catch (e) {}
+    try {
+      document.documentElement.classList.toggle("predark", theme === "dark");
+      if (window.themeLoader && themeLoader.load) { themeLoader.load(); }
+      else if (theme) { document.body.className = "theme_" + theme; }
+    } catch (e2) {}
+  }
   function renderYourThreads(watchedRaw, youboxRaw) {
     if (document.getElementById("rchan-yours")) { return; }
     var base = onBoardsOrigin() ? "" : BOARDS_ORIGIN;   // apex chips point at the board host
@@ -98,7 +114,8 @@
     if (!/^\/(index\.html)?$/.test(location.pathname)) { return; }
     if (document.getElementById("rchan-yours") || buildYourThreads.__done) { return; }
     buildYourThreads.__done = true;                    // async on the apex — build once
-    boardsStorage(["watchedData", YOUBOX_KEY], function (v) {
+    boardsStorage(["watchedData", YOUBOX_KEY, "selectedTheme"], function (v) {
+      applyBridgedTheme(v.selectedTheme);              // match the user's board theme
       renderYourThreads(v.watchedData, v[YOUBOX_KEY]);
     });
   }

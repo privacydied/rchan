@@ -5,9 +5,10 @@
    EXACT COPY of 4chan's yotsubluenew.716.css structure & typography,
    re-palette'd to CREAM, with SQUARE offset shadows. Tokens:
 
-   - Base type: arial, helvetica, sans-serif @ 10pt. EVERYTHING is 10pt
-     except: meta text x-small (backlinks, subtitles, footer), page list
-     13px, board nav 13px, board title 28px Tahoma. All hardcoded.
+   - Base type: arial, helvetica, sans-serif @ .833rem (10pt at the 16px
+     browser default — rem so user font-size preferences scale the site).
+     Meta text x-small (backlinks, subtitles, footer), page list + board
+     nav .8125rem (13px), board title 1.75rem (28px) Tahoma.
    - Palette (cream mapping of yotsuba blue):
        page bg        #EEEEE4   (4chan #EEF2FF)
        cell bg        #E6E6DA   (4chan #D6DAF0)
@@ -30,7 +31,7 @@
 /* ---------- Base (yotsuba: body / links / hr / images) ---------- */
 html body {
   font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;
+  font-size: .833rem;
   color: #393939;
   background: #EEEEE4;   /* outranks global.css's body{#EEF2FF + fade-blue image} */
   margin-left: 0; margin-right: 0; margin-top: 5px;
@@ -55,11 +56,11 @@ body hr { border: none; border-top: 1px solid #CFCFC4; height: 0; }
 body .postInfo, body .opHead, body .divMessage, body .panelIp, body .panelProxyIp,
   body .contentOmissionIndicator, body .labelOmission, body .labelId,
   body .panelASN, body .panelBypassId,
-  body .panelUploads, body .opUploadPanel { font-size: 10pt; }
-body input, body select, body textarea { font-size: 10pt; }
-body #postingForm button, body #qrbutton { font-size: 10pt; }
+  body .panelUploads, body .opUploadPanel { font-size: .833rem; }
+body input, body select, body textarea { font-size: .833rem; }
+body #postingForm button, body #qrbutton { font-size: .833rem; }
 body #postingForm label, body .divRefresh label, body .divRefresh input,
-body .spoilerCheckbox, body #boardContentLinks { font-size: 10pt; }
+body .spoilerCheckbox, body #boardContentLinks { font-size: .833rem; }
 body .panelBacklinks { font-size: x-small; }                     /* 4chan .backlink */
 /* (catalog card sizes live in the catalog section below, 4chan-exact) */
 body .sideCatalogCell, body .small { font-size: x-small; }
@@ -80,7 +81,7 @@ body #rchan-bannerwrap + #catalogId { margin-top: .4em; }
 .boardHeader { text-align: center; clear: both; margin-top: 70px; }
 .boardHeader p#labelName, #catalogId {
   font-family: Tahoma, sans-serif;
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -2px;   /* 4chan boardTitle — exact copy */
   margin-top: 0;
@@ -90,8 +91,8 @@ body #rchan-bannerwrap + #catalogId { margin-top: .4em; }
    `#catalogId { margin: 1.5em 0 1em 0 }` at equal specificity — without the
    prefix this rule (and the old 70px one) never applied. */
 body #catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader on board/thread pages */
-#catalogId .title { font-family: inherit; font-size: 28px; }
-#labelBoard { font-size: 28px; font-family: inherit; }   /* "/board/" link in the catalog heading */
+#catalogId .title { font-family: inherit; font-size: 1.75rem; }
+#labelBoard { font-size: 1.75rem; font-family: inherit; }   /* "/board/" link in the catalog heading */
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }
 .theme_dark .boardHeader p#labelName, .theme_dark .boardHeader p#labelDescription,
 .theme_dark #catalogId { color: #c9ccd1; }
@@ -153,11 +154,11 @@ body #postingForm th {
   font-weight: 700;
   border: 1px solid #393939;
   padding: 0 5px;
-  font-size: 10pt;
+  font-size: .833rem;
 }
 /* page list (4chan div.pagelist: cell bg, right+bottom border, 13px) */
 body .pageLink, body #divPages a, body .pagesDiv a {
-  font-size: 13px;
+  font-size: .8125rem;
   background: #E6E6DA;
   border-right: 1px solid #CFCFC4;
   border-bottom: 1px solid #CFCFC4;
@@ -170,7 +171,7 @@ body .pageLink, body #divPages a, body .pagesDiv a {
    give the taller bar a real (auto) height, cream colours, and push the page
    content + side catalog down by the new ~42px so nothing sits underneath. */
 body nav, body #dynamicHeader {
-  font-size: 13px;
+  font-size: .8125rem;
   height: auto;
   box-sizing: border-box;      /* engine sets width:100%; without this the 6px
                                   side padding overflows the viewport -> h-scrollbar */
@@ -246,7 +247,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 
 /* ---------- Homepage: active threads strip ---------- */
 #rchan-active { text-align: center; margin: 14px auto 4px; max-width: 940px; }
-#rchan-active-head { font-weight: 700; font-size: 10pt; margin-bottom: 7px; }
+#rchan-active-head { font-weight: 700; font-size: .833rem; margin-bottom: 7px; }
 .rchan-active-cell {
   display: inline-flex; align-items: center; gap: 8px; text-align: left;
   margin: 4px; padding: 5px 10px 5px 5px; max-width: 285px;
@@ -269,7 +270,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 }
 #rchan-nav button {
   width: 40px; height: 40px; border: 0; cursor: pointer;
-  font-size: 18px; padding: 0;
+  font-size: 1.125rem; padding: 0;
   display: flex; align-items: center; justify-content: center;
   background: #274a6b; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .82; transition: opacity .12s ease;
@@ -295,7 +296,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Catalog last-replies hover preview (4chan-style) ---------- */
 #rchan-catprev {
   position: fixed; z-index: 10003; width: 360px; pointer-events: none;
-  display: none; text-align: left; font-size: 10pt;
+  display: none; text-align: left; font-size: .833rem;
   background: #EEEEE4; border: 1px solid #CFCFC4;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
   padding: 4px; max-height: 70vh; overflow: hidden;
@@ -324,10 +325,10 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .coloredIcon[data-tooltip] { cursor: pointer; }
 
 /* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
-#rchan-cattools { text-align: right; margin: 10px 8px 2px; font-size: 10pt; font-weight: 700; }
+#rchan-cattools { text-align: right; margin: 10px 8px 2px; font-size: .833rem; font-weight: 700; }
 #rchan-cattools label { margin: 0; }
 #rchan-cattools select { margin-left: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
-#divTools { text-align: center; margin: 4px 0 2px; font-size: 10pt; }
+#divTools { text-align: center; margin: 4px 0 2px; font-size: .833rem; }
 #divTools input[type=text] { padding: 3px 8px; margin: 0 4px; }
 #divTools #catalogRefreshButton { padding: 3px 10px; cursor: pointer; margin: 0 4px; font: inherit; }
 .theme_dark #divTools #catalogRefreshButton { background: #1f2126; color: #c9ccd1; border: 1px solid #333; }
@@ -362,7 +363,7 @@ body .catalogCell .linkThumb img {
 }
 body .catalogCell .threadStats {
   cursor: help;
-  font-size: 11px;
+  font-size: .6875rem;
   line-height: 8px;
   margin: 2px 0 1px;
 }
@@ -370,7 +371,7 @@ body .catalogCell .labelSubject, body .catalogCell .divMessage {
   display: block;
   padding: 0 15px;
   margin: 0;
-  font-size: 10pt;
+  font-size: .833rem;
 }
 body .catalogCell .labelSubject { font-weight: 700; }
 /* Size dropdown (4chan's small/large modes; large = default) */
@@ -394,7 +395,7 @@ body .catalogCell .labelSubject { font-weight: 700; }
   position: absolute; top: -8px; right: -11px;
   background: #c8102e; color: #fff !important;
   font-family: arial, helvetica, sans-serif;
-  font-size: 9px; font-weight: 700; line-height: 1;
+  font-size: .5625rem; font-weight: 700; line-height: 1;
   padding: 2px 4px;
   box-shadow: 1px 1px 0 rgba(0,0,0,.15);
   pointer-events: none;
@@ -525,7 +526,7 @@ body .floatingMenu, body .hideMenu, body .extraMenu, body #watchedMenu {
 body #watchedMenu {
   padding: 0; min-width: 260px; max-width: 340px; max-height: 60vh; overflow: auto;
   background: #EEEEE4; border: 1px solid #CFCFC4;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.18); font-size: 10pt;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); font-size: .833rem;
 }
 body #watchedMenu > label {
   display: block; cursor: move; user-select: none;
@@ -577,7 +578,7 @@ body #quick-reply th {
   position: sticky; top: 0; z-index: 2;
   background: #DCDCCF; border: none; border-bottom: 1px solid #CFCFC4;
   padding: 3px 8px; text-align: left;
-  font-size: 10pt; font-weight: 700; color: #393939;
+  font-size: .833rem; font-weight: 700; color: #393939;
 }
 body #quick-reply th .handle {
   float: none; width: auto;
@@ -585,7 +586,7 @@ body #quick-reply th .handle {
   flex-direction: row-reverse;   /* close-btn is the FIRST child -> send it right */
   user-select: none;
 }
-body #quick-reply th .close-btn { float: none; padding: 0 3px; font-size: 13px; cursor: pointer; }
+body #quick-reply th .close-btn { float: none; padding: 0 3px; font-size: .8125rem; cursor: pointer; }
 /* body cells get the #rchan-qr-body gutter */
 body #quick-reply td { padding: 2px 8px; }
 body #quick-reply tbody:last-child tr:last-child td { padding-bottom: 8px; }
@@ -616,7 +617,7 @@ body #quick-reply td.small:hover { color: #c8102e; }
 body #quick-reply #qrbutton {
   width: auto; margin: 4px auto 2px; padding: 3px 16px;
   border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer;
-  font: inherit; font-size: 10pt; font-weight: 700; color: #393939;
+  font: inherit; font-size: .833rem; font-weight: 700; color: #393939;
 }
 body #quick-reply #qrbutton:hover:not(:disabled) { background: #c8102e; color: #fff; border-color: #c8102e; }
 body #quick-reply #qrbutton:disabled { opacity: .6; cursor: default; }
@@ -653,7 +654,7 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 #rchan-youbtn {
   position: fixed; left: 12px; bottom: 12px; z-index: 9999;
   border: 0; cursor: pointer; padding: 8px 13px;
-  font: inherit; font-size: 10pt; font-weight: 700;
+  font: inherit; font-size: .833rem; font-weight: 700;
   background: #c8102e; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .9; transition: opacity .12s ease;
   display: inline-flex; align-items: center; gap: 6px;   /* svg icon + text */
@@ -666,7 +667,7 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
   display: block; width: -moz-fit-content; width: fit-content; margin: 6px auto; /* centered */
   padding: 3px 11px;
   border: 1px solid #CFCFC4; background: #E6E6DA; cursor: pointer; font: inherit;
-  font-size: 10pt; font-weight: 700;
+  font-size: .833rem; font-weight: 700;
 }
 #rchan-formtoggle:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #rchan-formtoggle { background: #262a31; color: #c9ccd1; border-color: #333; }
@@ -684,10 +685,10 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
   cursor: move; user-select: none;
   position: sticky; top: 0; z-index: 1;    /* stays visible when the box body scrolls */
   background: #DCDCCF; border-bottom: 1px solid #CFCFC4;
-  padding: 3px 8px; font-size: 10pt; font-weight: 700;
+  padding: 3px 8px; font-size: .833rem; font-weight: 700;
   display: flex; align-items: center; justify-content: space-between;
 }
-#rchan-qr-close { border: 0; background: none; cursor: pointer; font-size: 13px; font-weight: 700; padding: 0 3px; }
+#rchan-qr-close { border: 0; background: none; cursor: pointer; font-size: .8125rem; font-weight: 700; padding: 0 3px; }
 #rchan-qr-close:hover { color: #c8102e; }
 #rchan-qr-body { padding: 6px; }
 #rchan-qr #postingForm input[type=text], #rchan-qr #postingForm textarea { max-width: 100%; box-sizing: border-box; }
@@ -715,7 +716,7 @@ body.rchan-staff #noFlagDiv, body.rchan-staff #qrcheckboxNoFlag,
 body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 
 /* admin flag-override row (built only for authorized staff; server enforces) */
-#rchan-flagrow { margin: 4px 0; font-size: 10pt; font-weight: 700; }
+#rchan-flagrow { margin: 4px 0; font-size: .833rem; font-weight: 700; }
 #rchan-flagrow select { font: inherit; font-weight: 400; margin-left: 4px; max-width: 220px; }
 .rchan-fmtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0; }
 /* scoped under #postingForm/#quick-reply to beat the engine's "#postingForm button
@@ -737,7 +738,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-preview {
   display: none; box-sizing: border-box; width: 100%;
   margin: 4px 0; padding: 6px 8px; text-align: left;
-  font-size: 10pt; line-height: 1.35;
+  font-size: .833rem; line-height: 1.35;
   background: #EEEEE4; border: 1px dashed #CFCFC4;
   max-height: 40vh; overflow: auto;
   word-break: break-word; overflow-wrap: anywhere;
@@ -760,7 +761,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   width: auto !important; min-width: 0 !important; height: auto !important;
   margin: 0 !important; padding: 0 2px !important;
   border: 0; background: transparent; cursor: pointer;
-  font-size: 10pt !important; line-height: 1; opacity: .6; font-weight: 700;
+  font-size: .833rem !important; line-height: 1; opacity: .6; font-weight: 700;
 }
 #postingForm .rchan-filex:hover { opacity: 1; color: #c8102e; }
 
@@ -771,7 +772,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   display: none; overflow: auto;
   background: #EEEEE4; border: 1px solid #CFCFC4;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
-  font-size: 10pt;
+  font-size: .833rem;
 }
 .rchan-hist-head {
   position: sticky; top: 0; z-index: 1;
@@ -798,7 +799,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-hist-row .rchan-newbadge { margin-left: 0; flex: none; }
 .rchan-hist-x {
   border: 0; background: none; cursor: pointer; padding: 0 2px; flex: none;
-  font-size: 10pt; font-weight: 700; line-height: 1; opacity: .5;
+  font-size: .833rem; font-weight: 700; line-height: 1; opacity: .5;
 }
 .rchan-hist-x:hover { opacity: 1; color: #c8102e; }
 .rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .85; text-align: center; }
@@ -843,7 +844,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   display: none; overflow: auto;
   background: #EEEEE4; border: 1px solid #CFCFC4;
   box-shadow: 4px 4px 0 rgba(0,0,0,.18);
-  font-size: 10pt;
+  font-size: .833rem;
 }
 .rchan-set-head {
   position: sticky; top: 0; z-index: 1;
@@ -853,7 +854,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 .rchan-set-x {
   border: 0; background: none; cursor: pointer; padding: 0 3px;
-  font-size: 13px; font-weight: 700; line-height: 1;
+  font-size: .8125rem; font-weight: 700; line-height: 1;
 }
 .rchan-set-x:hover { color: #c8102e; }
 .rchan-set-row {
@@ -918,7 +919,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-keys-box {
   width: 340px; max-width: 92vw; max-height: 80vh; overflow: auto;
   background: #EEEEE4; border: 1px solid #CFCFC4;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.18); font-size: 10pt;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.18); font-size: .833rem;
 }
 .rchan-keys-list { padding: 4px 0; }
 .rchan-keys-row {
@@ -940,7 +941,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
   z-index: 10010; display: none; cursor: pointer;
   max-width: min(560px, 92vw);
-  background: #2e2e2e; color: #fdfdfb; font-size: 10pt; font-weight: 700;
+  background: #2e2e2e; color: #fdfdfb; font-size: .833rem; font-weight: 700;
   line-height: 1.35; padding: 8px 14px;
   border: 1px solid rgba(0,0,0,.15); box-shadow: 4px 4px 0 rgba(0,0,0,.18);
 }
@@ -959,7 +960,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #rchan-resume {
   position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
   z-index: 9998; cursor: pointer;
-  border: 0; padding: 7px 14px; font: inherit; font-size: 10pt; font-weight: 700;
+  border: 0; padding: 7px 14px; font: inherit; font-size: .833rem; font-weight: 700;
   background: #274a6b; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   display: inline-flex; align-items: center; gap: 6px;
   opacity: .92;
@@ -971,7 +972,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #rchan-newpill {
   position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
   z-index: 9999; display: none; cursor: pointer;
-  border: 0; padding: 7px 14px; font: inherit; font-size: 10pt; font-weight: 700;
+  border: 0; padding: 7px 14px; font: inherit; font-size: .833rem; font-weight: 700;
   background: #2ea043; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   align-items: center; gap: 6px;   /* svg icon + text (shown as inline-flex) */
 }
@@ -999,6 +1000,19 @@ a.rchan-inlined::after { content: " ▲"; font-size: x-small; }
   #divThreads .postCell { content-visibility: auto; contain-intrinsic-size: auto 140px; }
 }
 
+/* ---------- Keyboard focus: visible rings for tab users ----------
+   (mouse clicks don't match :focus-visible, so the Yotsuba look is
+   untouched for pointer use) */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid #274a6b !important; outline-offset: 2px;
+}
+.theme_dark a:focus-visible, .theme_dark button:focus-visible, .theme_dark input:focus-visible,
+.theme_dark select:focus-visible, .theme_dark textarea:focus-visible,
+.theme_dark [tabindex]:focus-visible {
+  outline-color: #9fc4e8 !important;
+}
+
 /* ---------- Reduced motion / spoilers / code ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1011,7 +1025,7 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 .divMessage code {
   display: block; margin: 6px 0; padding: 6px 8px;
   font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 10pt; line-height: 1.4; white-space: pre; overflow-x: auto;
+  font-size: .833rem; line-height: 1.4; white-space: pre; overflow-x: auto;
   background: #E6E6DA; border: 1px solid #CFCFC4;
 }
 .theme_dark .divMessage code { background: #0f1013; border-color: #2c2f36; color: #d7dae0; }
@@ -1032,10 +1046,10 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
-  /* 16px inputs: anything smaller makes iOS force-zoom the viewport on focus */
-  body input, body select, body textarea, #quick-reply textarea, #qrbody { font-size: 16px; }
+  /* 1rem (16px default) inputs: anything smaller makes iOS force-zoom on focus */
+  body input, body select, body textarea, #quick-reply textarea, #qrbody { font-size: 1rem; }
   /* message text is unreadable at 10pt arial on a phone; nothing else changes */
-  body .divMessage { font-size: 14px; line-height: 1.45; }
+  body .divMessage { font-size: .875rem; line-height: 1.45; }
   /* bigger, full-width Quick Reply so it's usable on phones */
   body #quick-reply { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; height: auto; resize: none; }
   #quick-reply table, #quick-reply #post-form-inner { width: 100% !important; }

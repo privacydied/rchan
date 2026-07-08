@@ -77,6 +77,7 @@
     function btn(html, title, fn) {
       var b = document.createElement("button");
       b.type = "button"; b.innerHTML = html; b.title = title;
+      b.setAttribute("aria-label", title);
       b.addEventListener("click", fn);
       wrap.appendChild(b);
       return b;
@@ -1158,6 +1159,7 @@
     if (!youBtn) {
       youBtn = document.createElement("button"); youBtn.id = "rchan-youbtn"; youBtn.type = "button";
       youBtn.title = "Jump to replies to your posts";
+      youBtn.setAttribute("aria-label", "Jump to replies to your posts");
       youBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg><span></span>';
       youBtn.addEventListener("click", function () {
         youIdx = (youIdx + 1) % youHits.length;
@@ -1254,6 +1256,7 @@
     if (histPanel && histPanel.style.display === "block") { histPanel.style.display = "none"; return; }
     if (!histPanel) {
       histPanel = document.createElement("div"); histPanel.id = "rchan-hist";
+      histPanel.setAttribute("role", "dialog"); histPanel.setAttribute("aria-label", "Recently visited threads");
       var head = document.createElement("div"); head.className = "rchan-hist-head";
       var ttl = document.createElement("span"); ttl.textContent = "Recent threads";
       var clr = document.createElement("button"); clr.type = "button"; clr.className = "rchan-hist-clear"; clr.textContent = "Clear";

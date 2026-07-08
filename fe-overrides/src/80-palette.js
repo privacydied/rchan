@@ -107,6 +107,7 @@
     }
     // actions (context-aware)
     add("action", "Site settings", "toggles, filters, custom CSS", toggleSetPanel);
+    add("action", "Feature guide", "everything rchan does, in one page", toggleGuide);
     add("action", "Keyboard shortcuts", "the ? cheat-sheet", toggleKeysOverlay);
     if (document.querySelector("a.imgLink, a.linkThumb")) {
       add("action", "Gallery mode", "every file on this page (g)", function () { openGallery(); });
@@ -283,6 +284,7 @@
     if (edPanel && edPanel.style.display === "flex") { edClose(); return; }
     if (sheet && sheet.style.display === "flex") { closeSheet(); return; }
     if (youboxPanel && youboxPanel.style.display === "block") { youboxPanel.style.display = "none"; dialogClosed(youboxPanel); return; }
+    if (guideOverlay && guideOverlay.style.display === "flex") { guideOverlay.style.display = "none"; dialogClosed(guideOverlay); return; }
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; dialogClosed(keysOverlay); return; }
     if (convRoot) { closeConv(); return; }
     if (findBar && findBar.style.display === "flex") { closeFind(); return; }

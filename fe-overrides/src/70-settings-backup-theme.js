@@ -390,6 +390,7 @@
       setPanel.appendChild(document.createElement("div"));       // filter manager container
       setPanel.appendChild(document.createElement("div"));       // custom CSS container
       var foot = document.createElement("div"); foot.className = "rchan-set-foot";
+      foot.appendChild(setFootLink("Feature guide", function () { setPanel.style.display = "none"; toggleGuide(); }));
       foot.appendChild(setFootLink("Keyboard shortcuts (?)", function () { setPanel.style.display = "none"; toggleKeysOverlay(); }));
       var eng = document.getElementById("settingsButton");        // native menu: filters / custom CSS / JS
       if (eng) {
@@ -466,6 +467,83 @@
     ["?", "This cheat-sheet"],
     ["Esc", "Close panels · collapse the expanded image"]
   ];
+  /* ---------- Feature guide: forty features deserve a manual ----------
+     The hint pill fires once and ? documents only keys — petnames, the
+     inbox, watch-from-catalog, work-safe mode and the rest were rediscovered
+     by accident or never. One curated overlay, grouped like the settings. */
+  var GUIDE = [
+    ["Reading", [
+      ["Gallery", "g or the 🖼 nav icon — fullscreen media with filmstrip, pinch-zoom, slideshow (s), download"],
+      ["Hover previews", "hover a thumbnail for full-size; hover a catalog card for its last replies"],
+      ["Inline quotes", "click any >>quote to embed the post; the ⇄ icon isolates one conversation"],
+      ["Find in thread", "f — live filter with id: name: file: subj: no: prefixes; funnels on ID pills"],
+      ["Long threads", "minimap on the right edge (your posts red, replies to you green) · sticky OP bar"],
+      ["Work-safe mode", "blur all media until hovered — toggle in settings or via Ctrl+K"]
+    ]],
+    ["Staying current", [
+      ["Auto-watch", "posting watches the thread; replies notify you (bell / settings opt-in)"],
+      ["(You) inbox", "✉ in the corner column — every reply to your posts, unread-tracked, cross-device via backup"],
+      ["Watch from catalog", "👁 on any card, or w with the keyboard selection"],
+      ["Connection dot", "green = live updates flowing; amber = paused, with a missed-posts pill on reconnect"],
+      ["History", "🕘 recent threads with unread counts; pruned threads marked \"gone\""]
+    ]],
+    ["Posting", [
+      ["Submit fast", "Ctrl+Enter posts; sage is a checkbox; the counter knows the board limit"],
+      ["Live preview", "Preview button renders the markup exactly as it will land"],
+      ["File privacy", "EXIF/GPS stripped in-browser by default; optional filename anonymizing; ✎ crops/rotates"],
+      ["Duplicate warning", "attaching a file already in the thread warns before you post"],
+      ["Delete own post", "hover your (You) posts for the del button — uses your stored password"]
+    ]],
+    ["Navigation", [
+      ["Command palette", "Ctrl+K — boards, threads, watched, history, actions, deep search everywhere"],
+      ["Keyboard", "j/k posts and catalog cards · Enter/e/w on the catalog · full list under ?"],
+      ["Deep search", "the \"deep\" checkbox on catalog search matches inside every reply"]
+    ]],
+    ["Identity", [
+      ["It's all local", "(You)s, watched, filters, names — this browser only; export it under settings"],
+      ["Move devices", "Copy identity / Paste identity in the settings footer — merge-safe"],
+      ["ID petnames", "✎ next to an ID pill names it locally; the name filters in find (id:)"],
+      ["Filters", "name/text/regex/filename/image-hash rules — 🚫 on any file row filters that image forever"],
+      ["Appearance", "themes + auto (OS), text size, custom CSS — all under ⚙"]
+    ]]
+  ];
+  var guideOverlay = null;
+  function toggleGuide() {
+    if (guideOverlay && guideOverlay.style.display === "flex") { guideOverlay.style.display = "none"; dialogClosed(guideOverlay); return; }
+    if (!guideOverlay) {
+      guideOverlay = document.createElement("div"); guideOverlay.id = "rchan-guide";
+      guideOverlay.setAttribute("role", "dialog"); guideOverlay.setAttribute("aria-label", "Feature guide");
+      var box = document.createElement("div"); box.className = "rchan-keys-box rchan-guide-box";
+      var head = document.createElement("div"); head.className = "rchan-set-head";
+      var ttl = document.createElement("span"); ttl.textContent = "Everything rchan does";
+      var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+      x.textContent = "×"; x.title = "Close"; x.setAttribute("aria-label", "Close the feature guide");
+      x.addEventListener("click", function () { guideOverlay.style.display = "none"; dialogClosed(guideOverlay); });
+      head.appendChild(ttl); head.appendChild(x);
+      box.appendChild(head);
+      var list = document.createElement("div"); list.className = "rchan-guide-list";
+      GUIDE.forEach(function (grp) {
+        var h = document.createElement("div"); h.className = "rchan-guide-h"; h.textContent = grp[0];
+        list.appendChild(h);
+        grp[1].forEach(function (row) {
+          var r = document.createElement("div"); r.className = "rchan-guide-row";
+          var term = document.createElement("span"); term.className = "rchan-guide-term"; term.textContent = row[0];
+          var desc = document.createElement("span"); desc.className = "rchan-guide-desc"; desc.textContent = row[1];
+          r.appendChild(term); r.appendChild(desc);
+          list.appendChild(r);
+        });
+      });
+      box.appendChild(list);
+      guideOverlay.appendChild(box);
+      guideOverlay.addEventListener("click", function (e) {
+        if (e.target === guideOverlay) { guideOverlay.style.display = "none"; }
+      });
+      document.body.appendChild(guideOverlay);
+    }
+    guideOverlay.style.display = "flex";
+    dialogOpened(guideOverlay);
+  }
+
   var keysOverlay = null;
   function toggleKeysOverlay() {
     if (keysOverlay && keysOverlay.style.display === "flex") { keysOverlay.style.display = "none"; return; }
@@ -497,6 +575,14 @@
       row.appendChild(kbd); row.appendChild(lbl);
       list2.appendChild(row);
     });
+    var more = document.createElement("a");                       // keys are a tenth of it
+    more.href = "#"; more.className = "rchan-keys-more"; more.textContent = "Full feature guide →";
+    more.addEventListener("click", function (e) {
+      e.preventDefault();
+      keysOverlay.style.display = "none";
+      toggleGuide();
+    });
+    list2.appendChild(more);
     keysOverlay.style.display = "flex";
     dialogOpened(keysOverlay);
   }

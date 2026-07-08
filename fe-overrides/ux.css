@@ -264,12 +264,12 @@ body #navLinkSpan { order: 2; }
    Brutalist/Academia keep their own nav treatments. =========================== */
 body.theme_cream nav, body.theme_cream #dynamicHeader,
 html.rchan-warmdark nav, html.rchan-warmdark #dynamicHeader {
-  min-height: 40px; align-items: center !important; gap: 6px;
+  min-height: 40px; align-items: center !important;
 }
 body.theme_cream, html.rchan-warmdark body { margin-top: 42px; }  /* clear the 40px bar */
 /* the icon container is a flex row; gap owns spacing between its items */
 body.theme_cream #navLinkSpan, html.rchan-warmdark #navLinkSpan {
-  display: inline-flex !important; align-items: center; gap: 6px;
+  display: inline-flex !important; align-items: center;
 }
 /* every clickable in the right cluster → identical 28x28 centered box */
 body.theme_cream #navLinkSpan > a.coloredIcon,

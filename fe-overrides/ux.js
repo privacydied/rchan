@@ -1016,9 +1016,14 @@
     var posts = document.querySelectorAll(".postCell, .opCell");
     youHits = [];
     for (var i = 0; i < posts.length; i++) {
-      if (set[postIdOf(posts[i])]) { continue; }                    // skip your own posts
-      var qs = posts[i].getElementsByClassName("quoteLink");
+      // Scope to the cell's OWN message container: the opCell CONTAINS every
+      // reply postCell (.divPosts), so scanning the whole cell counted each
+      // reply's quotes AGAIN for the OP — inflating the count.
+      var inner = posts[i].querySelector(".innerPost, .innerOP, .markedPost");
+      if (!inner || set[postId(inner)]) { continue; }               // missing / your own post
+      var qs = inner.getElementsByClassName("quoteLink");
       for (var j = 0; j < qs.length; j++) {
+        if (qs[j].closest && qs[j].closest(".rchan-inline-quote")) { continue; }  // embedded copy, not this post's quote
         var m = (qs[j].getAttribute("href") || "").match(/(\d+)\s*$/) || (qs[j].textContent || "").match(/(\d+)/);
         if (m && set[m[1]]) { youHits.push(posts[i]); break; }
       }
@@ -1266,11 +1271,20 @@
           ttl.textContent = "/" + t.__b + "/ · " + label.slice(0, 60);
           var meta = document.createElement("span"); meta.className = "rchan-active-meta";
           var bump = Date.parse(t.lastBump) || 0;
+          meta.setAttribute("data-ts", bump);
+          meta.setAttribute("data-r", t.postCount || 0);
           meta.textContent = (t.postCount || 0) + " replies" + (bump ? " · " + fmtAgo(bump) + " ago" : "");
           txt.appendChild(ttl); txt.appendChild(meta); a.appendChild(txt);
           box.appendChild(a);
         });
         anchor.parentNode.insertBefore(box, anchor.nextSibling);
+        setInterval(function () {                        // live time-ago ticker
+          var metas = box.getElementsByClassName("rchan-active-meta");
+          for (var i = 0; i < metas.length; i++) {
+            var ts = parseInt(metas[i].getAttribute("data-ts"), 10);
+            if (ts) { metas[i].textContent = metas[i].getAttribute("data-r") + " replies · " + fmtAgo(ts) + " ago"; }
+          }
+        }, 30000);
       });
     }).catch(function () {});
   }

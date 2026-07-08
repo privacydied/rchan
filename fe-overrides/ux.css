@@ -412,6 +412,23 @@ body .catalogCell .labelSubject { font-weight: 700; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
+/* ---------- Work-safe mode: media blurred until hovered ---------- */
+body.rchan-ws .imgLink img, body.rchan-ws .linkThumb img, body.rchan-ws .imgExpanded,
+body.rchan-ws video:not(#rchan-vidzoom), body.rchan-ws #rchan-banner,
+body.rchan-ws .dragAndDropThumb, body.rchan-ws .rchan-active-cell img,
+body.rchan-ws .rchan-gal-thumb img, body.rchan-ws .flagPreview {
+  filter: blur(12px); transition: filter .12s ease;
+}
+body.rchan-ws .imgLink img:hover, body.rchan-ws .linkThumb img:hover,
+body.rchan-ws .imgExpanded:hover, body.rchan-ws video:hover,
+body.rchan-ws #rchan-banner:hover, body.rchan-ws .dragAndDropThumb:hover,
+body.rchan-ws .rchan-active-cell img:hover, body.rchan-ws .rchan-gal-thumb img:hover {
+  filter: none;
+}
+/* deliberate viewing surfaces stay clear: gallery main stage + hover pop-outs */
+body.rchan-ws .rchan-gal-main img, body.rchan-ws .rchan-gal-main video,
+body.rchan-ws #rchan-zoom { filter: none; }
+
 /* ---------- Catalog: dim threads you've already read ---------- */
 .catalogCell.rchan-visited { opacity: .5; transition: opacity .15s ease; }
 .catalogCell.rchan-visited:hover { opacity: 1; }

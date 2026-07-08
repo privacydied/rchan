@@ -3498,6 +3498,9 @@
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
+    { t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
+      get: function () { return setOn("wsmode", false); },
+      set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
     { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
@@ -3697,6 +3700,10 @@
         if (orig) { return orig.apply(this, arguments); }
       };
     }
+  }
+  /* ---------- Work-safe mode: blur all media until hovered ---------- */
+  function applyWorkSafe() {
+    try { document.body.classList.toggle("rchan-ws", setOn("wsmode", false)); } catch (e) {}
   }
   /* ---------- Custom CSS (settings panel; bridges the native customCSS key) ---------- */
   function applyCustomCss() {
@@ -4110,6 +4117,10 @@
       add("action", "Expand all images", "this thread (e per post)", function () { setExpandAll(!expandAllOn); });
     }
     add("action", "Replies to you", "the (You) inbox" + (youboxUnread() ? " — " + youboxUnread() + " unread" : ""), toggleYoubox);
+    add("action", (setOn("wsmode", false) ? "Disable" : "Enable") + " work-safe mode", "blur all media until hovered", function () {
+      setPut("wsmode", !setOn("wsmode", false)); applyWorkSafe();
+      okToast("Work-safe mode " + (setOn("wsmode", false) ? "on" : "off"));
+    });
     add("action", "Recent threads panel", "history (🕘)", toggleHistPanel);
     add("action", "Backup my rchan data", "download a merge-safe JSON", exportData);
     add("action", "Home", "front page", "/");
@@ -4552,7 +4563,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, initFirstVisitHint
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

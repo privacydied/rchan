@@ -189,6 +189,7 @@ body #navLinkSpan { order: 2; }
    landing it ~centered */
 #rchan-threadstat {
   order: 0; margin-right: auto;
+  padding: 0 18px;   /* guaranteed gap to the nav clusters even when the flex auto-margins collapse */
   font-size: x-small; font-weight: 700; opacity: .75;
   white-space: nowrap; align-self: center;
 }
@@ -531,6 +532,11 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
 /* ---------- Gallery lightbox ---------- */
 .modalPanel { backdrop-filter: blur(2px); }
 .galleryImage { max-width: 92vw; max-height: 86vh; box-shadow: 4px 4px 0 rgba(0,0,0,.18); }
+
+/* ---------- j/k keyboard post navigation: current-post marker ---------- */
+.rchan-kbcur > .innerPost, .rchan-kbcur > .innerOP, .rchan-kbcur > .markedPost {
+  outline: 2px solid rgba(200,16,46,.45); outline-offset: 2px;
+}
 
 /* ---------- New-since-last-visit + replies-to-you ---------- */
 .postCell.rchan-new .innerPost { box-shadow: inset 3px 0 0 #2ea043, 2px 2px 0 rgba(0,0,0,.1) !important; }

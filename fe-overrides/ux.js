@@ -525,11 +525,42 @@
     var t = e.target, g = t && t.tagName;
     return g === "INPUT" || g === "TEXTAREA" || g === "SELECT" || (t && t.isContentEditable);
   }
+  // j/k: step through posts (vim-style). First press selects the post at the
+  // top of the viewport; after that, steps from the selection — unless you
+  // scrolled it offscreen, in which case it re-syncs to where you're looking.
+  var kbCurEl = null;
+  function kbSelect(el) {
+    if (kbCurEl && kbCurEl.classList) { kbCurEl.classList.remove("rchan-kbcur"); }
+    kbCurEl = el;
+    el.classList.add("rchan-kbcur");
+    try { el.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {}
+  }
+  function navPosts(dir) {
+    var list = Array.prototype.slice.call(document.querySelectorAll(".opCell, .postCell"));
+    if (!list.length) { return; }
+    var idx = -1;
+    if (kbCurEl && document.contains(kbCurEl)) {
+      var r = kbCurEl.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < window.innerHeight) { idx = list.indexOf(kbCurEl); }
+    }
+    if (idx < 0) {                                       // no live selection: sync to viewport
+      for (var i = 0; i < list.length; i++) {
+        var rr = list[i].getBoundingClientRect();
+        if (rr.bottom > 60) { idx = i; break; }          // first post not scrolled past
+      }
+      if (idx < 0) { idx = list.length - 1; }
+      kbSelect(list[idx]);                               // first press = select, don't step
+      return;
+    }
+    kbSelect(list[Math.max(0, Math.min(list.length - 1, idx + dir))]);
+  }
   function onKey(e) {
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) { return; }
     if (e.key === "t") { window.scrollTo({ top: 0, behavior: SB }); }
     else if (e.key === "b") { window.scrollTo({ top: document.body.scrollHeight, behavior: SB }); }
     else if (e.key === "c") { toggleCatalog(); }
+    else if (e.key === "j") { navPosts(1); e.preventDefault(); }
+    else if (e.key === "k") { navPosts(-1); e.preventDefault(); }
     else if (e.key === "r") {
       var m = document.querySelector("#qrbody, #fieldMessage, textarea[name=message]");
       if (m) { m.focus(); e.preventDefault(); }

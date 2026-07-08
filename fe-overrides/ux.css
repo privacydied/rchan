@@ -190,7 +190,7 @@ body #navLinkSpan { order: 2; }
 #rchan-threadstat {
   order: 0; margin-right: auto;
   padding: 0 18px;   /* guaranteed gap to the nav clusters even when the flex auto-margins collapse */
-  font-size: x-small; font-weight: 700; opacity: .75;
+  font-size: x-small; font-weight: 700; opacity: .85;
   white-space: nowrap; align-self: center;
 }
 html body { margin-top: 36px; }              /* clear the fixed nav */
@@ -277,7 +277,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .rchan-catprev-name { color: #3a6b2e; font-weight: 700; }
 .rchan-catprev-id { color: #393939; font-size: x-small; }
 .rchan-catprev-msg { margin: 2px 0 1px; word-break: break-word; overflow-wrap: anywhere; max-height: 6em; overflow: hidden; }
-.rchan-catprev-empty { padding: 4px 6px; font-size: x-small; opacity: .8; }
+.rchan-catprev-empty { padding: 4px 6px; font-size: x-small; opacity: .85; }
 .theme_dark #rchan-catprev { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-catprev-post { background: #1f2126; border-color: #2c2f36; }
 .theme_dark .rchan-catprev-id { color: #c9ccd1; }
@@ -372,6 +372,21 @@ body.rchan-view-index .catalogCell .divMessage { max-height: 8em; overflow: hidd
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
+/* ---------- Watcher unread badge (native counter, restyled) ----------
+   watcher.js appends a <span> counter to #watcherButton and fills it only
+   when watched threads have new replies — style the non-empty state as a
+   red corner badge. */
+#watcherButton { position: relative; }
+#watcherButton span:not(:empty) {
+  position: absolute; top: -8px; right: -11px;
+  background: #c8102e; color: #fff !important;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 9px; font-weight: 700; line-height: 1;
+  padding: 2px 4px;
+  box-shadow: 1px 1px 0 rgba(0,0,0,.15);
+  pointer-events: none;
+}
+
 /* ---------- Icons legibility per theme ---------- */
 .theme_dark .coloredIcon, .theme_dark .unhideButton, .theme_dark .embedButton,
 .theme_dark #showFormsButton, .theme_dark #favouriteButton, .theme_dark .watchButton {
@@ -433,7 +448,7 @@ body.theme_dark .markedPost {
 }
 
 /* ---------- Reverse image search links (file rows) ---------- */
-.rchan-ris { font-size: x-small; margin-left: 6px; opacity: .75; white-space: nowrap; }
+.rchan-ris { font-size: x-small; margin-left: 6px; opacity: .85; white-space: nowrap; }
 .rchan-ris:hover { opacity: 1; }
 .rchan-ris a { text-decoration: none; }
 
@@ -509,7 +524,7 @@ body #quick-reply .reloadCaptchaButton {
 }
 body #quick-reply .reloadCaptchaButton:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 /* captcha countdown (native, seconds until expiry+auto-reload): quiet meta text */
-.captchaTimer { font-size: x-small; opacity: .7; margin-left: 6px; }
+.captchaTimer { font-size: x-small; opacity: .85; margin-left: 6px; }
 /* "Extra" / mobile "Files" / "Captcha" reveal rows read as links */
 body #quick-reply td.small { color: #274a6b; cursor: pointer; font-weight: 700; }
 body #quick-reply td.small:hover { color: #c8102e; }
@@ -628,7 +643,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 #postingForm .rchan-fmtbar button:hover, #quick-reply .rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #postingForm .rchan-fmtbar button, .theme_dark #quick-reply .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
-.rchan-charcount { margin-left: auto; font-size: x-small; opacity: .7; }
+.rchan-charcount { margin-left: auto; font-size: x-small; opacity: .85; }
 #postingForm.rchan-dragover { outline: 2px dashed #c8102e; outline-offset: 3px; }
 .rchan-filetray { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rchan-filechip {
@@ -678,14 +693,14 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rchan-hist-meta { font-size: x-small; opacity: .7; flex: none; }
+.rchan-hist-meta { font-size: x-small; opacity: .85; flex: none; }
 .rchan-hist-row .rchan-newbadge { margin-left: 0; flex: none; }
 .rchan-hist-x {
   border: 0; background: none; cursor: pointer; padding: 0 2px; flex: none;
   font-size: 10pt; font-weight: 700; line-height: 1; opacity: .5;
 }
 .rchan-hist-x:hover { opacity: 1; color: #c8102e; }
-.rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .8; text-align: center; }
+.rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .85; text-align: center; }
 .theme_dark #rchan-hist { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-hist-head { background: #262a31; border-color: #2c2f36; }
 .theme_dark .rchan-hist-row { border-color: #2c2f3666; }
@@ -732,7 +747,7 @@ a.rchan-inlined { font-weight: 700; }
 a.rchan-inlined::after { content: " ▲"; font-size: x-small; }
 
 /* ---------- Relative timestamps ("(14 minutes ago)" next to the date) ---------- */
-.relativeTime { font-size: x-small; opacity: .72; }
+.relativeTime { font-size: x-small; opacity: .85; }
 
 /* ---------- Long-thread rendering: skip offscreen posts ---------- */
 @supports (content-visibility: auto) {

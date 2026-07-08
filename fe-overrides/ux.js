@@ -668,8 +668,11 @@
     }
     s.forEach(function (c) { t.appendChild(c); });             // appendChild moves existing nodes → reorders
   }
-  function mkSelect(id, modes, names, cur, onChange) {
+  function mkSelect(id, label, modes, names, cur, onChange) {
     var s = document.createElement("select"); s.id = id;
+    var head = document.createElement("option");         // greyed-out label inside the dropdown
+    head.textContent = label; head.disabled = true;
+    s.appendChild(head);
     for (var i = 0; i < modes.length; i++) {
       var o = document.createElement("option"); o.value = modes[i]; o.textContent = names[modes[i]];
       if (modes[i] === cur) { o.selected = true; } s.appendChild(o);
@@ -687,13 +690,9 @@
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
-    var s1 = mkSelect("rchan-catsort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); });
-    s1.insertBefore(document.createTextNode("Index Sort "), s1.firstChild);
-    var s2 = mkSelect("rchan-catsize", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); });
-    s2.insertBefore(document.createTextNode("Size "), s2.firstChild);
-    var s3 = mkSelect("rchan-catview", VIEW_MODES, VIEW_NAMES, curView, function (v) { localStorage.setItem(VIEW_KEY, v); applyCatView(v); });
-    s3.insertBefore(document.createTextNode("View "), s3.firstChild);
-    bar.appendChild(s1); bar.appendChild(s2); bar.appendChild(s3);
+    bar.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
+    bar.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
+    bar.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, curView, function (v) { localStorage.setItem(VIEW_KEY, v); applyCatView(v); }));
     threads.parentNode.insertBefore(bar, threads);
   }
   // prefetch a thread page when hovering its catalog cell (snappier open)
@@ -1553,7 +1552,13 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); }, 80); }
+  // native watcher renders its unread count as "(3)" text — strip the parens
+  // so the CSS badge (#watcherButton span) reads as a clean red counter
+  function tidyWatcherBadge() {
+    var wc = document.querySelector("#watcherButton span");
+    if (wc && wc.textContent.indexOf("(") > -1) { wc.textContent = wc.textContent.replace(/[()]/g, ""); }
+  }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.

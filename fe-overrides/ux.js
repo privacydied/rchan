@@ -1317,6 +1317,41 @@
     };
   }
 
+  /* ---------- Rotating board banners ----------
+     LynxChan serves /randomBanner.js?boardUri=x (302 to a random uploaded
+     banner, or to /defaultBanner.png when the board has none — in which
+     case we render NOTHING rather than the engine's stock art). Click the
+     banner to roll another. Upload banners per-board via board management. */
+  function buildBanner() {
+    if (!setOn("banners")) { return; }
+    var b = getBoard();
+    if (!b || b.charAt(0) === "." || document.getElementById("rchan-bannerwrap")) { return; }
+    var anchor = document.querySelector(".boardHeader, #catalogId");
+    if (!anchor) { return; }
+    var url = "/randomBanner.js?boardUri=" + encodeURIComponent(b);
+    fetch(url).then(function (r) {
+      if (!r.ok || /defaultBanner/.test(r.url || "")) { return; }
+      if (document.getElementById("rchan-bannerwrap")) { return; }
+      var img = document.createElement("img");
+      img.id = "rchan-banner";
+      img.alt = "/" + b + "/ banner";
+      img.src = r.url;
+      img.setAttribute("data-tooltip", "Another banner");
+      img.addEventListener("click", function () {
+        fetch(url + "&r=" + Date.now()).then(function (r2) {
+          if (r2.ok && !/defaultBanner/.test(r2.url || "")) { img.src = r2.url; }
+        }).catch(function () {});
+      });
+      img.addEventListener("error", function () {
+        var w = document.getElementById("rchan-bannerwrap");
+        if (w && w.parentNode) { w.parentNode.removeChild(w); }
+      });
+      var wrap = document.createElement("div"); wrap.id = "rchan-bannerwrap";
+      wrap.appendChild(img);
+      anchor.parentNode.insertBefore(wrap, anchor);
+    }).catch(function () {});
+  }
+
   /* ---------- Per-thread scroll resume ----------
      Jump-to-new answers "what's unread"; this answers "where was I".
      Last scroll position is saved per thread (only after a real user
@@ -2247,6 +2282,7 @@
     { k: "keys", t: "Keyboard shortcuts", d: "j/k posts · t/b top/bottom · c catalog · r reply — press ? for the full list" },
     { k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
+    { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { t: "Relative timestamps", d: "“14 minutes ago” next to post dates",
       get: function () { try { return JSON.parse(localStorage.relativeTime || "true"); } catch (e) { return true; } },
       set: function (on) {
@@ -2447,7 +2483,7 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildActiveThreads
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, buildActiveThreads
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

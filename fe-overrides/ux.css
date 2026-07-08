@@ -1006,6 +1006,15 @@ body.theme_brutalist .innerOP { border: 3px solid #000 !important; }
 body.theme_brutalist .innerPost { border: 2px solid #000 !important; }
 body.theme_brutalist .uploadCell, body.theme_brutalist .opUploadPanel { border: 0 !important; padding: 0 !important; }
 
+/* --- catalog last-replies hover preview: brutalize the inner rows (box already done) --- */
+body.theme_brutalist .rchan-catprev-post {
+  background: #fff !important; color: #000 !important;
+  border: 2px solid #000 !important; border-left: 2px solid #000 !important; border-top: 2px solid #000 !important;
+}
+body.theme_brutalist .rchan-catprev-name { color: #000 !important; font-family: var(--brutal-sans) !important; }
+body.theme_brutalist .rchan-catprev-id { color: #000 !important; font-family: var(--brutal-mono) !important; }
+body.theme_brutalist .rchan-catprev-msg, body.theme_brutalist .rchan-catprev-empty { color: #000 !important; }
+
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
    '(Show file)'). Replace with currentColor mask icons — external-link,

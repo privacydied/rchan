@@ -1398,6 +1398,31 @@
     ta.focus(); ta.setSelectionRange(ls, ls + rep.length);
     ta.dispatchEvent(new Event("input", { bubbles: true }));
   }
+  /* ---------- Live post preview ----------
+     Client-side re-render of LynxChan's markup ('''b''' ''i'' **sp** ~~s~~
+     ==red== [code] >green >>123 URLs) so what you see before posting is what
+     lands. Reuses the site's real content classes (greenText, spoiler,
+     quoteLink…) so the preview inherits every theme automatically. */
+  function renderMarkup(src) {
+    var esc = escHtml(src);
+    var codes = [];                                              // protect [code] bodies from inline markup
+    esc = esc.replace(/\[code\]([\s\S]*?)\[\/code\]/gi, function (m, body) {
+      codes.push(body); return "\u0000C" + (codes.length - 1) + "\u0000";
+    });
+    esc = esc
+      .replace(/'''([\s\S]+?)'''/g, "<strong>$1</strong>")
+      .replace(/''([\s\S]+?)''/g, "<em>$1</em>")
+      .replace(/\*\*([\s\S]+?)\*\*/g, '<span class="spoiler">$1</span>')
+      .replace(/~~([\s\S]+?)~~/g, "<s>$1</s>")
+      .replace(/==([^\n=]+?)==/g, '<span class="redText">$1</span>')
+      .replace(/&gt;&gt;&gt;\/(\w+)\/(\d*)/g, '<span class="quoteLink">&gt;&gt;&gt;/$1/$2</span>')
+      .replace(/&gt;&gt;(\d+)/g, '<span class="quoteLink">&gt;&gt;$1</span>')
+      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    esc = esc.split("\n").map(function (l) {
+      return /^&gt;(?!&gt;)/.test(l) ? '<span class="greenText">' + l + "</span>" : l;
+    }).join("<br>");
+    return esc.replace(/\u0000C(\d+)\u0000/g, function (m, i) { return "<code>" + codes[+i] + "</code>"; });
+  }
   // Formatting toolbar for a message textarea (main post form + quick reply).
   function buildFmtBar(msg) {
     var bar = document.createElement("div"); bar.className = "rchan-fmtbar";
@@ -1413,8 +1438,31 @@
     });
     var qb = document.createElement("button"); qb.type = "button"; qb.textContent = ">"; qb.title = "Greentext";
     qb.addEventListener("click", function (ev) { ev.preventDefault(); prefixLines(msg, ">"); }); bar.appendChild(qb);
+    // live preview toggle: rendered pane right under the textarea
+    var pvBox = null;
+    var pv = document.createElement("button"); pv.type = "button"; pv.textContent = "Preview";
+    pv.title = "Live preview of the rendered post";
+    pv.setAttribute("aria-pressed", "false");
+    function pvUpdate() {
+      if (!pvBox || pvBox.style.display === "none") { return; }
+      var v = msg.value;
+      pvBox.innerHTML = v.trim() ? renderMarkup(v) : '<span class="rchan-pv-empty">Nothing to preview yet</span>';
+    }
+    pv.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (!pvBox) {
+        pvBox = document.createElement("div"); pvBox.className = "rchan-preview";
+        msg.parentNode.insertBefore(pvBox, msg.nextSibling);
+      }
+      var show = pvBox.style.display === "none" || !pvBox.firstChild;
+      pvBox.style.display = show ? "block" : "none";
+      pv.classList.toggle("rchan-pvon", show);
+      pv.setAttribute("aria-pressed", show ? "true" : "false");
+      pvUpdate();
+    });
+    bar.appendChild(pv);
     var count = document.createElement("span"); count.className = "rchan-charcount"; bar.appendChild(count);
-    var upd = function () { count.textContent = msg.value.length + " chars"; };
+    var upd = function () { count.textContent = msg.value.length + " chars"; pvUpdate(); };
     msg.addEventListener("input", upd); upd();
     return bar;
   }

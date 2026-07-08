@@ -718,6 +718,21 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 #postingForm .rchan-fmtbar button:hover, #quick-reply .rchan-fmtbar button:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
 .theme_dark #postingForm .rchan-fmtbar button, .theme_dark #quick-reply .rchan-fmtbar button { background: #262a31; color: #c9ccd1; border-color: #333; }
 .rchan-charcount { margin-left: auto; font-size: x-small; opacity: .85; }
+/* live post preview pane (under the textarea; toggled from the fmtbar) */
+#postingForm .rchan-fmtbar button.rchan-pvon, #quick-reply .rchan-fmtbar button.rchan-pvon {
+  background: #274a6b; color: #fff; border-color: #274a6b;
+}
+.rchan-preview {
+  display: none; box-sizing: border-box; width: 100%;
+  margin: 4px 0; padding: 6px 8px; text-align: left;
+  font-size: 10pt; line-height: 1.35;
+  background: #EEEEE4; border: 1px dashed #CFCFC4;
+  max-height: 40vh; overflow: auto;
+  word-break: break-word; overflow-wrap: anywhere;
+}
+.rchan-preview code { margin: 4px 0; }
+.rchan-pv-empty { font-size: x-small; opacity: .7; }
+.theme_dark .rchan-preview { background: #16171b; border-color: #2c2f36; }
 #postingForm.rchan-dragover { outline: 2px dashed #c8102e; outline-offset: 3px; }
 .rchan-filetray { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rchan-filechip {

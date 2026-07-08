@@ -74,7 +74,7 @@ body .sideCatalogCell, body .small { font-size: x-small; }
   margin-top: 0;
   color: #393939;
 }
-#catalogId { margin-top: 70px; }   /* clear the fixed nav, like .boardHeader on board/thread pages */
+#catalogId { margin-top: 3em; }   /* clear the fixed nav, like .boardHeader on board/thread pages */
 #catalogId .title { font-family: inherit; font-size: 28px; }
 #labelBoard { font-size: 28px; font-family: inherit; }   /* "/board/" link in the catalog heading */
 .boardHeader p#labelDescription { font-size: x-small; color: #393939; }

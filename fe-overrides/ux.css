@@ -2694,6 +2694,17 @@ html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small {
 html.rchan-warmdark .divMessage {
   font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.65; color: #E8E6DF !important;
 }
+/* greentext/quotes read as quoted PROSE, not code: same register as the body,
+   differing in COLOUR ONLY. The engine sets a font-family on .greenText that
+   overrode the Georgia it should inherit from .divMessage — force it back, and
+   neutralise any size/style/tracking that leaked in from display styles. */
+html.rchan-warmdark .divMessage .greenText,
+html.rchan-warmdark .divMessage .redText {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-style: normal !important;
+  font-size: inherit !important;
+  letter-spacing: normal !important;
+}
 /* post/thread separators: the base cream hr (#CFCFC4) is far too bright here */
 html.rchan-warmdark hr { border-top-color: #3C3C38 !important; }
 /* board/catalog title: keep Cream's bold serif, flipped to an embossed-on-dark

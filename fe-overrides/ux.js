@@ -2487,6 +2487,103 @@
         });
       } }
   ];
+  /* ---------- Backup / restore: the user's whole rchan identity ----------
+     Everything accumulated ((You)s, watched, history, filters, drafts,
+     settings…) lives in localStorage — one cleared cache and it's gone.
+     Export writes every rchan_* key + the native keys to a JSON file;
+     import MERGES (union arrays, keep-newest maps) so restoring on a
+     second device adds to it instead of clobbering it. */
+  var EXPORT_NATIVE = ["filterData", "hidingData", "watchedData", "relativeTime",
+                       "localTime", "selectedTheme", "noAutoLoop", "deletionPassword", "postingPasswords"];
+  function exportData() {
+    var out = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("rchan_") === 0) { out[k] = localStorage.getItem(k); }
+      }
+      EXPORT_NATIVE.forEach(function (k2) {
+        var v = localStorage.getItem(k2);
+        if (v !== null) { out[k2] = v; }
+      });
+    } catch (e) { toast("Couldn't read local data", true); return; }
+    var blob = new Blob([JSON.stringify({ rchanBackup: 1, exported: new Date().toISOString(), data: out })],
+                        { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "rchan-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.parentNode.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    okToast("Backup downloaded");
+  }
+  function mergeJson(k, oldRaw, newRaw) {
+    try {
+      var a = JSON.parse(oldRaw), b = JSON.parse(newRaw);
+      if (Array.isArray(a) && Array.isArray(b)) {
+        if (k === "rchan_hist") {                      // newest-first, dedup by board/thread
+          var seen = {};
+          var all = b.concat(a).filter(function (e) {
+            var kk = e && (e.b + "/" + e.t);
+            if (!kk || seen[kk]) { return false; }
+            seen[kk] = 1; return true;
+          }).sort(function (x, y) { return (y.ts || 0) - (x.ts || 0); });
+          return JSON.stringify(all.slice(0, HIST_MAX));
+        }
+        if (k === "filterData") {                      // dedup by (type, pattern, regex)
+          var have = {}, outArr = a.slice();
+          a.forEach(function (f) { have[f.type + "|" + f.filter + "|" + !!f.regex] = 1; });
+          b.forEach(function (f) {
+            if (!have[f.type + "|" + f.filter + "|" + !!f.regex]) { outArr.push(f); }
+          });
+          return JSON.stringify(outArr);
+        }
+        var u = a.slice();                             // generic array (rchan_you): union
+        b.forEach(function (v) { if (u.indexOf(v) < 0) { u.push(v); } });
+        return JSON.stringify(u);
+      }
+      if (a && b && typeof a === "object" && typeof b === "object") {
+        if (k === "rchan_seen") {                      // keep whichever read further
+          Object.keys(b).forEach(function (kk) {
+            if (!a[kk] || (b[kk].maxId || 0) > (a[kk].maxId || 0)) { a[kk] = b[kk]; }
+          });
+          return JSON.stringify(a);
+        }
+        if (k === "hidingData") {                      // per-board union of threads/posts
+          Object.keys(b).forEach(function (bd) {
+            if (!a[bd]) { a[bd] = b[bd]; return; }
+            ["threads", "posts"].forEach(function (f2) {
+              var cur = a[bd][f2] = a[bd][f2] || [];
+              (b[bd][f2] || []).forEach(function (v) { if (cur.indexOf(v) < 0) { cur.push(v); } });
+            });
+          });
+          return JSON.stringify(a);
+        }
+        Object.keys(b).forEach(function (kk) { if (!(kk in a)) { a[kk] = b[kk]; } });
+        return JSON.stringify(a);
+      }
+    } catch (e) {}
+    return newRaw;                                     // scalars / mismatch: imported wins
+  }
+  function importData(file) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      try {
+        var parsed = JSON.parse(fr.result);
+        if (!parsed || parsed.rchanBackup !== 1 || !parsed.data) { toast("Not an rchan backup file", true); return; }
+        var d = parsed.data, n = 0;
+        Object.keys(d).forEach(function (k) {
+          if (k.indexOf("rchan_") !== 0 && EXPORT_NATIVE.indexOf(k) < 0) { return; }   // whitelist only
+          if (typeof d[k] !== "string") { return; }
+          var cur = localStorage.getItem(k);
+          try { localStorage.setItem(k, cur === null ? d[k] : mergeJson(k, cur, d[k])); n++; } catch (e) {}
+        });
+        okToast("Restored " + n + " entries — reloading");
+        setTimeout(function () { location.reload(); }, 900);
+      } catch (e) { toast("Couldn't read that backup file", true); }
+    };
+    fr.readAsText(file);
+  }
+
   var setPanel = null;
   function buildSetRow(row) {
     var lab = document.createElement("label"); lab.className = "rchan-set-row";
@@ -2528,6 +2625,16 @@
       if (eng) {
         foot.appendChild(setFootLink("Filters & engine settings", function () { setPanel.style.display = "none"; eng.click(); }));
       }
+      foot.appendChild(setFootLink("Backup data", exportData));
+      var restoreInput = document.createElement("input");
+      restoreInput.type = "file"; restoreInput.accept = ".json,application/json";
+      restoreInput.style.display = "none";
+      restoreInput.addEventListener("change", function () {
+        if (restoreInput.files && restoreInput.files[0]) { importData(restoreInput.files[0]); }
+        restoreInput.value = "";
+      });
+      foot.appendChild(setFootLink("Restore", function () { restoreInput.click(); }));
+      foot.appendChild(restoreInput);
       setPanel.appendChild(foot);
       document.body.appendChild(setPanel);
       document.addEventListener("click", function (ev) {          // click-away closes

@@ -89,6 +89,9 @@ services:
       - ./fe-overrides/ux.js:/etc/nginx/rchan/ux.js:ro
       - ./fe-overrides/manifest.json:/etc/nginx/rchan/manifest.json:ro
       - ./fe-overrides/sw.js:/etc/nginx/rchan/sw.js:ro
+      # branded 404 page (router-served for every dead URL) + custom spoiler art
+      - ./fe-overrides/404.html:/etc/nginx/rchan/404.html:ro
+      - ./fe-overrides/spoiler.png:/etc/nginx/rchan/spoiler.png:ro
       - ./branding/icon-192.png:/etc/nginx/rchan/icon-192.png:ro
       - ./branding/icon-512.png:/etc/nginx/rchan/icon-512.png:ro
     ports:

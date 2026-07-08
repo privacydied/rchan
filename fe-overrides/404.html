@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>404 — rchan</title>
+<script>try{if(localStorage.selectedTheme==="dark"){document.documentElement.className="dark"}}catch(e){}</script>
+<style>
+  /* rchan design system, self-contained (no dependency on versioned assets) */
+  html { background: #EEEEE4; }
+  html.dark { background: #16171b; }
+  body {
+    font-family: arial, helvetica, sans-serif; font-size: .833rem;
+    color: #393939; background: #EEEEE4;
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dark body { background: #16171b; color: #c9ccd1; }
+  .box { text-align: center; padding: 24px; max-width: 420px; }
+  h1 {
+    font-family: Tahoma, sans-serif; font-size: 4.5rem; font-weight: 700;
+    letter-spacing: -4px; margin: 0; color: #393939;
+  }
+  .dark h1 { color: #c9ccd1; }
+  h1 span { color: #c8102e; }
+  p { margin: 10px 0 22px; opacity: .85; }
+  a.btn {
+    display: inline-block; margin: 0 4px; padding: 6px 18px;
+    border: 1px solid #CFCFC4; background: #E6E6DA; color: #393939;
+    box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+    font-weight: 700; text-decoration: none;
+  }
+  a.btn:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+  .dark a.btn { background: #262a31; color: #c9ccd1; border-color: #333; }
+  .cell {
+    display: inline-block; text-align: left;
+    background: #E6E6DA; border: 1px solid #CFCFC4; border-left: none; border-top: none;
+    box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+    padding: 4px 12px; margin-bottom: 18px;
+  }
+  .dark .cell { background: #1f2126; border-color: #2c2f36; }
+  .cell .name { color: #3a6b2e; font-weight: 700; }
+  .dark .cell .name { color: #8ec07c; }
+  .cell .green { color: #5b8a2b; }
+  .dark .cell .green { color: #8ec07c; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>4<span>0</span>4</h1>
+    <div class="cell">
+      <span class="name">Anonymous</span><br>
+      <span class="green">&gt;he clicked a dead link</span><br>
+      This page was deleted, never existed, or has been archived beyond reach.
+    </div>
+    <p>Whatever it was, the thread has moved on.</p>
+    <div>
+      <a class="btn" href="/">Home</a>
+      <a class="btn" href="/overboard/">Overboard</a>
+    </div>
+  </div>
+</body>
+</html>

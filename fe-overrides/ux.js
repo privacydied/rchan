@@ -1134,6 +1134,33 @@
     histPanel.style.display = "block";
   }
 
+  /* ---------- Captcha expiry feedback ----------
+     captchaUtils already counts down and AUTO-RELOADS the captcha at expiry —
+     but that also clears whatever you'd typed, silently. Wrap the reload so
+     the auto-expiry path (cu.reloading, set only by its timer loop) toasts
+     when it eats a typed answer. Manual Reload clicks bypass the wrapper
+     (they were bound by reference at init) — correctly so. */
+  function hookCaptchaReload() {
+    var cu = window.captchaUtils;
+    if (!cu || !cu.reloadCaptcha || cu.__rchan) { return; }
+    cu.__rchan = true;
+    var orig = cu.reloadCaptcha;
+    cu.reloadCaptcha = function () {
+      try {
+        if (cu.reloading) {                                  // auto-expiry path only
+          var fields = document.getElementsByClassName("captchaField");
+          for (var i = 0; i < fields.length; i++) {
+            if (fields[i].value.trim()) {
+              toast("Captcha expired — a fresh one loaded, please re-solve", true);
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    };
+  }
+
   /* ---------- Sticky thread status line (lives in the fixed nav) ----------
      "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
      worth my scroll" answer, always visible. Counts come straight from the
@@ -1567,7 +1594,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
+     hookAlerts, hookCaptchaReload, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, updateThreadStat
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking

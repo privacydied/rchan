@@ -508,6 +508,8 @@ body #quick-reply .reloadCaptchaButton {
   font: inherit; font-size: x-small; font-weight: 700; padding: 2px 8px;
 }
 body #quick-reply .reloadCaptchaButton:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+/* captcha countdown (native, seconds until expiry+auto-reload): quiet meta text */
+.captchaTimer { font-size: x-small; opacity: .7; margin-left: 6px; }
 /* "Extra" / mobile "Files" / "Captcha" reveal rows read as links */
 body #quick-reply td.small { color: #274a6b; cursor: pointer; font-weight: 700; }
 body #quick-reply td.small:hover { color: #c8102e; }

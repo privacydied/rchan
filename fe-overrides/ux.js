@@ -3655,6 +3655,9 @@
     }
     var list = setPanel.children[1];                              // rebuild → checkboxes reflect live state
     list.innerHTML = "";
+    var news = document.createElement("div"); news.className = "rchan-set-news";
+    news.textContent = "Recently added: auto-watch on post · replies-to-you inbox · Ctrl+Enter · sage · work-safe mode · gallery (g) · Ctrl+K palette";
+    list.appendChild(news);
     SET_ROWS.forEach(function (row) { list.appendChild(buildSetRow(row)); });
     buildFilterSection(setPanel.children[2]);
     buildCssSection(setPanel.children[3]);
@@ -4105,6 +4108,33 @@
     }
   }
 
+  /* ---------- First-visit hint: the features exist — say so, once ----------
+     ~15 features live behind ?, g, f, Ctrl+K, long-press and the gear; a
+     first-time visitor sees plain Yotsuba and learns none of it. One pill,
+     one visit, gone on any keypress/dismiss/20s. */
+  function initFirstVisitHint() {
+    try {
+      if (localStorage.getItem("rchan_hinted")) { return; }
+      localStorage.setItem("rchan_hinted", "1");               // one shot, ever
+    } catch (e) { return; }
+    var pill = document.createElement("div");
+    pill.id = "rchan-hint";
+    pill.setAttribute("role", "status");
+    pill.appendChild(document.createTextNode(TOUCH_ONLY
+      ? "Tip: long-press a post for actions · the ⚙ button has all the toggles"
+      : "Tip: press ? for shortcuts · Ctrl+K jumps anywhere"));
+    var x = document.createElement("button"); x.type = "button"; x.className = "rchan-set-x";
+    x.textContent = "×"; x.setAttribute("aria-label", "Dismiss tip");
+    function hide() { if (pill.parentNode) { pill.parentNode.removeChild(pill); } }
+    x.addEventListener("click", hide);
+    pill.appendChild(x);
+    document.body.appendChild(pill);
+    setTimeout(hide, 20000);
+    document.addEventListener("keydown", function once() {
+      hide(); document.removeEventListener("keydown", once);
+    });
+  }
+
   /* ---------- Mobile gestures: swipe, long-press action sheet, pull-to-refresh ----------
      Everything keyboard users get from j/k/e/f lives behind keys a phone
      doesn't have. Three touch-native equivalents:
@@ -4360,7 +4390,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, initFirstVisitHint
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

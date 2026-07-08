@@ -1356,6 +1356,24 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 .theme_dark .rchan-ed-bar button { background: #262a31; color: #c9ccd1; border-color: #333; }
 .theme_dark .rchan-ed-stage canvas { background: #0f1013; }
 
+/* ---------- First-visit hint pill + settings "what's new" line ---------- */
+#rchan-hint {
+  position: fixed; top: 46px; left: 50%; transform: translateX(-50%);
+  z-index: 9998; display: inline-flex; align-items: center; gap: 8px;
+  max-width: 92vw; padding: 6px 12px;
+  background: #E6E6DA; color: #393939; border: 1px solid #CFCFC4;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.12);
+  font-size: .833rem; font-weight: 700; white-space: nowrap;
+}
+#rchan-hint .rchan-set-x { flex: none; }
+.theme_dark #rchan-hint { background: #262a31; color: #c9ccd1; border-color: #333; }
+@media (max-width: 640px) { #rchan-hint { white-space: normal; text-align: center; } }
+.rchan-set-news {
+  padding: 5px 8px; font-size: x-small; opacity: .75; font-style: italic;
+  border-bottom: 1px solid #CFCFC466;
+}
+.theme_dark .rchan-set-news { border-color: #2c2f3666; }
+
 /* ---------- Long-press action sheet (touch) ---------- */
 #rchan-sheet {
   position: fixed; inset: 0; z-index: 10012; display: none;

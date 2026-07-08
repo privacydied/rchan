@@ -3217,6 +3217,13 @@
     { t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
+    { t: "Auto theme (follow OS)", d: "Dark when your system is dark, cream otherwise — switches live",
+      get: autoThemeOn,
+      set: function (on) {
+        try { on ? localStorage.setItem(THEME_AUTO_KEY, "1") : localStorage.removeItem(THEME_AUTO_KEY); } catch (e) {}
+        if (on) { applyAutoTheme(); }
+        syncAutoThemeOption();
+      } },
     { t: "Loop videos", d: "Restart videos when they end (native players)",
       get: function () { try { return !JSON.parse(localStorage.noAutoLoop || "false"); } catch (e) { return true; } },
       set: function (on) {
@@ -3259,7 +3266,7 @@
      import MERGES (union arrays, keep-newest maps) so restoring on a
      second device adds to it instead of clobbering it. */
   var EXPORT_NATIVE = ["filterData", "hidingData", "watchedData", "relativeTime",
-                       "localTime", "selectedTheme", "noAutoLoop", "deletionPassword", "postingPasswords"];
+                       "localTime", "selectedTheme", "noAutoLoop", "deletionPassword", "postingPasswords", "customCSS"];
   function exportData() {
     var out = {};
     try {
@@ -3349,6 +3356,105 @@
     fr.readAsText(file);
   }
 
+  /* ---------- Auto theme: follow the OS light/dark preference ----------
+     "Auto (OS)" joins the theme dropdown (and a settings row): dark when the
+     OS is dark, cream otherwise, live-switching on the matchMedia change
+     event. Implemented by steering the NATIVE selectedTheme + themeLoader
+     (and the pre-paint predark hint), so every page renders consistently. */
+  var THEME_AUTO_KEY = "rchan_theme_auto";
+  function autoThemeOn() { try { return localStorage.getItem(THEME_AUTO_KEY) === "1"; } catch (e) { return false; } }
+  function applyAutoTheme() {
+    if (!autoThemeOn()) { return; }
+    var dark = !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    try {
+      delete localStorage.manualDefault;
+      localStorage.selectedTheme = dark ? "dark" : "cream";
+    } catch (e) {}
+    try { if (window.themeLoader && themeLoader.load) { themeLoader.load(); } } catch (e2) {}
+    try { document.documentElement.classList.toggle("predark", dark); } catch (e3) {}
+  }
+  function syncAutoThemeOption() {
+    var sel = document.getElementById("themeSelector");
+    if (!sel) { return; }
+    var o = sel.querySelector("option[data-auto]");
+    if (o && autoThemeOn()) { o.selected = true; }
+  }
+  function initAutoTheme() {
+    var mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+    if (mq) {
+      var onChange = function () { applyAutoTheme(); syncAutoThemeOption(); };
+      if (mq.addEventListener) { mq.addEventListener("change", onChange); }
+      else if (mq.addListener) { mq.addListener(onChange); }
+    }
+    applyAutoTheme();
+    var sel = document.getElementById("themeSelector");
+    if (sel && !sel.querySelector("option[data-auto]")) {
+      var o = document.createElement("option");
+      o.textContent = "Auto (OS)";
+      o.setAttribute("data-auto", "1");
+      sel.appendChild(o);
+      if (autoThemeOn()) { o.selected = true; }
+      // themes.js binds onchange as a property and indexes into ITS OWN theme
+      // list — selecting our appended option through that handler would throw.
+      var orig = sel.onchange;
+      sel.onchange = function () {
+        var cur = sel.options[sel.selectedIndex];
+        if (cur && cur.getAttribute("data-auto")) {
+          try { localStorage.setItem(THEME_AUTO_KEY, "1"); } catch (e) {}
+          applyAutoTheme();
+          return;
+        }
+        try { localStorage.removeItem(THEME_AUTO_KEY); } catch (e2) {}
+        if (orig) { return orig.apply(this, arguments); }
+      };
+    }
+  }
+  /* ---------- Custom CSS (settings panel; bridges the native customCSS key) ---------- */
+  function applyCustomCss() {
+    var css = "";
+    try { css = localStorage.customCSS || ""; } catch (e) {}
+    var el = document.getElementById("rchan-customcss");
+    if (!css.trim()) { if (el && el.parentNode) { el.parentNode.removeChild(el); } return; }
+    if (!el) { el = document.createElement("style"); el.id = "rchan-customcss"; }
+    el.textContent = css;
+    document.head.appendChild(el);            // (re-)append LAST so it wins the cascade
+  }
+  function buildCssSection(box) {
+    box.innerHTML = "";
+    var head = document.createElement("div"); head.className = "rchan-set-sub";
+    head.textContent = "Custom CSS";
+    box.appendChild(head);
+    var desc = document.createElement("div"); desc.className = "rchan-set-desc";
+    desc.textContent = "Applied on every page, after every theme. Yours to break.";
+    box.appendChild(desc);
+    var ta = document.createElement("textarea");
+    ta.className = "rchan-css-input"; ta.rows = 5;
+    ta.placeholder = ".divMessage { font-size: 15px; }";
+    ta.setAttribute("aria-label", "Custom CSS");
+    try { ta.value = localStorage.customCSS || ""; } catch (e) {}
+    box.appendChild(ta);
+    var save = document.createElement("button"); save.type = "button";
+    save.className = "rchan-css-save"; save.textContent = "Save CSS";
+    save.addEventListener("click", function () {
+      var prev = "";
+      try { prev = localStorage.customCSS || ""; } catch (e) {}
+      // the native settings menu injected an anonymous <style> with the old
+      // value at load — clear it so deletions actually disappear this session
+      if (prev) {
+        var styles = document.head.getElementsByTagName("style");
+        for (var i = 0; i < styles.length; i++) {
+          if (!styles[i].id && styles[i].textContent === prev) { styles[i].textContent = ""; }
+        }
+      }
+      try { localStorage.customCSS = ta.value; } catch (e2) {}
+      var inp = document.getElementById("cssInput");     // keep the native menu's box in sync
+      if (inp) { inp.value = ta.value; }
+      applyCustomCss();
+      okToast("Custom CSS saved");
+    });
+    box.appendChild(save);
+  }
+
   var setPanel = null;
   function buildSetRow(row) {
     var lab = document.createElement("label"); lab.className = "rchan-set-row";
@@ -3384,6 +3490,7 @@
       setPanel.appendChild(head);
       setPanel.appendChild(document.createElement("div"));       // rows container
       setPanel.appendChild(document.createElement("div"));       // filter manager container
+      setPanel.appendChild(document.createElement("div"));       // custom CSS container
       var foot = document.createElement("div"); foot.className = "rchan-set-foot";
       foot.appendChild(setFootLink("Keyboard shortcuts (?)", function () { setPanel.style.display = "none"; toggleKeysOverlay(); }));
       var eng = document.getElementById("settingsButton");        // native menu: filters / custom CSS / JS
@@ -3413,6 +3520,7 @@
     list.innerHTML = "";
     SET_ROWS.forEach(function (row) { list.appendChild(buildSetRow(row)); });
     buildFilterSection(setPanel.children[2]);
+    buildCssSection(setPanel.children[3]);
     setPanel.style.display = "block";
   }
   /* "?" cheat-sheet overlay (works even with shortcuts toggled off) */
@@ -3924,7 +4032,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

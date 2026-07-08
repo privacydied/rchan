@@ -2709,6 +2709,9 @@ html.rchan-warmdark #sideCatalogRefreshButton, html.rchan-warmdark #rchan-findbt
 html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark .rchan-convbtn,
 html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rchan-warmdark .rchan-hist-clear,
 html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #A6C185 !important; }
+/* side nav: sage-green blocks with a dark glyph for contrast (was blue #274a6b) */
+html.rchan-warmdark #rchan-nav button { background: #A6C185 !important; color: #1F1F1E !important; }
+html.rchan-warmdark #rchan-nav button.rchan-on { background: #BED49F !important; }
 
 /* body copy: New York Small at Medium (500) — light-on-dark optical
    compensation makes 500 the right body weight on the dark ground. 10pt. */

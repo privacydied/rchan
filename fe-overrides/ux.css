@@ -141,6 +141,8 @@ body .divMessage {
 }
 /* header line: name green bold, subject blue bold, post No. black -> red hover */
 .linkName, .labelName { color: #3a6b2e; font-weight: 700; }
+/* cream: poster name in Georgia serif */
+body.theme_cream .labelName, body.theme_cream .linkName { font-family: Georgia, "Times New Roman", serif; }
 .labelSubject { color: #0d5b73; font-weight: 700; }
 .linkQuote, .linkSelf { color: #393939; }
 .linkQuote:hover, .linkSelf:hover { color: #c8102e !important; }

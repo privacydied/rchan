@@ -1103,6 +1103,47 @@
     histPanel.style.display = "block";
   }
 
+  /* ---------- Sticky thread status line (lives in the fixed nav) ----------
+     "412 replies · 96 files · 31 IDs · updated 3m ago" — the "is this thread
+     worth my scroll" answer, always visible. Counts come straight from the
+     DOM; last-activity parses the newest labelCreated the same way the
+     engine's relative-time code does (localTimes-aware). */
+  function parseCreated(el) {
+    var v = (el.textContent || "").trim();
+    if (!v) { return 0; }
+    var d = new Date(v + (window.posting && posting.localTimes ? "" : " UTC"));
+    return +d || 0;
+  }
+  function updateThreadStat() {
+    if (!curThreadId()) { return; }
+    var nav = document.querySelector("nav, #dynamicHeader");
+    if (!nav) { return; }
+    var el = document.getElementById("rchan-threadstat");
+    if (!el) {
+      el = document.createElement("span");
+      el.id = "rchan-threadstat";
+      nav.insertBefore(el, document.getElementById("navOptionsSpan") || null);
+    }
+    var replies = document.getElementsByClassName("postCell").length;
+    var files = document.getElementsByClassName("originalNameLink").length;
+    var ids = {}, idEls = document.getElementsByClassName("labelId");
+    for (var i = 0; i < idEls.length; i++) {
+      var v = (idEls[i].textContent || "").replace(/\s*\(\d+\)\s*$/, "").trim();  // hover appends "(n)"
+      if (v) { ids[v] = 1; }
+    }
+    var idCount = Object.keys(ids).length;
+    var last = 0, times = document.getElementsByClassName("labelCreated");
+    for (var j = 0; j < times.length; j++) {
+      var t = parseCreated(times[j]);
+      if (t > last) { last = t; }
+    }
+    var ago = last ? fmtAgo(last) : "";
+    el.textContent = replies + (replies === 1 ? " reply" : " replies") +
+      " · " + files + (files === 1 ? " file" : " files") +
+      (idCount ? " · " + idCount + (idCount === 1 ? " ID" : " IDs") : "") +
+      (last ? " · updated " + (ago === "now" ? "just now" : ago + " ago") : "");
+  }
+
   /* ---------- Post form: formatting toolbar, char counter, paste/drop, file previews ----------
      IMPORTANT: the engine uploads ONLY from postCommon.selectedFiles (its own
      array, rendered as .selectedCell chips) — it never reads input.files at
@@ -1454,7 +1495,7 @@
 
   /* ---------- init + observe ---------- */
   var pending = false;
-  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); }, 80); }
+  function refresh() { if (pending) { return; } pending = true; setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateIdPills(document); decorateFileSearch(document); markNewInThread(); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); }, 80); }
   function init() {
     // Bind interaction listeners FIRST, so a throw in any decorate/build step below
     // can never leave hover-zoom / video-pop-out / tooltips unwired.
@@ -1496,8 +1537,9 @@
     [buildNav, buildCatalogTools, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit,
-     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }
+     function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, updateThreadStat
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
+    if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }
   // PWA: register the (cache-free) service worker so the site is installable.

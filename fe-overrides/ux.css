@@ -184,6 +184,14 @@ body nav, body #dynamicHeader { display: flex !important; flex-wrap: wrap; align
 body #navBoardsSpan { order: 0; margin-right: auto !important; }
 body #navOptionsSpan { order: 1; margin-right: 8px; }
 body #navLinkSpan { order: 2; }
+/* thread status line: rides the nav between boards (left) and the right
+   cluster; its own auto right-margin splits the free space with boards',
+   landing it ~centered */
+#rchan-threadstat {
+  order: 0; margin-right: auto;
+  font-size: x-small; font-weight: 700; opacity: .75;
+  white-space: nowrap; align-self: center;
+}
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
 /* footer (4chan #absbot: x-small) */

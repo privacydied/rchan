@@ -61,6 +61,15 @@ and do NOT hand-edit the gridfs page (it's gzip-compressed with a `.gz` sibling 
 - **`db-export.sh`** (cron, daily) → content-only JSON to `db-export/*.json`, committed to git (no media, no secrets/IPs).
 - `mongo-data/` is the ONLY irreplaceable state — treat it accordingly.
 
+## Workflow
+- **Always commit after every change** — as soon as a change is deployed and verified,
+  commit it (small, focused commits in the style of the existing history). Don't wait
+  to be asked, and don't batch unrelated changes together.
+- When `fe-overrides/ux.js` / `ux.css` / `favicon.js` change meaningfully, bump their
+  `?v=` query string in `nginx/default.conf` (Cloudflare edge-caches them and ignores
+  browser refreshes) and restart `rchan-landing` (single-file bind mounts pin the old
+  inode until restart).
+
 ## Project
 LynxChan + MongoDB in Docker behind DSM reverse proxy + Cloudflare. See `README.md` for
 architecture, routing, overrides in `fe-overrides/`, and restore steps.

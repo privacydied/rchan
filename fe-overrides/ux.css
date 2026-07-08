@@ -1042,8 +1042,10 @@ body.theme_academia, body.theme_academia .divMessage, body.theme_academia .label
 body.theme_academia p, body.theme_academia blockquote, body.theme_academia li {
   font-family: var(--serif) !important;
 }
+/* Linux Libertine has a small x-height, so prose needs ~17px to read like a
+   15px grotesque — bump body copy above the nominal scale. */
 body.theme_academia .divMessage {
-  font-size: var(--t4) !important; line-height: 1.65 !important; color: var(--ink) !important;
+  font-size: 17px !important; line-height: 1.62 !important; color: var(--ink) !important;
   -webkit-font-smoothing: antialiased;
 }
 body.theme_academia .divMessage em, body.theme_academia em, body.theme_academia i { font-style: italic; }
@@ -1200,11 +1202,11 @@ body.theme_academia .catalogCell .labelSubject {
 }
 /* (3) serif teaser, clamp 4 */
 body.theme_academia .catalogCell > .divMessage {
-  order: 3; margin: 0; padding: 0; font-family: var(--serif) !important; font-size: 14px !important;
+  order: 3; margin: 0; padding: 0; font-family: var(--serif) !important; font-size: 15px !important;
   line-height: 1.5; color: var(--ink-soft) !important; text-align: left; flex: 1 1 auto; min-height: 0;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
 }
-body.theme_academia .catalogCell > .divMessage .greenText { font-size: 14px !important; }
+body.theme_academia .catalogCell > .divMessage .greenText { font-size: 15px !important; }
 /* the bottom stat strip is retired — readout lives in the eyebrow */
 body.theme_academia .catalogCell > p.threadStats { display: none !important; }
 /* no-file: oat band with a centered sans eyebrow "TEXT ONLY" */

@@ -5,7 +5,7 @@
      counts rchan_seen already tracks. */
   var HIST_KEY = "rchan_hist", HIST_MAX = 50;
   function histLoad() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch (e) { return []; } }
-  function histSave(a) { try { localStorage.setItem(HIST_KEY, JSON.stringify(a.slice(0, HIST_MAX))); } catch (e) {} }
+  function histSave(a) { try { localStorage.setItem(HIST_KEY, JSON.stringify(a.slice(0, HIST_MAX))); } catch (e) { storageFailed(); } }
   function threadTitle() {
     var s = document.querySelector(".innerOP .labelSubject");
     if (s && s.textContent.trim()) { return s.textContent.trim().slice(0, 70); }

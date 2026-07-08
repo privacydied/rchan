@@ -81,7 +81,7 @@
         for (var i = 0; i < keys.length - SEEN_MAX; i++) { delete o[keys[i]]; }
       }
       localStorage.setItem(SEEN_KEY, JSON.stringify(o));
-    } catch (e) {}
+    } catch (e) { storageFailed(); }
   }
   function curThreadId() {
     var t = document.getElementById("threadIdentifier");
@@ -426,7 +426,7 @@
       keys.sort(function (a, b) { return (o[a].ts || 0) - (o[b].ts || 0); });
       for (var i = 0; i < keys.length - YOUBOX_MAX; i++) { delete o[keys[i]]; }
     }
-    try { localStorage.setItem(YOUBOX_KEY, JSON.stringify(o)); } catch (e) {}
+    try { localStorage.setItem(YOUBOX_KEY, JSON.stringify(o)); } catch (e) { storageFailed(); }
   }
   function youboxAdd(b, t, p, snippet, ts, read) {
     var o = youboxAll(), key = b + "/" + t + "/" + p;

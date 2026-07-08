@@ -150,7 +150,20 @@
 
   /* ---------- localStorage helpers ---------- */
   function load(key) { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
-  function save(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr.slice(-5000))); } catch (e) {} }
+  // When the quota trips, identity quietly stops persisting — every write
+  // path swallowed the error. Say it once per session, with the fix attached.
+  var storageWarned = false;
+  function storageFailed() {
+    if (storageWarned) { return; }
+    storageWarned = true;
+    try {
+      toastAction("Browser storage is full — your rchan data may not be saving", "Back up now", exportData);
+    } catch (e) {}
+  }
+  function save(key, arr) {
+    try { localStorage.setItem(key, JSON.stringify(arr.slice(-5000))); }
+    catch (e) { storageFailed(); }
+  }
   var YOU_KEY = "rchan_you";
   function postId(inner) {
     var q = inner.querySelector(".linkQuote");

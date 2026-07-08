@@ -24,6 +24,7 @@
     { g: "Reading", k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
     { g: "Reading", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
     { g: "Reading", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
+    { g: "Reading", k: "follow", t: "Follow live threads", d: "Reading at the bottom? New posts scroll into view as they arrive; scroll up and it stands down" },
     { g: "Media", t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },

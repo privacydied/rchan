@@ -175,9 +175,18 @@
     seenSave(all);
     if (newCount > 0) {
       if (document.hidden) { bumpTitleUnread(newCount); }
+      // Follow mode: watching a live thread FROM the bottom shouldn't mean
+      // chasing it — if you're already within ~600px of the end, new posts
+      // scroll into view on arrival. Scroll up even slightly past that and
+      // it stands down instantly (the "N new" pill takes over below).
+      var followed = false;
+      if (!document.hidden && setOn("follow") &&
+          (window.innerHeight + (window.scrollY || 0)) > (document.documentElement.scrollHeight - 600)) {
+        try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: SB }); followed = true; } catch (e4) {}
+      }
       // pill only when the first new post is fully outside the viewport
       var fr = firstNew.getBoundingClientRect();
-      if (fr.top > window.innerHeight || fr.bottom < 0) { showNewPill(newCount, firstNew); }
+      if (!followed && (fr.top > window.innerHeight || fr.bottom < 0)) { showNewPill(newCount, firstNew); }
     }
     // Foreground desktop notification when new posts land while the tab is hidden (opt-in via 🔔).
     // Replies quoting one of YOUR posts get top billing, and clicking the

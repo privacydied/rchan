@@ -65,10 +65,11 @@ and do NOT hand-edit the gridfs page (it's gzip-compressed with a `.gz` sibling 
 - **Always commit after every change** — as soon as a change is deployed and verified,
   commit it (small, focused commits in the style of the existing history). Don't wait
   to be asked, and don't batch unrelated changes together.
-- When `fe-overrides/ux.js` / `ux.css` / `favicon.js` change meaningfully, bump their
-  `?v=` query string in `nginx/default.conf` (Cloudflare edge-caches them and ignores
-  browser refreshes) and restart `rchan-landing` (single-file bind mounts pin the old
-  inode until restart).
+- After ANY `fe-overrides/*` change, run **`./deploy-fe.sh`** — it rewrites the `?v=`
+  cache-bust tokens in `nginx/default.conf` from each file's content hash (Cloudflare
+  edge-caches the assets and ignores browser refreshes), restarts `rchan-landing`
+  (single-file bind mounts pin the old inode until restart), and smoke-checks the
+  versioned URLs. Never hand-bump version numbers.
 
 ## Project
 LynxChan + MongoDB in Docker behind DSM reverse proxy + Cloudflare. See `README.md` for

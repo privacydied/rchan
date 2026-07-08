@@ -105,7 +105,7 @@
       pen.id = "rchan-penbtn";   // mobile CSS promotes it to the primary FAB
     }
     if (curThreadId() && "Notification" in window) {
-      var bell = btn(SVG_BELL, "Notify me of new replies in this thread (while this tab is open)", function () {
+      var bell = btn(SVG_BELL, "Notify me of new replies — this thread and watched threads (while a tab is open)", function () {
         if (localStorage.getItem(NOTIFY_KEY) === "1") { localStorage.removeItem(NOTIFY_KEY); bell.classList.remove("rchan-on"); return; }
         Notification.requestPermission().then(function (p) {
           if (p === "granted") { localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on"); }
@@ -1184,6 +1184,45 @@
     var q = cell.getElementsByClassName("linkQuote")[0];
     return q ? (parseInt((q.textContent || "").replace(/\D/g, ""), 10) || 0) : 0;
   }
+  // Gentle two-note chime for replies quoting your posts (opt-in). WebAudio =
+  // CSP-safe, no asset fetch. The context is armed on the first user gesture
+  // (autoplay policy: contexts created outside a gesture start suspended).
+  var audioCtx = null;
+  function armAudio() {
+    if (audioCtx) { return; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { return; }
+    try { audioCtx = new AC(); } catch (e) {}
+  }
+  function youChime() {
+    if (!setOn("yousound", false)) { return; }
+    try {
+      armAudio();
+      if (!audioCtx) { return; }
+      if (audioCtx.state === "suspended") { audioCtx.resume().catch(function () {}); }
+      var t = audioCtx.currentTime;
+      [[880, 0], [1174.66, 0.09]].forEach(function (nt) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = nt[0];
+        g.gain.setValueAtTime(0.0001, t + nt[1]);
+        g.gain.exponentialRampToValueAtTime(0.12, t + nt[1] + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + nt[1] + 0.18);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t + nt[1]); o.stop(t + nt[1] + 0.22);
+      });
+    } catch (e) {}
+  }
+  // Does this post's OWN message quote one of my (You) posts?
+  function quotesMine(cell, mineSet) {
+    var inner = cell.querySelector(".innerPost, .innerOP") || cell;
+    var qs = inner.getElementsByClassName("quoteLink");
+    for (var j = 0; j < qs.length; j++) {
+      if (qs[j].closest && qs[j].closest(".rchan-inline-quote")) { continue; }
+      var m = (qs[j].getAttribute("href") || "").match(/(\d+)\s*$/) || (qs[j].textContent || "").match(/(\d+)/);
+      if (m && mineSet[m[1]]) { return true; }
+    }
+    return false;
+  }
   // On a thread: highlight posts newer than the last time you viewed it, drop a divider,
   // then record the current high-water mark. Re-runs on live WS posts (highlights those too).
   function markNewInThread() {
@@ -1193,7 +1232,9 @@
     var posts = document.getElementsByClassName("postCell");
     if (!posts.length) { return; }
     var key = board + "/" + tid, all = seenAll(), rec = all[key] || { maxId: 0, replies: 0 };
-    var curMax = rec.maxId, firstNew = null, newCount = 0;
+    var curMax = rec.maxId, firstNew = null, newCount = 0, youNew = 0, firstYou = null;
+    var mine = load(YOU_KEY), mineSet = {};
+    for (var k = 0; k < mine.length; k++) { mineSet[mine[k]] = 1; }
     for (var i = 0; i < posts.length; i++) {
       var id = postIdOf(posts[i]);
       if (id > curMax) { curMax = id; }
@@ -1202,8 +1243,14 @@
         posts[i].classList.add("rchan-new");
         if (!firstNew) { firstNew = posts[i]; }
         newCount++;
+        // not your own fresh post (it lands as "new" too and may quote your earlier posts)
+        if (!mineSet[String(id)] && quotesMine(posts[i], mineSet)) {
+          youNew++;
+          if (!firstYou) { firstYou = posts[i]; }
+        }
       }
     }
+    if (youNew > 0) { youChime(); }
     if (firstNew && !document.getElementById("rchan-newline")) {
       var d = document.createElement("div"); d.id = "rchan-newline";
       d.textContent = newCount + " new post" + (newCount > 1 ? "s" : "") + " since last visit";
@@ -1218,15 +1265,75 @@
       if (fr.top > window.innerHeight || fr.bottom < 0) { showNewPill(newCount, firstNew); }
     }
     // Foreground desktop notification when new posts land while the tab is hidden (opt-in via 🔔).
+    // Replies quoting one of YOUR posts get top billing, and clicking the
+    // notification deep-links to the first relevant post instead of just focusing.
     if (newCount > 0 && document.hidden && "Notification" in window &&
         Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1") {
       try {
-        var n = new Notification("rchan — " + newCount + " new repl" + (newCount > 1 ? "ies" : "y"), {
-          body: "/" + board + "/ · thread " + tid, icon: "/.rchan/icon-192.png", tag: "rchan-" + board + "-" + tid
+        var title = youNew > 0
+          ? "rchan — " + youNew + " repl" + (youNew > 1 ? "ies" : "y") + " to you"
+          : "rchan — " + newCount + " new repl" + (newCount > 1 ? "ies" : "y");
+        var target = firstYou || firstNew;
+        var n = new Notification(title, {
+          body: "/" + board + "/ · " + threadTitle(), icon: "/.rchan/icon-192.png", tag: "rchan-" + board + "-" + tid
         });
-        n.onclick = function () { window.focus(); this.close(); };
+        n.onclick = function () {
+          window.focus();
+          try {
+            if (target && document.contains(target)) { target.scrollIntoView({ behavior: SB, block: "center" }); }
+          } catch (e2) {}
+          this.close();
+        };
       } catch (e) {}
     }
+  }
+  /* Watched threads: the native watcher polls every watched thread's JSON and
+     tallies unread into its nav counter — but silently. Wrap the tally so a
+     thread that BECOMES unread while this tab is hidden raises a system
+     notification (same opt-in as the bell). The first tally after page load
+     only seeds the baseline, so navigating around never re-notifies old unread. */
+  function hookWatcherNotify() {
+    var w = window.watcher;
+    if (!w || w.__rchanNotify || !w.updateWatcherCounter) { return; }
+    w.__rchanNotify = true;
+    var prevUnread = null;
+    var orig = w.updateWatcherCounter;
+    function unescapeHtml(s) { var d = document.createElement("textarea"); d.innerHTML = s || ""; return d.value; }
+    w.updateWatcherCounter = function () {
+      var r = orig.apply(this, arguments);
+      try {
+        var data = JSON.parse(localStorage.watchedData || "{}");
+        var unread = {};
+        Object.keys(data).forEach(function (b) {
+          Object.keys(data[b] || {}).forEach(function (t) {
+            var rec = data[b][t];
+            if (rec && (rec.lastReplied || 0) > (rec.lastSeen || 0)) { unread[b + "/" + t] = rec; }
+          });
+        });
+        if (prevUnread && document.hidden && "Notification" in window &&
+            Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1") {
+          Object.keys(unread).forEach(function (k2) {
+            if (prevUnread[k2]) { return; }
+            var parts = k2.split("/");
+            // the open thread notifies with full context via markNewInThread — skip it here
+            if (parts[0] === getBoard() && parts[1] === curThreadId()) { return; }
+            try {
+              var n = new Notification("rchan — watched thread updated", {
+                body: (unread[k2].label ? unescapeHtml(unread[k2].label) + " · " : "") + "/" + parts[0] + "/ · thread " + parts[1],
+                icon: "/.rchan/icon-192.png", tag: "rchan-watch-" + k2
+              });
+              n.onclick = function () {
+                window.focus();
+                try { location.href = "/" + parts[0] + "/res/" + parts[1]; } catch (e3) {}
+                this.close();
+              };
+            } catch (e2) {}
+          });
+        }
+        prevUnread = unread;
+      } catch (e) {}
+      return r;
+    };
   }
   // On the catalog: badge threads that gained replies since you last opened them.
   function markNewInCatalog() {
@@ -2785,6 +2892,7 @@
     { k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
     { t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
@@ -2806,7 +2914,7 @@
         var els = document.getElementsByClassName("relativeTime");
         for (var i = els.length - 1; i >= 0; i--) { els[i].parentNode.removeChild(els[i]); }
       } },
-    { t: "Desktop notifications", d: "System notification when a hidden tab's thread gets replies (same as the bell button)",
+    { t: "Desktop notifications", d: "System notification when a hidden tab gets replies — this thread or any watched thread (same as the bell button)",
       get: function () { try { return localStorage.getItem(NOTIFY_KEY) === "1"; } catch (e) { return false; } },
       set: function (on, report) {
         if (!on) {
@@ -3088,6 +3196,9 @@
     document.addEventListener("click", hideTip, true);
     document.addEventListener("keydown", onKey);
     document.addEventListener("keydown", onEscKey);
+    // arm the WebAudio context inside a real user gesture so later chimes can play
+    document.addEventListener("pointerdown", armAudio, { once: true, capture: true });
+    document.addEventListener("keydown", armAudio, { once: true, capture: true });
     // remember hide-menu clicks so hookHideUndo can tell user hides from
     // the silent stored-hide re-application at load/refresh
     document.addEventListener("click", function (e) {
@@ -3104,7 +3215,7 @@
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
     [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, markNewInThread, markNewInCatalog, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
-     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
+     hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherNotify, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads

@@ -969,14 +969,14 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-findcount { font-size: x-small; font-weight: 700; opacity: .85; white-space: nowrap; min-width: 54px; text-align: right; }
 .rchan-findhide { display: none !important; }
 .theme_dark #rchan-find { background: #16171b; border-color: #2c2f36; }
-#rchan-findbtn, #rchan-expandbtn {
+#rchan-findbtn, #rchan-expandbtn, #rchan-galbtn {
   border: 0; background: none; cursor: pointer; padding: 0 6px;
   color: #274a6b; display: inline-flex; align-items: center; align-self: center;
 }
-#rchan-findbtn:hover, #rchan-expandbtn:hover { color: #c8102e; }
+#rchan-findbtn:hover, #rchan-expandbtn:hover, #rchan-galbtn:hover { color: #c8102e; }
 #rchan-expandbtn.rchan-on2 { color: #c8102e; }   /* expand-all active */
-.theme_dark #rchan-findbtn, .theme_dark #rchan-expandbtn { color: #9fc4e8; }
-.theme_dark #rchan-findbtn:hover, .theme_dark #rchan-expandbtn:hover { color: #d6e8f8; }
+.theme_dark #rchan-findbtn, .theme_dark #rchan-expandbtn, .theme_dark #rchan-galbtn { color: #9fc4e8; }
+.theme_dark #rchan-findbtn:hover, .theme_dark #rchan-expandbtn:hover, .theme_dark #rchan-galbtn:hover { color: #d6e8f8; }
 .theme_dark #rchan-expandbtn.rchan-on2 { color: #e06c75; }
 .rchan-idfunnel {
   border: 0; background: none; cursor: pointer; padding: 0 2px;
@@ -1237,6 +1237,48 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   width: auto; max-height: 45vh;
 }
 
+/* ---------- Long-press action sheet (touch) ---------- */
+#rchan-sheet {
+  position: fixed; inset: 0; z-index: 10012; display: none;
+  align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,.45);
+}
+.rchan-sheet-box {
+  width: 100%; max-width: 480px; padding: 6px 8px calc(10px + env(safe-area-inset-bottom));
+  background: #EEEEE4; border-top: 1px solid #CFCFC4;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.25);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rchan-sheet-head {
+  text-align: center; font-size: .833rem; font-weight: 700; opacity: .7; padding: 4px 0 2px;
+}
+.rchan-sheet-box button {
+  display: block; width: 100%; padding: 12px 10px; cursor: pointer;
+  border: 1px solid #CFCFC4; background: #E6E6DA; color: #393939;
+  font: inherit; font-size: .9rem; font-weight: 700; text-align: center;
+}
+.rchan-sheet-box button:active { background: #c8102e; color: #fff; border-color: #c8102e; }
+.rchan-sheet-box .rchan-sheet-cancel { background: #DCDCCF; font-weight: 400; }
+.theme_dark .rchan-sheet-box { background: #1f2126; border-color: #2c2f36; }
+.theme_dark .rchan-sheet-box button { background: #262a31; color: #c9ccd1; border-color: #333; }
+.theme_dark .rchan-sheet-box .rchan-sheet-cancel { background: #16171b; }
+
+/* ---------- Pull-to-refresh (touch, board index/catalog) ---------- */
+html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
+#rchan-ptrind {
+  position: fixed; top: 0; left: 50%; transform: translate(-50%, 0);
+  z-index: 9999; pointer-events: none; opacity: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; font-size: .833rem; font-weight: 700;
+  background: #E6E6DA; color: #393939; border: 1px solid #CFCFC4;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.1);
+  transition: opacity .12s ease;
+}
+#rchan-ptrind.rchan-ptr-armed { background: #2ea043; color: #fff; border-color: #2ea043; }
+#rchan-ptrind svg { display: block; flex: none; }
+.theme_dark #rchan-ptrind { background: #262a31; color: #c9ccd1; border-color: #333; }
+.theme_dark #rchan-ptrind.rchan-ptr-armed { background: #2ea043; color: #fff; border-color: #2ea043; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   /* 1rem (16px default) inputs: anything smaller makes iOS force-zoom on focus */
@@ -1273,9 +1315,9 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
   body .nameLink, body .hideFileButton { padding: 6px 4px; display: inline-block; }
   .rchan-ris { white-space: normal; }
   .rchan-ris a { display: inline-block; padding: 4px 3px; }
-  /* nav icon buttons (filter / expand-all) need finger room */
-  #rchan-findbtn, #rchan-expandbtn { padding: 4px 10px; }
-  #rchan-findbtn svg, #rchan-expandbtn svg { width: 18px; height: 18px; }
+  /* nav icon buttons (filter / expand-all / gallery) need finger room */
+  #rchan-findbtn, #rchan-expandbtn, #rchan-galbtn { padding: 4px 10px; }
+  #rchan-findbtn svg, #rchan-expandbtn svg, #rchan-galbtn svg { width: 18px; height: 18px; }
   .rchan-idfunnel { padding: 4px 6px; }
   .rchan-idfunnel svg { width: 14px; height: 14px; }
   /* floating panels: hug the small screen instead of the desktop offsets */

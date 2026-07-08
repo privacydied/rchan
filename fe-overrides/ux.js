@@ -1695,17 +1695,29 @@
       });
       row.appendChild(title); row.appendChild(badge); row.appendChild(meta); row.appendChild(x);
       list.appendChild(row);
-      rows.push({ e: e, badge: badge });
+      rows.push({ e: e, badge: badge, row: row });
     });
-    // unread badges: one catalog fetch per distinct board in the list
+    // unread badges + dead markers: one catalog fetch per distinct board in
+    // the list. A thread missing from its board's catalog is pruned/archived —
+    // grey it out and say so instead of leaving a link that 404s unannounced.
     var boards = {};
     a.forEach(function (e) { boards[e.b] = 1; });
     Object.keys(boards).forEach(function (b) {
-      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (cat) {
+      fetch("/" + b + "/catalog.json").then(function (r) {
+        if (!r.ok) { throw new Error("no catalog"); }
+        return r.json();
+      }).then(function (cat) {
         var counts = {};
         (cat || []).forEach(function (t) { counts[t.threadId] = t.postCount || 0; });
         rows.forEach(function (ro) {
-          if (ro.e.b !== b || counts[ro.e.t] == null) { return; }
+          if (ro.e.b !== b) { return; }
+          if (counts[ro.e.t] == null) {                          // gone from the board
+            ro.row.classList.add("rchan-hist-dead");
+            ro.badge.className = "rchan-deadbadge";
+            ro.badge.textContent = "gone";
+            ro.badge.style.display = "";
+            return;
+          }
           var rec = seen[b + "/" + ro.e.t];
           var diff = counts[ro.e.t] - ((rec && rec.replies) || 0);
           if (rec && diff > 0) {
@@ -1713,7 +1725,7 @@
             ro.badge.style.display = "";
           }
         });
-      }).catch(function () {});
+      }).catch(function () {});                                  // board unreachable: mark nothing
     });
   }
   var HIST_SCROLL = "rchan_hist_scroll", histScrollT = null;

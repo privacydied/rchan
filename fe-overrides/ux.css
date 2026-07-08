@@ -1006,6 +1006,13 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 .rchan-hist-x:hover { opacity: 1; color: #c8102e; }
 .rchan-hist-empty { padding: 10px 8px; font-size: x-small; opacity: .85; text-align: center; }
+/* pruned/archived threads: dimmed row + grey "gone" chip */
+.rchan-hist-dead { opacity: .5; }
+.rchan-deadbadge {
+  display: inline-block; margin-left: 0; padding: 0 7px; flex: none;
+  background: #8a8a82; color: #fff; font-size: x-small; font-weight: 700; vertical-align: middle;
+}
+.theme_dark .rchan-deadbadge { background: #4a4e57; }
 .theme_dark #rchan-hist, .theme_dark #rchan-youbox { background: #16171b; border-color: #2c2f36; }
 .theme_dark .rchan-hist-head { background: #262a31; border-color: #2c2f36; }
 .theme_dark .rchan-hist-row { border-color: #2c2f3666; }

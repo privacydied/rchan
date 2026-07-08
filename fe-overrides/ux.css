@@ -123,9 +123,9 @@ body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_crea
      the ivory, not a grey sticker. */
   text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(42,38,32,.15);
 }
-/* cream: thread subjects share the display serif (Semibold), keeping their hue */
+/* cream: thread subjects in Arial (bold), keeping their hue */
 body.theme_cream .labelSubject {
-  font-family: "New York Large", Georgia, serif; font-weight: 600;
+  font-family: arial, helvetica, sans-serif; font-weight: 700;
 }
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
@@ -2807,8 +2807,8 @@ html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
   font-family: "New York Large", Georgia, "Times New Roman", serif; font-weight: 600; letter-spacing: -.5px;
   color: #EFEDE6 !important; text-shadow: 0 1px 1px rgba(0,0,0,.5);
 }
-/* thread subjects share the display serif (Semibold), keeping their hue */
-html.rchan-warmdark .labelSubject { font-family: "New York Large", Georgia, serif; font-weight: 600; }
+/* thread subjects in Arial (bold), keeping their hue */
+html.rchan-warmdark .labelSubject { font-family: arial, helvetica, sans-serif !important; font-weight: 700; }
 html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
 
 /* ---------- Forced colors (Windows High Contrast) ----------

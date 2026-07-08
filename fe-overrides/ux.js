@@ -1032,6 +1032,7 @@
     if (!youBtn) {
       youBtn = document.createElement("button"); youBtn.id = "rchan-youbtn"; youBtn.type = "button";
       youBtn.title = "Jump to replies to your posts";
+      youBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg><span></span>';
       youBtn.addEventListener("click", function () {
         youIdx = (youIdx + 1) % youHits.length;
         youHits[youIdx].scrollIntoView({ behavior: SB, block: "center" });
@@ -1039,7 +1040,7 @@
       document.body.appendChild(youBtn);
     }
     youBtn.style.display = "";
-    youBtn.textContent = "↩ " + youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
+    youBtn.lastChild.textContent = youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
   }
 
   /* ---------- Recently visited threads: history panel (🕘 in the nav column) ----------

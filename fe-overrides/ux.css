@@ -651,7 +651,9 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
   font: inherit; font-size: 10pt; font-weight: 700;
   background: #c8102e; color: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,.1);
   opacity: .9; transition: opacity .12s ease;
+  display: inline-flex; align-items: center; gap: 6px;   /* svg icon + text */
 }
+#rchan-youbtn svg { display: block; flex: none; }
 #rchan-youbtn:hover { opacity: 1; }
 
 /* ---------- Post form: collapse toggle + toolbar, char counter, drag-drop, previews ---------- */

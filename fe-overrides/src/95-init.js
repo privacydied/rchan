@@ -112,7 +112,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildYourThreads, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyWarmDark, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     document.addEventListener("visibilitychange", function () {   // catch up on what happened while hidden

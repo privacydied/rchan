@@ -269,6 +269,12 @@
       ao.textContent = "Academia";
       ao.setAttribute("data-rchan-theme", "academia");
       sel.appendChild(ao);
+      // Cream (Dark): rides on native "dark" (data-rchan-theme=dark) + warm marker.
+      var cdo = document.createElement("option");
+      cdo.textContent = "Cream (Dark)";
+      cdo.setAttribute("data-rchan-theme", "dark");
+      cdo.setAttribute("data-rchan-warm", "1");
+      sel.appendChild(cdo);
       var o = document.createElement("option");
       o.textContent = "Auto (OS)";
       o.setAttribute("data-auto", "1");
@@ -277,6 +283,7 @@
       else { try {
         if (localStorage.selectedTheme === "brutalist") { bo.selected = true; }
         else if (localStorage.selectedTheme === "academia") { ao.selected = true; }
+        else if (localStorage.selectedTheme === "dark" && warmDarkOn()) { cdo.selected = true; }
       } catch (e0) {} }
       // themes.js binds onchange as a property and indexes into ITS OWN theme
       // list — selecting an appended option through that handler would throw.
@@ -285,16 +292,20 @@
         var cur = sel.options[sel.selectedIndex];
         if (cur && cur.getAttribute("data-auto")) {
           try { localStorage.setItem(THEME_AUTO_KEY, "1"); } catch (e) {}
+          setWarmDark(false);
           applyAutoTheme();
           return;
         }
         try { localStorage.removeItem(THEME_AUTO_KEY); } catch (e2) {}
-        if (cur && cur.getAttribute("data-rchan-theme")) {   // Brutalist etc.
+        if (cur && cur.getAttribute("data-rchan-theme")) {   // Brutalist / Academia / Cream (Dark)
+          setWarmDark(cur.getAttribute("data-rchan-warm") === "1");
           try { delete localStorage.manualDefault; localStorage.selectedTheme = cur.getAttribute("data-rchan-theme"); } catch (e3) {}
           try { document.documentElement.classList.remove("predark"); } catch (e4) {}
           if (window.themeLoader && themeLoader.load) { themeLoader.load(); }
+          applyWarmDark();
           return;
         }
+        setWarmDark(false);   // any native option (Default/Clear/Cyber/Cream/Dark) clears the warm tint
         if (orig) { return orig.apply(this, arguments); }
       };
     }
@@ -360,6 +371,21 @@
     try { v = localStorage.getItem(TEXTSIZE_KEY) || "m"; } catch (e) {}
     if (!(v in TEXT_SIZES)) { v = "m"; }
     document.documentElement.style.fontSize = TEXT_SIZES[v];
+  }
+
+  /* ---------- "Cream (Dark)" theme ----------
+     A warm-brown dark variant. It rides on the native "dark" theme (so every
+     dark-styled surface is inherited for free) and layers a warm tint via an
+     html.rchan-warmdark marker class — the class lives on <html> so the native
+     themeLoader, which rewrites body.className, can't clobber it. */
+  var WARMDARK_KEY = "rchan_warmdark";
+  function warmDarkOn() { try { return localStorage.getItem(WARMDARK_KEY) === "1"; } catch (e) { return false; } }
+  function applyWarmDark() {
+    try { document.documentElement.classList.toggle("rchan-warmdark", warmDarkOn()); } catch (e) {}
+  }
+  function setWarmDark(on) {
+    try { if (on) { localStorage.setItem(WARMDARK_KEY, "1"); } else { localStorage.removeItem(WARMDARK_KEY); } } catch (e) {}
+    applyWarmDark();
   }
 
   /* ---------- Feedback lever: forty features, zero ways to say one is broken ----------

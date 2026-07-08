@@ -161,6 +161,51 @@
       if (m.cyclic) { chip("cyclic", "Cyclic thread — oldest replies rotate out"); }
     });
   }
+  /* ---------- Neo-futurist catalog card: instrument labeling ----------
+     Adds the parts the CSS can't derive: a top meta-strip (thread part-number +
+     board tag), a zero-padded R·I·P readout, and a no-file flag. Gated to the
+     brutalist theme so no other theme's catalog DOM is touched; idempotent per
+     cell. The CSS (ux.css .theme_brutalist) styles/positions all of it. */
+  function pad3(n) { n = String(n); return n.length >= 3 ? n : ("00" + n).slice(-3); }
+  function pad4(n) { n = String(n); return n.length >= 4 ? n : ("000" + n).slice(-4); }
+  function decorateCatalogCards(root) {
+    if (!isCatalog() || !document.body.classList.contains("theme_brutalist")) { return; }
+    var b = getBoard(); if (!b) { return; }
+    var tag = "/" + b.toUpperCase() + "/";
+    var cells = (root || document).getElementsByClassName("catalogCell");
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      if (cell.getAttribute("data-card")) { continue; }
+      cell.setAttribute("data-card", "1");
+      var tid = catThreadId(cell);
+      // meta-strip: THR//0044 .......... /GEN/
+      var meta = document.createElement("div"); meta.className = "rchan-cardmeta";
+      var l = document.createElement("span"); l.textContent = "THR//" + pad4(tid);
+      var r = document.createElement("span"); r.textContent = tag;
+      meta.appendChild(l); meta.appendChild(r);
+      cell.insertBefore(meta, cell.firstChild);
+      // readout: zero-padded interpunct R·I·P (preserve any +N new badge)
+      var stats = cell.getElementsByClassName("threadStats")[0];
+      if (stats && !stats.getAttribute("data-fmt")) {
+        stats.setAttribute("data-fmt", "1");
+        var badge = stats.getElementsByClassName("rchan-newbadge")[0];
+        stats.innerHTML = 'R <span class="labelReplies">' + pad3(catNum(cell, "labelReplies")) +
+          '</span> · I <span class="labelImages">' + pad3(catNum(cell, "labelImages")) +
+          '</span> · P <span class="labelPage">' + pad3(catNum(cell, "labelPage")) + '</span>';
+        if (badge) { stats.appendChild(badge); }
+      }
+      // no-file variant: inject a striped placeholder band in the thumb slot
+      if (!cell.querySelector(".linkThumb img")) {
+        cell.classList.add("rchan-nofile");
+        if (!cell.querySelector(".rchan-nofile-band")) {
+          var band = document.createElement("div"); band.className = "rchan-nofile-band";
+          var lab = document.createElement("span"); lab.textContent = "NO FILE";
+          band.appendChild(lab);
+          cell.insertBefore(band, meta.nextSibling);
+        }
+      }
+    }
+  }
   /* ---------- Deep search: reply-level search across the whole board ----------
      Native catalog search only sees OP subject/message. On a small board the
      client can afford what big boards need servers for: fetch every

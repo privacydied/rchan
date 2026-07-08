@@ -954,6 +954,48 @@ body.theme_brutalist .rchan-catprev-name { color: var(--ink) !important; font-fa
 body.theme_brutalist .rchan-catprev-id { color: #6b6b66 !important; font-family: var(--mono) !important; }
 body.theme_brutalist .rchan-catprev-msg, body.theme_brutalist .rchan-catprev-empty { color: var(--ink) !important; }
 
+/* ============ CATALOG CARD PROTOTYPE — the instrument card ============
+   Motifs: (1) index-label meta-strip, (2) corner registration ticks,
+   (3) inverted zero-padded readout strip. States: default / hover / visited
+   (grayscale thumb only) / no-file (striped band). Catalog grid only. */
+body.theme_brutalist .catalogCell { position: relative; }
+/* (2) corner registration ticks — top-left + bottom-right L-brackets */
+body.theme_brutalist .catalogCell::before, body.theme_brutalist .catalogCell::after {
+  content: ""; position: absolute; width: 8px; height: 8px; z-index: 3; pointer-events: none;
+}
+body.theme_brutalist .catalogCell::before { top: 4px; left: 4px; border-top: 2px solid var(--ink); border-left: 2px solid var(--ink); }
+body.theme_brutalist .catalogCell::after { bottom: 4px; right: 4px; border-bottom: 2px solid var(--ink); border-right: 2px solid var(--ink); }
+/* (1) meta-strip: THR//0044 .......... /GEN/ — part-number stamp */
+body.theme_brutalist .rchan-cardmeta {
+  order: 0; flex: none; display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono) !important; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); padding: 7px 12px 6px; border-bottom: 1px solid var(--hair);
+}
+/* teaser: clamp 4 this round */
+body.theme_brutalist .catalogCell > .divMessage { -webkit-line-clamp: 4; }
+/* (3) readout strip: already inverted + zero-padded (JS). Instrument tracking. */
+body.theme_brutalist .catalogCell > p.threadStats { letter-spacing: .09em; }
+/* state: visited = grayscale THUMB only, nothing else dims */
+body.theme_brutalist .catalogCell.rchan-visited { opacity: 1 !important; }
+body.theme_brutalist .catalogCell.rchan-visited > a.linkThumb img { filter: grayscale(100%) !important; }
+body.theme_brutalist .catalogCell.rchan-visited:hover > a.linkThumb img { filter: grayscale(0%) !important; }
+/* state: no-file = diagonal-stripe band + large mono NO FILE (overrides the *{bg-image:none} reset) */
+body.theme_brutalist .rchan-nofile-band {
+  order: 1; flex: none; width: 100%; aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  background-image: repeating-linear-gradient(45deg, var(--ink) 0 2px, transparent 2px 11px) !important;
+}
+body.theme_brutalist .rchan-nofile-band span {
+  font-family: var(--mono) !important; font-size: 15px; font-weight: 700; letter-spacing: .14em; color: var(--ink);
+  background: var(--paper); padding: 5px 9px; border: 2px solid var(--ink);
+}
+body.theme_brutalist .catalogCell.rchan-nofile > a.linkThumb { display: none !important; }   /* band replaces the empty thumb */
+/* +N new badge on a card: ink-inverted, no third color (accent discipline) */
+body.theme_brutalist .catalogCell .rchan-newbadge { background: var(--ink) !important; color: #fff !important; border: 0 !important; font-family: var(--mono) !important; font-size: 10px; letter-spacing: .08em; }
+/* top rhythm: kill the catalog dead zone — title anchors 32px under the fixed nav */
+body.theme_brutalist #catalogId { margin: var(--s6) 0 var(--s5) !important; }
+body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
+
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
    '(Show file)'). Replace with currentColor mask icons — external-link,

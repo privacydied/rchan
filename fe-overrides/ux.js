@@ -58,9 +58,12 @@
   var SVG_CLOCK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 15.2 13.8"/></svg>';
   var SVG_GEAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.484.484 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.61 3.61 0 0 1 8.4 12c0-1.98 1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>';
   function isCatalog() { return /\/catalog(\.html)?$/.test(location.pathname); }
+  // The overboard is a pseudo-board: no catalog.json, no res/<id>.json, no
+  // posting form. Board-scoped features that fetch those must step aside.
+  function isOverboard(b) { return b === "overboard"; }
   function toggleCatalog() {
     var b = getBoard();
-    if (!b || b.charAt(0) === ".") { return; }
+    if (!b || b.charAt(0) === "." || isOverboard(b)) { return; }   // overboard has no catalog view
     var toIndex = isCatalog();
     // remember the choice as the preferred board landing view: the router's
     // board-root -> catalog redirect reads this cookie and steps aside for
@@ -83,7 +86,7 @@
       return b;
     }
     btn(SVG_UP, "Top", function () { window.scrollTo({ top: 0, behavior: SB }); });
-    if (getBoard()) {
+    if (getBoard() && !isOverboard(getBoard())) {
       var onCat = isCatalog();
       btn(onCat ? SVG_LIST : SVG_GRID, onCat ? "Back to index view" : "Catalog view", toggleCatalog);
     }
@@ -957,8 +960,41 @@
         return orig.apply(this, arguments);
       };
     }
+    // a palette search from another page left a pending term — run it now
+    var pending = null;
+    try {
+      pending = sessionStorage.getItem(DEEP_PENDING);
+      if (pending) { sessionStorage.removeItem(DEEP_PENDING); }
+    } catch (e4) {}
+    if (pending) {
+      cb.checked = true;
+      try { localStorage.setItem(DEEP_KEY, "1"); } catch (e5) {}
+      field.value = pending;
+      applyDeepSearch();
+    }
   }
 
+  // Deep-search for a term from anywhere on the board: on the catalog, arm the
+  // deep checkbox and run it; elsewhere, stash the term and go to the catalog
+  // (hookDeepSearch picks the pending term up on load).
+  var DEEP_PENDING = "rchan_deep_pending";
+  function deepSearchFor(term) {
+    if (!term) { return; }
+    try { localStorage.setItem(DEEP_KEY, "1"); } catch (e) {}
+    if (isCatalog()) {
+      var f = document.getElementById("catalogSearchField");
+      var cb = document.querySelector("#rchan-deeplab input");
+      if (f) {
+        if (cb) { cb.checked = true; }
+        f.value = term;
+        applyDeepSearch();
+        try { f.scrollIntoView({ behavior: SB, block: "center" }); f.focus(); } catch (e2) {}
+        return;
+      }
+    }
+    try { sessionStorage.setItem(DEEP_PENDING, term); } catch (e3) {}
+    location.href = "/" + getBoard() + "/catalog";
+  }
   // prefetch a thread page when hovering its catalog cell (snappier open)
   var prefetched = {};
   function onCatHover(e) {
@@ -1210,6 +1246,30 @@
   function setFavBadge(n) {  // favicon.js exposes the badge compositor
     try { if (window.rchanSetFaviconBadge) { rchanSetFaviconBadge(n); } } catch (e) {}
   }
+  // Cross-tab once-guard: localStorage is shared synchronously between tabs,
+  // so stamping a key before notifying/chiming stops two open tabs from both
+  // firing for the same event. Stamps are pruned after an hour and excluded
+  // from backups.
+  function onceAcross(key, ms) {
+    try {
+      var k = "rchan_once_" + key, now = Date.now();
+      var prev = parseInt(localStorage.getItem(k), 10) || 0;
+      if (now - prev < ms) { return false; }
+      localStorage.setItem(k, String(now));
+      return true;
+    } catch (e) { return true; }
+  }
+  function pruneOnceStamps() {
+    try {
+      var now = Date.now(), del = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("rchan_once_") === 0 &&
+            now - (parseInt(localStorage.getItem(k), 10) || 0) > 3600000) { del.push(k); }
+      }
+      for (var j = 0; j < del.length; j++) { localStorage.removeItem(del[j]); }
+    } catch (e) {}
+  }
   function setTitleUnread(n) {                  // absolute count (board pages diff, not accumulate)
     unseenCount = Math.max(0, n | 0);
     document.title = unseenCount ? "(" + unseenCount + ") " + baseTitle : baseTitle;
@@ -1332,7 +1392,10 @@
         }
       }
     }
-    if (youNew > 0) { youChime(); updateYouboxBadge(); }
+    if (youNew > 0) {
+      if (onceAcross("chime-" + key + "-" + postIdOf(firstYou), 15000)) { youChime(); }
+      updateYouboxBadge();
+    }
     if (!document.hidden) { youboxMarkThreadRead(board, tid); }   // being here = reading it
     if (firstNew && !document.getElementById("rchan-newline")) {
       var d = document.createElement("div"); d.id = "rchan-newline";
@@ -1351,7 +1414,8 @@
     // Replies quoting one of YOUR posts get top billing, and clicking the
     // notification deep-links to the first relevant post instead of just focusing.
     if (newCount > 0 && document.hidden && "Notification" in window &&
-        Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1") {
+        Notification.permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "1" &&
+        onceAcross("ntf-" + key + "-" + curMax, 15000)) {
       try {
         var title = youNew > 0
           ? "rchan — " + youNew + " repl" + (youNew > 1 ? "ies" : "y") + " to you"
@@ -1400,6 +1464,8 @@
             var parts = k2.split("/");
             // the open thread notifies with full context via markNewInThread — skip it here
             if (parts[0] === getBoard() && parts[1] === curThreadId()) { return; }
+            // every open tab polls the watcher — only one gets to notify
+            if (!onceAcross("watch-" + k2 + "-" + (unread[k2].lastReplied || 0), 30000)) { return; }
             try {
               var n = new Notification("rchan — watched thread updated", {
                 body: (unread[k2].label ? unescapeHtml(unread[k2].label) + " · " : "") + "/" + parts[0] + "/ · thread " + parts[1],
@@ -1975,7 +2041,7 @@
      instead of silently going stale. */
   function initBoardLiveness() {
     var b = getBoard();
-    if (!b || b.charAt(0) === "." || curThreadId()) { return; }
+    if (!b || b.charAt(0) === "." || isOverboard(b) || curThreadId()) { return; }   // no catalog.json to diff on the overboard
     if (!document.getElementById("divThreads")) { return; }        // board index or catalog only
     var base = null, pill = null;
     function snapshot(list) {
@@ -3623,6 +3689,7 @@
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
+        if (k && k.indexOf("rchan_once_") === 0) { continue; }   // ephemeral cross-tab stamps
         if (k && k.indexOf("rchan_") === 0) { out[k] = localStorage.getItem(k); }
       }
       EXPORT_NATIVE.forEach(function (k2) {
@@ -4272,6 +4339,16 @@
     }
     if (q) { scored.sort(function (a, b) { return b.s - a.s || a.i - b.i; }); }
     palResults = scored.slice(0, 14).map(function (r) { return r.e; });
+    // no destination matches: fall through to a board-wide deep search for the query
+    var pb = getBoard();
+    if (!palResults.length && q && pb && pb.charAt(0) !== "." && !isOverboard(pb)) {
+      palResults = [{
+        kind: "search",
+        title: "Search /" + pb + "/ for “" + palInput.value.trim() + "”",
+        sub: "deep search — matches inside every reply on the board",
+        fn: (function (term) { return function () { deepSearchFor(term); }; })(palInput.value.trim())
+      }];
+    }
     palSel = Math.max(0, Math.min(palSel, palResults.length - 1));
     palListEl.innerHTML = "";
     if (!palResults.length) {
@@ -4665,7 +4742,7 @@
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, initFirstVisitHint, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     try { new MutationObserver(refresh).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}

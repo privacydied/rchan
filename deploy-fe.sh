@@ -21,11 +21,24 @@ CONF=nginx/default.conf
 # ---- build: ux.js is generated from fe-overrides/src/*.js (numeric order) ----
 # Edit the modules, never ux.js directly; the artifact stays committed because
 # the router bind-mounts it. A failed parse aborts the deploy.
+# Minified with esbuild when available (once: npm install --no-save esbuild) —
+# whitespace+syntax only, identifiers KEPT so smoke canaries and stack traces
+# stay readable. Falls back to unminified rather than failing the deploy.
 if [ -d fe-overrides/src ]; then
   echo "building ux.js from fe-overrides/src/ ($(ls fe-overrides/src/*.js | wc -l | tr -d ' ') modules)..."
   cat fe-overrides/src/*.js > fe-overrides/ux.new.js
   node --check fe-overrides/ux.new.js
-  mv fe-overrides/ux.new.js fe-overrides/ux.js
+  if [ -x node_modules/.bin/esbuild ]; then
+    node_modules/.bin/esbuild fe-overrides/ux.new.js --minify-whitespace --minify-syntax \
+      --charset=utf8 --log-level=error --outfile=fe-overrides/ux.min.js
+    node --check fe-overrides/ux.min.js
+    mv fe-overrides/ux.min.js fe-overrides/ux.js
+    rm -f fe-overrides/ux.new.js
+    echo "  minified: $(wc -c < fe-overrides/ux.js | tr -d ' ') bytes (source $(cat fe-overrides/src/*.js | wc -c | tr -d ' '))"
+  else
+    echo "  (esbuild missing — serving unminified; npm install --no-save esbuild)"
+    mv fe-overrides/ux.new.js fe-overrides/ux.js
+  fi
 fi
 
 bump() { # $1 = URL path in the conf, $2 = source file

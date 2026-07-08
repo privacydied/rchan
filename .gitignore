@@ -17,3 +17,7 @@ private.key
 addons-deps/
 ux.new.js
 ux.js.new
+node_modules/
+package.json
+package-lock.json
+ux.min.js

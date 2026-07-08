@@ -2868,6 +2868,32 @@
       });
     });
   }
+  // Duplicate guard: the /.media/<hash> URLs in the thread ARE sha256 hashes
+  // (the engine dedups uploads by that digest) — hash the file we're about to
+  // attach and warn if the thread already has it. Advisory only; posting a
+  // dupe on purpose stays possible.
+  function threadMediaHashes() {
+    var set = {}, els = document.querySelectorAll('a[href*="/.media/"], img[src*="/.media/"]');
+    for (var i = 0; i < els.length; i++) {
+      var h = mediaHashOf(els[i].getAttribute("href") || els[i].getAttribute("src"));
+      if (h) { set[h] = 1; }
+    }
+    return set;
+  }
+  function warnIfDuplicate(file) {
+    if (!curThreadId() || !file || !window.crypto || !crypto.subtle ||
+        typeof file.arrayBuffer !== "function") { return; }
+    file.arrayBuffer().then(function (buf) {
+      return crypto.subtle.digest("SHA-256", buf);
+    }).then(function (hb) {
+      var hex = Array.prototype.map.call(new Uint8Array(hb), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+      if (threadMediaHashes()[hex]) {
+        toast("Heads up: “" + file.name + "” is already posted in this thread", true);
+      }
+    }).catch(function () {});
+  }
   function hookFilePrivacy() {
     if (!window.postCommon || !postCommon.addSelectedFile || postCommon.__rchanPriv) { return; }
     postCommon.__rchanPriv = true;
@@ -2876,10 +2902,13 @@
       try {
         var strip = setOn("stripexif") && file && STRIP_TYPES[(file.type || "").toLowerCase()];
         var anon = setOn("anonname", false) && file && typeof File === "function";
-        if (!strip && !anon) { return orig.call(postCommon, file); }
-        var self = this;
+        if (!strip && !anon) {
+          warnIfDuplicate(file);                       // fire-and-forget, never blocks the add
+          return orig.call(postCommon, file);
+        }
         var finish = function (f) {
           if (anon) { try { f = new File([f], anonName(f), { type: f.type }); } catch (e) {} }
+          warnIfDuplicate(f);                          // hash the FINAL bytes (post strip/rename)
           orig.call(postCommon, f);
         };
         if (!strip) { finish(file); return; }

@@ -5,7 +5,7 @@
    EXACT COPY of 4chan's yotsubluenew.716.css structure & typography,
    re-palette'd to CREAM, with SQUARE offset shadows. Tokens:
 
-   - Base type: arial, helvetica, sans-serif @ .833rem (10pt at the 16px
+   - Base type: "Liberation Sans", "Arial", "sans-serif" @ .833rem (10pt at the 16px
      browser default — rem so user font-size preferences scale the site).
      Meta text x-small (backlinks, subtitles, footer), page list + board
      nav .8125rem (13px), board title 1.75rem (28px) Tahoma.
@@ -30,7 +30,7 @@
 
 /* ---------- Base (yotsuba: body / links / hr / images) ---------- */
 html body {
-  font-family: arial, helvetica, sans-serif;
+  font-family: "Liberation Sans", "Arial", "sans-serif";
   font-size: .833rem;
   color: #393939;
   background: #EEEEE4;   /* outranks global.css's body{#EEF2FF + fade-blue image} */
@@ -97,7 +97,6 @@ body #rchan-bannerwrap + #catalogId { margin-top: .4em; }
 .rchan-accented #rchan-formtoggle:hover, .rchan-accented .rchan-empty-cta:hover {
   background: hsl(var(--bah, 210), 42%, 36%); border-color: hsl(var(--bah, 210), 42%, 36%); color: #fff;
 }
-.rchan-accented #rchan-banner { border-bottom: 3px solid hsl(var(--bah, 210), 38%, 45%); }
 
 /* ---------- Board header (yotsuba: .boardTitle / .boardSubtitle) ---------- */
 .boardHeader { text-align: center; clear: both; margin-top: 70px; }
@@ -132,7 +131,7 @@ body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_crea
 }
 /* cream: thread subjects in Arial (bold), keeping their hue */
 body.theme_cream .labelSubject {
-  font-family: arial, helvetica, sans-serif; font-weight: 700;
+  font-family: "Liberation Sans", "Arial", "sans-serif"; font-weight: 700;
 }
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
@@ -542,7 +541,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 /* ---------- Catalog last-replies hover preview (4chan-style) ---------- */
 #rchan-catprev {
   position: fixed; z-index: 10003; width: 360px; pointer-events: auto;
-  display: none; text-align: left; font-size: .833rem;
+  display: none; text-align: left; font-size: .833rem; box-sizing: border-box;
   background: #EEEEE4; border: 1px solid #CFCFC4; border-radius: 6px;
   box-shadow: 0 8px 24px rgba(0,0,0,.45);
   padding: 4px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain;
@@ -798,7 +797,7 @@ body.rchan-ws #rchan-zoom { filter: none; }
 #watcherButton span:not(:empty) {
   position: absolute; top: -8px; right: -11px;
   background: #c8102e; color: #fff !important;
-  font-family: arial, helvetica, sans-serif;
+  font-family: "Liberation Sans", "Arial", "sans-serif";
   font-size: .5625rem; font-weight: 700; line-height: 1;
   padding: 2px 4px;
   box-shadow: 1px 1px 0 rgba(0,0,0,.15);
@@ -2061,6 +2060,7 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
 #rchan-origform {
   display: block; width: -moz-fit-content; width: fit-content;
   margin: 0 auto 6px; font-size: x-small; text-decoration: underline; cursor: pointer;
+  font-family: "Liberation Sans", "Arial", "sans-serif";
 }
 
 /* slide the posting form open/closed (grid-rows 1fr<->0fr animates true auto height) */
@@ -2980,7 +2980,7 @@ html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
   color: #EFEDE6 !important; text-shadow: 0 1px 1px rgba(0,0,0,.5);
 }
 /* thread subjects in Arial (bold), keeping their hue */
-html.rchan-warmdark .labelSubject { font-family: arial, helvetica, sans-serif !important; font-weight: 700; }
+html.rchan-warmdark .labelSubject { font-family: "Liberation Sans", "Arial", "sans-serif" !important; font-weight: 700; }
 html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
 
 /* ==========================================================================

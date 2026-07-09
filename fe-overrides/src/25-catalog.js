@@ -432,7 +432,9 @@
     // align if it would overflow the right edge; flip ABOVE if it clips the bottom.
     var r = cell.getBoundingClientRect(), m = 8;
     var vw = window.innerWidth, vh = window.innerHeight;
-    var w = Math.min(Math.max(Math.round(r.width), 240), vw - 2 * m);
+    // match the cell's actual rendered width exactly (whatever the catalog size
+    // dropdown has it at) — only the viewport-edge overflow guard clamps it.
+    var w = Math.min(Math.round(r.width), vw - 2 * m);
     catPrev.style.width = w + "px";
     var left = r.left;
     if (left + w > vw - m) { left = r.right - w; }              // flip to right-align

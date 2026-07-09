@@ -22,9 +22,9 @@
     { g: "Advanced", k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { g: "Appearance", k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
     { g: "Reading", k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
-    { g: "Reading", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
-    { g: "Reading", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
-    { g: "Reading", k: "follow", t: "Follow live threads", d: "Reading at the bottom? New posts scroll into view as they arrive; scroll up and it stands down" },
+    { g: "Advanced", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
+    { g: "Advanced", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
+    { g: "Advanced", k: "follow", t: "Follow live threads", d: "Reading at the bottom? New posts scroll into view as they arrive; scroll up and it stands down" },
     { g: "Reading", t: "Infinite scroll", d: "Board index and catalog load more automatically as you scroll near the bottom, instead of paging",
       get: function () { return infScrollOn(); },
       set: function (on) {
@@ -41,12 +41,12 @@
     { g: "Media", t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },
-    { g: "Media", k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
+    { g: "Advanced", k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { g: "Posting", k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
     { g: "Notifications", k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },
     { g: "Posting", k: "stripexif", t: "Strip image metadata", d: "Re-encode JPEG/PNG/WebP uploads in the browser so EXIF/GPS never leaves your device (GIFs excluded)" },
-    { g: "Posting", k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },
-    { g: "Appearance", t: "Board accent colors", d: "Each board tints its title with its own stable hue",
+    { g: "Advanced", k: "anonname", def: false, t: "Anonymize filenames", d: "Rename uploads to a timestamp before they upload" },
+    { g: "Advanced", t: "Board accent colors", d: "Each board tints its title with its own stable hue",
       get: function () { return setOn("accent"); },
       set: function (on) { setPut("accent", on); applyBoardAccent(); } },
     { g: "Appearance", t: "Text size", d: "Scales every piece of text (the rem scale) without zooming the whole page",
@@ -63,7 +63,7 @@
         if (on) { applyAutoTheme(); }
         syncAutoThemeOption();
       } },
-    { g: "Media", t: "Loop videos", d: "Restart videos when they end (native players)",
+    { g: "Advanced", t: "Loop videos", d: "Restart videos when they end (native players)",
       get: function () { try { return !JSON.parse(localStorage.noAutoLoop || "false"); } catch (e) { return true; } },
       set: function (on) {
         try { localStorage.noAutoLoop = JSON.stringify(!on); } catch (e) {}
@@ -496,7 +496,7 @@
     var list = setPanel.children[1];                              // rebuild → checkboxes reflect live state
     list.innerHTML = "";
     var news = document.createElement("div"); news.className = "rchan-set-news";
-    news.textContent = "Recently added: connection dot · watch from catalog · text size · ID names · your-threads strip (see each section)";
+    news.textContent = "Recently added: save a thread (Ctrl+K) · click-to-play video links · long-thread folding · honours Data Saver — all automatic, nothing to switch on";
     list.appendChild(news);
     // grouped into collapsible sections — 20+ flat toggles had become a wall.
     // Open/closed state persists per group; first visit opens Reading only.
@@ -553,7 +553,8 @@
       ["Hover previews", "hover a thumbnail for full-size; hover a catalog card for its last replies"],
       ["Inline quotes", "click any >>quote to embed the post; the ⇄ icon isolates one conversation"],
       ["Find in thread", "f — live filter with id: name: file: subj: no: prefixes; funnels on ID pills"],
-      ["Long threads", "minimap on the right edge (your posts red, replies to you green) · sticky OP bar"],
+      ["Long threads", "minimap on the right edge (your posts red, replies to you green) · sticky OP bar · very long threads fold old posts behind a stub"],
+      ["Play video links", "a ▶ appears next to YouTube/Vimeo links — click to play inline, nothing loads until you do"],
       ["Work-safe mode", "blur all media until hovered — toggle in settings or via Ctrl+K"]
     ]],
     ["Staying current", [
@@ -576,6 +577,7 @@
       ["Deep search", "the \"deep\" checkbox on catalog search matches inside every reply"]
     ]],
     ["Identity", [
+      ["Save a thread", "Ctrl+K → \"Save this thread\" (or long-press on mobile) writes a self-contained HTML archive"],
       ["It's all local", "(You)s, watched, filters, names — this browser only; export it under settings"],
       ["Move devices", "Copy identity / Paste identity in the settings footer — merge-safe"],
       ["ID petnames", "✎ next to an ID pill names it locally; the name filters in find (id:)"],

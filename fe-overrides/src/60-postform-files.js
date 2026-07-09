@@ -44,14 +44,18 @@
   // themeLoader already handles the theme natively.
   function applyBridgedTheme(theme) {
     if (onBoardsOrigin()) { return; }
-    try {
-      if (theme) { localStorage.setItem("selectedTheme", theme); }
-      else { localStorage.removeItem("selectedTheme"); }
-    } catch (e) {}
+    // No explicit choice on the board origin (a fresh visitor — including private
+    // browsing, where the board origin's localStorage is empty too — or someone
+    // who never changed their theme): leave the apex's OWN predark-resolved
+    // default (Cream Dark) alone. The old code removed selectedTheme and stripped
+    // the predark class here, which clobbered that default and flashed the
+    // homepage from dark to light. Only mirror an ACTUAL board-origin choice.
+    if (!theme) { return; }
+    try { localStorage.setItem("selectedTheme", theme); } catch (e) {}
     try {
       document.documentElement.classList.toggle("predark", theme === "dark");
       if (window.themeLoader && themeLoader.load) { themeLoader.load(); }
-      else if (theme) { document.body.className = "theme_" + theme; }
+      else { document.body.className = "theme_" + theme; }
     } catch (e2) {}
   }
   function renderYourThreads(watchedRaw, youboxRaw) {

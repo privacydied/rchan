@@ -505,7 +505,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
   display: flex; flex-direction: row; flex-wrap: wrap;
   align-items: center; justify-content: center;
-  gap: 6px; width: 100%; box-sizing: border-box; padding: 6px 10px;
+  width: 100%; box-sizing: border-box; padding: 6px 10px;
 }
 #rchan-nav button {
   width: 40px; height: 40px; border: 0; cursor: pointer;

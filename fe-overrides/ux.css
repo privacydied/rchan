@@ -190,6 +190,16 @@ body.theme_cream .divMessage .greenText, body.theme_cream .divMessage .redText {
 .innerOP { overflow: hidden; }   /* contain the float (4chan div.post) */
 /* thumbnails: never overflow */
 .imgLink img, .imgExpanded { max-width: 100%; height: auto; }
+/* engine bug: posting.css's `.uploadCell img:not(.imgExpanded) { max-width: 125px }`
+   is meant for the COMPOSE-form "you selected these files" preview, but the
+   SAME class wraps posted thumbnails in rendered threads/index too (server-side
+   domManipulator/common.js reuses <figure class="uploadCell">), so every OP and
+   reply thumbnail was stuck at 125px regardless of the actual thumbnail size.
+   Restore full size for rendered posts only — scoped to .innerPost/.innerOP,
+   which the compose form (#postingForm/#quick-reply) is never inside. */
+.innerPost .uploadCell img:not(.imgExpanded), .innerOP .uploadCell img:not(.imgExpanded) {
+  max-width: 100% !important;
+}
 
 /* ---------- Form/table colours (cream) ---------- */
 /* posting-form label cells (4chan table.postForm td:first-child = #98E + black border) */

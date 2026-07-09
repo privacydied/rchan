@@ -52,6 +52,7 @@ bump "/.rchan/ux.css"           fe-overrides/ux.css
 bump "/.rchan/ux.js"            fe-overrides/ux.js
 bump "/.rchan/favicon.js"       fe-overrides/favicon.js
 bump "/.rchan/mod.js"           fe-overrides/mod.js
+bump "/.rchan/predark.js"       fe-overrides/predark.js
 bump "/.static/js/tooltips.js"  fe-overrides/tooltips.js
 
 echo "restarting router..."

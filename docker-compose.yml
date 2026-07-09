@@ -83,6 +83,7 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./fe-overrides/mod.js:/etc/nginx/rchan/mod.js:ro
       - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
+      - ./fe-overrides/predark.js:/etc/nginx/rchan/predark.js:ro
       - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
       - ./fe-overrides/Roboto.woff2:/etc/nginx/rchan/roboto.woff2:ro
       - ./fe-overrides/RobotoMono.woff2:/etc/nginx/rchan/robotomono.woff2:ro

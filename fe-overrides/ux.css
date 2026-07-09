@@ -142,6 +142,7 @@ body .innerPost {
   border: 1px solid #CFCFC4;
   border-left: none;
   border-top: none;
+  border-radius: 5px;
   display: table;
   padding: 2px;
   box-shadow: 2px 2px 0 rgba(0,0,0,.1);   /* square shadow kept */

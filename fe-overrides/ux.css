@@ -2861,6 +2861,10 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
    Token map:  bg #1F1F1E · well #161615 · panel #2A2A28 · panel-2 #363634 ·
    border #454542 · ink #E8E6DF · sage #A6C185.
    ========================================================================== */
+html.rchan-warmdark {
+  --ground: #1F1F1E; --well: #161615; --surface: #2A2A28; --surface-2: #363634;
+  --border: #454542; --ink: #E8E6DF; --ink-faint: #9b9b94; --accent: #A6C185;
+}
 html.rchan-warmdark body.theme_dark,
 html.rchan-warmdark .theme_dark { background: #1F1F1E !important; color: #E8E6DF !important; }
 
@@ -2971,6 +2975,110 @@ html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
 /* thread subjects in Arial (bold), keeping their hue */
 html.rchan-warmdark .labelSubject { font-family: arial, helvetica, sans-serif !important; font-weight: 700; }
 html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
+
+/* ==========================================================================
+   CREAM (DARK): CATALOG POLISH PASS — fills over strokes, full-bleed thumbs,
+   hover life. De-1.0 the catalog card without touching the small type scale.
+   ========================================================================== */
+
+/* 1. Card surface: definition from the fill sitting one step above --ground,
+   not the stroke. Barely-there edge + soft resting shadow; hover lifts. */
+html.rchan-warmdark .catalogCell {
+  background: var(--surface) !important;
+  border: 1px solid rgba(255,255,255,.04) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+html.rchan-warmdark .catalogCell:hover {
+  background: var(--surface-2) !important;
+  border-color: rgba(255,255,255,.09) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+}
+
+/* 2. Full-bleed thumb: edge-to-edge at the card top, radius matches the card's
+   top corners, fixed-height band, cover-cropped. The image edge IS the divider —
+   no hairline between thumb and body. */
+html.rchan-warmdark .catalogCell > a.linkThumb {
+  height: 160px; border-radius: 8px 8px 0 0; overflow: hidden;
+}
+html.rchan-warmdark.rchan-cat-s .catalogCell > a.linkThumb { height: 120px; }
+
+/* 3. Stat line: plain text at the card bottom, no border, a faint --ground
+   wash for grounding. Compact "R 1 · I 0 · P 1" format (set in JS —
+   decorateCreamDarkCatalog). */
+html.rchan-warmdark .catalogCell > p.threadStats {
+  border-top: none !important;
+  background: rgba(31,31,30,.4);
+  font-size: 10px !important; color: var(--ink-faint) !important;
+  padding: 12px !important; letter-spacing: .04em;
+}
+html.rchan-warmdark .rchan-nofile-open {
+  float: right; color: var(--accent); text-decoration: none; font-weight: 700;
+}
+html.rchan-warmdark .rchan-nofile-open:hover { text-decoration: underline; }
+
+/* 4. Teaser clamp: clean line-boundary cut instead of scroll-in-place (which
+   Cream/light keeps) — clamp is the default state for this pass. */
+html.rchan-warmdark .catalogCell > .divMessage {
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
+  overflow: hidden; overflow-y: hidden;
+}
+
+/* 5. Color diet: cream text, grey metadata, sage interactive — nothing else.
+   Subjects go ink (not gold); the whole card is the hover target, so the
+   subject picks up --accent when the CARD is hovered, not just itself. */
+html.rchan-warmdark .catalogCell .labelSubject { color: var(--ink) !important; font-weight: 600; }
+html.rchan-warmdark .catalogCell:hover .labelSubject { color: var(--accent) !important; }
+html.rchan-warmdark .catalogCell .greenText { color: var(--ink-faint) !important; }
+html.rchan-warmdark .checkedFavouriteButton { color: var(--ink-faint) !important; }
+
+/* 6. No-image cells: --surface-2 band where the thumb would be (same fixed
+   height), a centered muted glyph instead of raw "Open" text (folded into the
+   stat line instead — see .rchan-nofile-open above and decorateCreamDarkCatalog). */
+html.rchan-warmdark .catalogCell.rchan-nofile > a.linkThumb {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2) !important;
+}
+html.rchan-warmdark .rchan-nofile-glyph {
+  color: var(--ink-faint); font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* 7. Floating button bar: one compact pill (not the full-width sticky footer
+   the base theme uses), docked bottom-right. 32px square buttons, faint icons,
+   sage on hover/active. */
+html.rchan-warmdark #rchan-nav {
+  left: auto !important; right: 16px !important; bottom: 16px !important;
+  width: auto !important; gap: 4px !important; padding: 4px !important;
+  background: var(--surface) !important; border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+}
+html.rchan-warmdark #rchan-nav button {
+  width: 32px !important; height: 32px !important;
+  background: transparent !important; color: var(--ink-faint) !important;
+  border-radius: 4px; box-shadow: none !important;
+}
+html.rchan-warmdark #rchan-nav button:hover { background: var(--surface-2) !important; color: var(--accent) !important; }
+html.rchan-warmdark #rchan-nav button.rchan-on { background: var(--accent) !important; color: var(--ground) !important; }
+/* the pill is small + corner-docked now, not a full-width bar — the generic
+   60px body clearance is more than it needs, but the catalog grid gets a
+   little extra so the pill never sits over the last row's bottom-right card */
+html.rchan-warmdark #divThreads:has(.catalogCell) { padding-bottom: 90px !important; }
+
+/* 8. Page header rhythm: title, 12px, create-thread, 8px, original-form,
+   24px, controls row, 16px, grid (each gap owned by ONE element's
+   margin-bottom, margin-top:0 on the follower avoids collapse ambiguity). */
+html.rchan-warmdark #catalogId { margin-bottom: 12px !important; }
+html.rchan-warmdark #rchan-formtoggle { margin-top: 0 !important; margin-bottom: 8px !important; }
+html.rchan-warmdark #rchan-origform { margin-top: 0 !important; margin-bottom: 24px !important; }
+/* #postingForm (collapsed) and #divTools (hidden but still in flow) sit between
+   origform and the controls row — zero their margins so origform's
+   margin-bottom is the ONLY thing setting that gap. */
+html.rchan-warmdark #postingForm, html.rchan-warmdark #divTools { margin: 0 !important; }
+html.rchan-warmdark #rchan-cattools { margin-top: 0 !important; margin-bottom: 16px !important; }
 
 /* ---------- Forced colors (Windows High Contrast) ----------
    Nearly every control we ship is an SVG on a transparent background —

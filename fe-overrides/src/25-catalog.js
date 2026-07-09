@@ -227,6 +227,42 @@
       }
     }
   }
+  /* ---------- Cream (Dark) catalog polish: compact stat line + no-file cells ----------
+     Separate from decorateCatalogCards' Brutalist/Academia register system (no
+     eyebrow row here) — just the stat-line reformat ("R 1 · I 0 · P 1") and the
+     no-image placeholder band, folding its "Open" link into the stat line. */
+  function decorateCreamDarkCatalog(root) {
+    if (!document.documentElement.classList.contains("rchan-warmdark") || !isCatalog()) { return; }
+    var cells = (root || document).getElementsByClassName("catalogCell");
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      if (cell.getAttribute("data-cdcat")) { continue; }
+      cell.setAttribute("data-cdcat", "1");
+      var stats = cell.getElementsByClassName("threadStats")[0];
+      if (stats) {
+        var reps = catNum(cell, "labelReplies"), imgs = catNum(cell, "labelImages"), pg = catNum(cell, "labelPage");
+        var badge = stats.getElementsByClassName("rchan-newbadge")[0];
+        stats.innerHTML = "R " + reps + " &middot; I " + imgs + " &middot; P " + pg;
+        if (badge) { stats.appendChild(badge); }
+      }
+      var thumbLink = cell.querySelector("a.linkThumb");
+      if (thumbLink && !thumbLink.querySelector("img")) {
+        cell.classList.add("rchan-nofile");
+        var glyph = document.createElement("span");
+        glyph.className = "rchan-nofile-glyph";
+        glyph.textContent = "TEXT";
+        thumbLink.textContent = "";
+        thumbLink.appendChild(glyph);
+        if (stats && !stats.querySelector(".rchan-nofile-open")) {
+          var openLink = document.createElement("a");
+          openLink.className = "rchan-nofile-open";
+          openLink.href = thumbLink.getAttribute("href") || "#";
+          openLink.textContent = "Open";
+          stats.appendChild(openLink);
+        }
+      }
+    }
+  }
   /* ---------- Deep search: reply-level search across the whole board ----------
      Native catalog search only sees OP subject/message. On a small board the
      client can afford what big boards need servers for: fetch every

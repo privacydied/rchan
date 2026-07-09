@@ -4,7 +4,7 @@
     if (document.hidden) { refreshWhenVisible = true; return; }    // hidden tabs defer the whole pipeline
     if (pending) { return; }
     pending = true;
-    setTimeout(function () { pending = false; decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateCodeBlocks(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); decorateCatalogCards(document); decorateAcademiaChrome(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); decorateCatalogWatch(document); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80);
+    setTimeout(function () { pending = false; applyWarmDark(); decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateCodeBlocks(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateSideCatalog(); decorateCatalogCards(document); decorateCreamDarkCatalog(document); decorateAcademiaChrome(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); decorateCatalogWatch(document); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80);
   }
   /* The observer used to re-run that ~30-scan pipeline on EVERY childList
      mutation — including our own: each decoration, each status-line rewrite
@@ -107,13 +107,13 @@
       }
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
-    [buildNav, ensureNavSettings, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); }, function () { decorateCodeBlocks(document); },
-     function () { decorateYou(document); }, function () { decorateCatalogCards(document); }, decorateAcademiaChrome, initInfiniteScroll, initCatalogInfiniteScroll, markNewInThread, markNewInCatalog, markVisitedInCatalog, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
+    [applyWarmDark, buildNav, ensureNavSettings, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); }, function () { decorateCodeBlocks(document); },
+     function () { decorateYou(document); }, function () { decorateCatalogCards(document); }, function () { decorateCreamDarkCatalog(document); }, decorateAcademiaChrome, initInfiniteScroll, initCatalogInfiniteScroll, markNewInThread, markNewInCatalog, markVisitedInCatalog, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildYourThreads, buildActiveThreads,
-     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyWarmDark, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps
+     initGallerySwipe, initLongPress, initPullRefresh, initAutoTheme, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps
     ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
     if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
     document.addEventListener("visibilitychange", function () {   // catch up on what happened while hidden

@@ -8,11 +8,14 @@
     if (!b || b.charAt(0) === "." || isOverboard(b) || curThreadId()) { return; }   // no catalog.json to diff on the overboard
     if (!document.getElementById("divThreads")) { return; }        // board index or catalog only
     var base = null, pill = null;
+    // per-thread post counts (not just a grand total) -- needed so a brand
+    // new thread that already picked up a reply or two before this poll
+    // caught it doesn't get those replies miscounted as "new posts" in an
+    // ALREADY-known thread (see check(), below).
     function snapshot(list) {
-      var m = { total: 0, threads: {} };
+      var m = { threads: {} };
       (list || []).forEach(function (t) {
-        m.total += (t.postCount || 0) + 1;                         // +1: the OP itself
-        m.threads[t.threadId] = 1;
+        m.threads[t.threadId] = (t.postCount || 0) + 1;             // +1: the OP itself
       });
       return m;
     }
@@ -20,9 +23,14 @@
       fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
         var cur = snapshot(list);
         if (!base) { base = cur; return; }
-        var newThreads = 0;
-        Object.keys(cur.threads).forEach(function (id) { if (!base.threads[id]) { newThreads++; } });
-        var newPosts = Math.max(0, cur.total - base.total) - newThreads;
+        var newThreads = 0, newPosts = 0;
+        Object.keys(cur.threads).forEach(function (id) {
+          if (!base.threads[id]) { newThreads++; return; }          // brand new thread: its whole post
+          // count is "new threads", not "new posts" -- even if it already
+          // has replies by the time this poll saw it.
+          var delta = cur.threads[id] - base.threads[id];
+          if (delta > 0) { newPosts += delta; }                     // ignore shrinkage (pruned/deleted posts)
+        });
         // hidden tab: board pages get the same "(N)" title + favicon badge threads have
         if (document.hidden) { setTitleUnread(newThreads + newPosts); }
         if (newThreads <= 0 && newPosts <= 0) { if (pill) { pill.style.display = "none"; } return; }
@@ -111,16 +119,23 @@
   var sitePresenceCount = 0;
   function renderSitePresence() {
     var n = sitePresenceCount;
-    if (!n) { return; }
-    var txt = n + (n === 1 ? " anon" : " anons") + " browsing now";
+    // n===0 must still run through: presence is dynamic (tabs close, pings
+    // age out) and legitimately drops to zero. Bailing out here used to leave
+    // whatever the LAST nonzero count was on screen forever -- once it ticked
+    // up once, it could never tick back down (or to 0) again for the rest of
+    // the page's life. Only skip creating brand-new DOM for a first-ever 0
+    // (nothing to show yet); an already-rendered element still gets hidden.
     if (/^\/(index\.html)?$/.test(location.pathname)) {
       var el = document.getElementById("rchan-sitestat");
+      if (!n) { if (el) { el.style.display = "none"; } return; }
+      var txt = n + (n === 1 ? " anon" : " anons") + " browsing now";
       if (!el) {
         var anchor = document.getElementById("rchan-active") || document.getElementById("divBoards");
         if (!anchor) { return; }
         el = document.createElement("div"); el.id = "rchan-sitestat";
         anchor.parentNode.insertBefore(el, anchor);
       }
+      el.style.display = "";
       el.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span> ' + escHtml(txt);
       return;
     }
@@ -128,13 +143,16 @@
       var nav = document.querySelector("nav, #dynamicHeader");
       if (!nav) { return; }
       var el2 = document.getElementById("rchan-sitestat-nav");
+      if (!n) { if (el2) { el2.style.display = "none"; } return; }
+      var txt2 = n + (n === 1 ? " anon" : " anons") + " browsing now";
       if (!el2) {
         el2 = document.createElement("span"); el2.id = "rchan-sitestat-nav";
         nav.insertBefore(el2, document.getElementById("navOptionsSpan") || null);
       }
+      el2.style.display = "";
       // icon form, matching the thread status line: "1 👤" + full sentence on hover
-      el2.setAttribute("data-tooltip", txt);
-      el2.setAttribute("aria-label", txt);
+      el2.setAttribute("data-tooltip", txt2);
+      el2.setAttribute("aria-label", txt2);
       el2.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span>' + n + " " + TS_SVG.anon;
     }
   }

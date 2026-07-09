@@ -184,13 +184,18 @@
     form.parentNode.insertBefore(origLink, form);
     origLink.addEventListener("click", function (e) {
       e.preventDefault();
-      if (qrBox && qrBox.style.display === "block") {           // pull it out of the float
+      // "Original Form" should just slide the inline posting form OUT in one
+      // click — never a toggle (which could collapse it / need a second click)
+      // and never an intermediate step. Pull it back from the floating box if
+      // it's in there, expand it, and drop the cursor in the message box.
+      if (qrBox && qrBox.style.display === "block") {
         qrBox.style.display = "none";
         origLink.parentNode.insertBefore(form, origLink.nextSibling);
-        setCollapsed(false);
-        return;
       }
-      slideToggle();
+      setCollapsed(false);
+      try { localStorage.removeItem(COLLAPSE_KEY); } catch (e3) {}
+      try { form.scrollIntoView({ behavior: SB, block: "nearest" }); } catch (e4) {}
+      if (msg) { try { msg.focus(); } catch (e5) {} }
     });
     if (!inThread) {
       tog.addEventListener("click", openFloatForm);             // our floating new-thread box

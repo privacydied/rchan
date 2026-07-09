@@ -177,3 +177,30 @@
     };
   }
 
+  /* ---------- thread.replyCallback patch: confirm + guarantee a refresh ----------
+     Native behaviour after a successful post: clear the form fields, then
+     `if (!thread.autoRefresh || !thread.socket) { thread.refreshPosts(true); }`
+     — i.e. it ONLY re-fetches explicitly when the live-update WebSocket is
+     down; otherwise it assumes the socket will push the new post and does
+     NOTHING itself. That assumption doesn't hold here: the WS listens on a
+     bare port (8082) that Cloudflare's proxy doesn't forward for a domain on
+     its standard plan (non-standard ports bypass the edge entirely), so for
+     any visitor going through the CDN the socket never connects and the page
+     silently never updates — no error, no confirmation, nothing. Wrap (not
+     replace) the native callback: let it do its own cleanup first, then
+     unconditionally toast + reload, so posting always has visible feedback
+     and always ends with the new post actually on the page. */
+  function patchReplyCallback() {
+    var t = window.thread;
+    if (!t || !t.replyCallback || t.__rchanReplyPatched) { return; }
+    t.__rchanReplyPatched = true;
+    var orig = t.replyCallback;
+    t.replyCallback = function (status, data) {
+      orig(status, data);
+      if (status === "ok") {
+        okToast("Post submitted — refreshing…");
+        setTimeout(function () { location.reload(); }, 900);
+      }
+    };
+  }
+

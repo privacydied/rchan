@@ -519,17 +519,20 @@
     if (to && (cell.contains(to) || (catPrev && catPrev.contains(to)))) { return; }  // into cell or popup: stay
     scheduleHideCatPreview();                        // grace period bridges the gap to the popup
   }
-  // Catalog, every theme: the whole card opens the thread — except the
-  // scrollable teaser, links, and the watch button (those handle themselves).
-  // Desktop click parity with the thumb link so title/stat-line are also
-  // live targets, not just the thumbnail.
+  // Catalog, every theme: the whole card opens the thread, including the
+  // teaser text (.divMessage) — only real links/buttons and an in-progress
+  // text selection opt out (so copy-and-scroll inside the clamp still work).
   function onCatCellOpen(e) {
     if (!isCatalog()) { return; }
     var t = e.target;
     if (!t || !t.closest) { return; }
     var cell = t.closest(".catalogCell");
     if (!cell) { return; }
-    if (t.closest("a, button, .divMessage")) { return; }   // links / buttons / teaser self-handle
+    if (t.closest("a, button")) { return; }   // links / buttons self-handle
+    // a click that ends a text-drag selection shouldn't also navigate --
+    // let the user copy teaser text without being yanked into the thread.
+    var sel = window.getSelection && window.getSelection();
+    if (sel && String(sel).length && cell.contains(sel.anchorNode)) { return; }
     var a = cell.querySelector("a.linkThumb");
     var href = a && a.getAttribute("href");
     if (href) { window.location.href = href; }

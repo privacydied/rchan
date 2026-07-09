@@ -261,6 +261,7 @@ body nav, body #dynamicHeader {
   padding: 4px 6px 6px 6px;
   background: #E6E6DA;
   border-bottom: 1px solid #CFCFC4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .12);   /* subtle lift off the page — it's a fixed bar, give it some elevation */
 }
 /* icon-only nav at ALL widths: the engine paints text labels via ::after
    (#navLinkHome::after{content:'home'} etc.) and only blanks them in its

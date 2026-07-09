@@ -94,7 +94,15 @@
     // (its CSS is loaded on catalog), so this matches the native button exactly.
     a.addEventListener("click", function (e) { e.preventDefault(); toggleSetPanel(); });
     var sel = document.getElementById("themeSelector");
-    if (sel && sel.parentNode === span) { span.insertBefore(a, sel); }
+    if (sel && sel.parentNode === span) {
+      // native markup separates every #navLinkSpan item with a plain "<span>/</span>"
+      // (see the watcherButton->settingsButton->themeSelector run on thread/index) --
+      // match it exactly so catalog's injected button isn't the only ungapped one.
+      var sep = document.createElement("span");
+      sep.textContent = "/";
+      span.insertBefore(a, sel);
+      span.insertBefore(sep, sel);
+    }
     else { posting.parentNode.insertBefore(a, posting.nextSibling); }
   }
 

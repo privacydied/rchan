@@ -605,7 +605,7 @@ body .catalogCell .labelSubject, body .catalogCell .divMessage {
   margin: 0;
   font-size: .833rem;
 }
-body .catalogCell .labelSubject { font-weight: 700; }
+body .catalogCell .labelSubject { font-weight: 700; padding: 0; }
 /* Size dropdown (4chan's small/large modes; large = default) */
 .rchan-cat-s  .catalogCell   { width: 165px; max-height: 250px; }
 .rchan-cat-s  .linkThumb img { max-width: 150px; max-height: 150px; }
@@ -697,7 +697,17 @@ body.rchan-ws #rchan-zoom { filter: none; }
   background: rgba(0,0,0,.45); color: #fff; line-height: 0;
   opacity: 0; transition: opacity .12s ease;
 }
-.catalogCell:hover .rchan-catwatch, .rchan-catwatch:focus-visible, .rchan-catwatch.rchan-on { opacity: 1; }
+/* hover-reveal only on real hover-capable pointers — an ancestor :hover-only
+   reveal on touch trips WebKit's "first tap = hover, second tap = click" quirk
+   for EVERY tap on a descendant (incl. the thumbnail). Touch/no-hover shows it
+   at rest instead of gating on a hover that touch can't sustain anyway. */
+@media (hover: hover) and (pointer: fine) {
+  .catalogCell:hover .rchan-catwatch { opacity: 1; }
+}
+@media (hover: none), (pointer: coarse) {
+  .rchan-catwatch { opacity: 1; }
+}
+.rchan-catwatch:focus-visible, .rchan-catwatch.rchan-on { opacity: 1; }
 .rchan-catwatch:hover { background: #c8102e; }
 .rchan-catwatch.rchan-on { color: #2ea043; }
 .rchan-catwatch svg { display: block; }
@@ -1807,7 +1817,15 @@ body.theme_dark #quick-reply, .theme_dark #quick-reply table { background: #1f21
   margin-left: 6px; color: #274a6b; opacity: 0; transition: opacity .1s ease;
   vertical-align: -1px;
 }
-.innerPost:hover .rchan-reportbtn, .innerOP:hover .rchan-reportbtn { opacity: .55; }
+/* hover-reveal only on real hover-capable pointers — see .rchan-catwatch note
+   above; this is THE cause of "image expand needs two taps" (the ancestor
+   .innerPost/.innerOP wraps the thumbnail too). */
+@media (hover: hover) and (pointer: fine) {
+  .innerPost:hover .rchan-reportbtn, .innerOP:hover .rchan-reportbtn { opacity: .55; }
+}
+@media (hover: none), (pointer: coarse) {
+  .rchan-reportbtn { opacity: .55; }
+}
 .rchan-reportbtn:focus-visible { opacity: 1; }
 .rchan-reportbtn:hover { opacity: 1 !important; color: #c8102e; }
 .rchan-reportbtn svg { display: inline-block; vertical-align: middle; }
@@ -2177,7 +2195,14 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
   color: #c8102e; background: transparent; border: 1px solid #c8102e66;
   opacity: 0; transition: opacity .1s ease;
 }
-.innerPost:hover .rchan-qmod-btn, .innerOP:hover .rchan-qmod-btn,
+/* hover-reveal only on real hover-capable pointers — same ancestor-:hover
+   quirk as .rchan-reportbtn above. */
+@media (hover: hover) and (pointer: fine) {
+  .innerPost:hover .rchan-qmod-btn, .innerOP:hover .rchan-qmod-btn { opacity: 1; }
+}
+@media (hover: none), (pointer: coarse) {
+  .rchan-qmod-btn { opacity: 1; }
+}
 .rchan-qmod-btn:focus-visible, .rchan-qmod-btn.rchan-armed { opacity: 1; }
 .rchan-qmod-btn:hover { background: #c8102e14; }
 .rchan-qmod-btn.rchan-armed { background: #c8102e; color: #fff; border-color: #c8102e; }

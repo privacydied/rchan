@@ -296,7 +296,7 @@
       else { try {
         if (localStorage.selectedTheme === "brutalist") { bo.selected = true; }
         else if (localStorage.selectedTheme === "academia") { ao.selected = true; }
-        else if (localStorage.selectedTheme === "dark" && warmDarkOn()) { cdo.selected = true; }
+        else if ((localStorage.selectedTheme === "dark" || !localStorage.selectedTheme) && warmDarkOn()) { cdo.selected = true; }
       } catch (e0) {} }
       // themes.js binds onchange as a property and indexes into ITS OWN theme
       // list — selecting an appended option through that handler would throw.
@@ -392,12 +392,30 @@
      html.rchan-warmdark marker class — the class lives on <html> so the native
      themeLoader, which rewrites body.className, can't clobber it. */
   var WARMDARK_KEY = "rchan_warmdark";
-  function warmDarkOn() { try { return localStorage.getItem(WARMDARK_KEY) === "1"; } catch (e) { return false; } }
+  function warmDarkOn() {
+    try {
+      var wd = localStorage.getItem(WARMDARK_KEY);
+      if (wd === "1") { return true; }
+      if (wd === "0") { return false; }
+      // wd unset: Cream (Dark) is the default ONLY for a truly fresh visitor —
+      // no theme chosen at all. This is what makes the default survive Safari
+      // private mode, where predark's localStorage write throws so nothing
+      // persists (selectedTheme stays empty). A user who explicitly picked a
+      // theme (selectedTheme set, incl. plain "dark") or a manual default keeps
+      // their cool choice — no persisted "0" needed for pre-existing picks.
+      if (localStorage.getItem("selectedTheme")) { return false; }
+      if (localStorage.getItem("manualDefault")) { return false; }
+      return true;
+    } catch (e) { return true; }   // storage blocked entirely -> default (Cream Dark)
+  }
   function applyWarmDark() {
     try { document.documentElement.classList.toggle("rchan-warmdark", warmDarkOn()); } catch (e) {}
   }
   function setWarmDark(on) {
-    try { if (on) { localStorage.setItem(WARMDARK_KEY, "1"); } else { localStorage.removeItem(WARMDARK_KEY); } } catch (e) {}
+    // Store an explicit "0" for off (not removeItem): the absent state now MEANS
+    // "default = warm", so a user who picks plain Dark / Brutalist / Academia /
+    // Auto must be recorded as an explicit cool choice to stay cool.
+    try { localStorage.setItem(WARMDARK_KEY, on ? "1" : "0"); } catch (e) {}
     applyWarmDark();
   }
 

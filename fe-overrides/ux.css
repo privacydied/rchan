@@ -605,6 +605,7 @@ body .catalogCell {
   margin: 5px 2px 20px;
   padding: 5px 0 3px 0;
   position: relative;
+  cursor: pointer;         /* the whole card opens the thread — onCatCellOpen, every theme */
   width: 180px;            /* 4chan .extended-small (teaser shown) */
   height: auto;
   max-height: 320px;

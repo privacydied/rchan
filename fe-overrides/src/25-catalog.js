@@ -481,12 +481,12 @@
     if (to && (cell.contains(to) || (catPrev && catPrev.contains(to)))) { return; }  // into cell or popup: stay
     scheduleHideCatPreview();                        // grace period bridges the gap to the popup
   }
-  // Cream catalog: the whole card opens the thread — except the scrollable teaser,
-  // links, and the watch button (those handle themselves). Desktop click parity
-  // with the thumb link so title/stat-line are also live targets.
+  // Catalog, every theme: the whole card opens the thread — except the
+  // scrollable teaser, links, and the watch button (those handle themselves).
+  // Desktop click parity with the thumb link so title/stat-line are also
+  // live targets, not just the thumbnail.
   function onCatCellOpen(e) {
     if (!isCatalog()) { return; }
-    if (!(document.body.classList.contains("theme_cream") || document.documentElement.classList.contains("rchan-warmdark"))) { return; }
     var t = e.target;
     if (!t || !t.closest) { return; }
     var cell = t.closest(".catalogCell");

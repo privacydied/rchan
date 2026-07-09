@@ -48,6 +48,10 @@ services:
       # regex required ".html" in quote hrefs, which the router's clean-URL sub_filter
       # strips — made optional so hover previews + backlinks work on clean URLs.
       - ./fe-overrides/tooltips.js:/lynxchan/src/fe/static/js/tooltips.js:ro
+      # Same clean-URL fix as tooltips.js, applied to catalog.js: initCatalog()'s
+      # api.boardUri regex required a literal ".html" and threw (breaking the
+      # rest of init) on our extensionless /<board>/catalog URLs.
+      - ./fe-overrides/catalog.js:/lynxchan/src/fe/static/js/catalog.js:ro
       # Site-wide global rules page (copy of PenumbraLynx globalRules.html).
       - ./fe-overrides/globalRules.html:/lynxchan/src/fe/static/pages/globalRules.html:ro
       # Captcha-gated contact page (reveals admin@rchan.xyz after solving a captcha).

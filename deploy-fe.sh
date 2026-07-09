@@ -54,6 +54,7 @@ bump "/.rchan/favicon.js"       fe-overrides/favicon.js
 bump "/.rchan/mod.js"           fe-overrides/mod.js
 bump "/.rchan/predark.js"       fe-overrides/predark.js
 bump "/.static/js/tooltips.js"  fe-overrides/tooltips.js
+bump "/.static/js/catalog.js"   fe-overrides/catalog.js
 
 echo "restarting router..."
 sudo docker restart rchan-landing >/dev/null

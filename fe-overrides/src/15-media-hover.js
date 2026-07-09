@@ -20,7 +20,10 @@
     if (isImg(href)) { return href; }
     if (a && a.classList && a.classList.contains("linkThumb")) {
       var ext = MIME_EXT[(a.getAttribute("data-filemime") || "").toLowerCase()];
-      var m = (img.getAttribute("src") || "").match(/\/\.media\/t_([a-z0-9]+)$/i);
+      // strip a possible "?v=<n>" cache-bust query (server-side thumb versioning)
+      // before matching -- the hash must still be the END of the PATH, not the URL.
+      var thumbPath = (img.getAttribute("src") || "").split("?")[0];
+      var m = thumbPath.match(/\/\.media\/t_([a-z0-9]+)$/i);
       if (ext && m) { return "/.media/" + m[1] + "." + ext; }
     }
     return null;
@@ -74,7 +77,8 @@
     if (a.classList.contains("linkThumb")) {                       // catalog: derive from thumb src + mime
       var mime = (a.getAttribute("data-filemime") || "").toLowerCase();
       var ext = VID_EXT[mime];
-      var m = (img.getAttribute("src") || "").match(/\/\.media\/t_([a-z0-9]+)$/i);
+      var thumbPath = (img.getAttribute("src") || "").split("?")[0];   // strip ?v=<n> cache-bust
+      var m = thumbPath.match(/\/\.media\/t_([a-z0-9]+)$/i);
       if (/^video\//.test(mime) && ext && m) { return { a: a, url: "/.media/" + m[1] + "." + ext }; }
     }
     return null;

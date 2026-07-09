@@ -9,10 +9,10 @@
 	"settings": [
 		"disableIds"
 	],
-	"uniqueIps": 0,
-	"lastPostId": 61,
+	"uniqueIps": 4,
+	"lastPostId": 71,
 	"captchaMode": 0,
-	"postsPerHour": 1,
-	"threadCount": 23
+	"postsPerHour": 0,
+	"threadCount": 26
 }]
 

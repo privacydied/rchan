@@ -227,7 +227,6 @@
       img.id = "rchan-banner";
       img.alt = "/" + b + "/ banner";
       img.src = r.url;
-      img.setAttribute("data-tooltip", "Another banner");
       img.addEventListener("click", function () {
         fetch(url + "&r=" + Date.now()).then(function (r2) {
           if (r2.ok && !/defaultBanner/.test(r2.url || "")) { img.src = r2.url; }

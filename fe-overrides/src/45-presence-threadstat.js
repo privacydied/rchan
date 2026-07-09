@@ -139,7 +139,12 @@
       el.innerHTML = '<span class="rchan-sitedot" aria-hidden="true"></span> ' + escHtml(txt);
       return;
     }
-    if (getBoard() && !curThreadId()) {
+    // The board/index/catalog nav "N anons browsing now" indicator is disabled
+    // by request. The logic below is kept intact (and pingSitePresence still runs
+    // so this viewer is COUNTED in the site-wide presence shown on the homepage);
+    // only the nav element is never rendered. Flip SITESTAT_NAV to re-enable.
+    var SITESTAT_NAV = false;
+    if (SITESTAT_NAV && getBoard() && !curThreadId()) {
       var nav = document.querySelector("nav, #dynamicHeader");
       if (!nav) { return; }
       var el2 = document.getElementById("rchan-sitestat-nav");

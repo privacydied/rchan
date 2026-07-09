@@ -28,6 +28,25 @@ var boardStaffArchiving;
 var cacheHandler;
 var noBanCaptcha;
 var noReportCaptcha;
+var thumbAssetVersion;
+
+// rchan: cache-bust thumb URLs this file emits directly (catalog cells +
+// front-page "latest images") -- same reasoning as jsonBuilder.js's
+// versionThumb() and domManipulator/common.js's getImgTag(): a thumb
+// regenerated in place (e.g. at a higher resolution) never changes its own
+// URL, so a browser that already cached the old bytes at that exact URL
+// keeps serving them until ITS OWN locally-recorded expiry -- changing the
+// URL is the only thing that evicts it. Only real hash-based thumb paths
+// get the query (matches the engine's own file.thumb.length > 71 check used
+// elsewhere to distinguish a real thumb from a short static placeholder
+// like /genericThumb.png).
+function versionThumb(thumb) {
+  if (!thumb || thumb.length <= 71) {
+    return thumb;
+  }
+  var v = thumbAssetVersion || 1;
+  return thumb + (thumb.indexOf('?') === -1 ? '?' : '&') + 'v=' + v;
+}
 
 exports.availableLogTypes = {
   ban : 'guiTypeBan',
@@ -67,6 +86,7 @@ exports.loadSettings = function() {
   overboard = settings.overboard;
   accountCreationDisabled = settings.disableAccountCreation;
   siteTitle = settings.siteTitle;
+  thumbAssetVersion = settings.thumbAssetVersion || 1;
   clearIpMinRole = settings.clearIpMinRole;
 
 };
@@ -582,7 +602,7 @@ exports.setCatalogCellThumb = function(thread, language) {
 
   if (thread.files && thread.files.length) {
     var img = '<img  loading="lazy" src="';
-    img += common.clean(thread.files[0].thumb) + '">';
+    img += common.clean(versionThumb(thread.files[0].thumb)) + '">';
     cell = cell.replace('__linkThumb_inner__', img).replace(
         '__linkThumb_mime__', thread.files[0].mime);
   } else {
@@ -761,7 +781,7 @@ exports.getLatestImages = function(latestImages, language) {
 
     var cell = '<a href="' + postLink + '"><img loading="lazy" src="';
 
-    children += cell + image.thumb + '"></a>';
+    children += cell + versionThumb(image.thumb) + '"></a>';
 
   }
 

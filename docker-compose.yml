@@ -35,6 +35,8 @@ services:
       # Per-thread / per-board Open Graph tags (modified copy of PenumbraLynx static.js).
       - ./fe-overrides/be/static.js:/lynxchan/src/be/engine/domManipulator/static.js:ro
       - ./fe-overrides/be/engine/gridFsHandler.js:/lynxchan/src/be/engine/gridFsHandler.js:ro
+      - ./fe-overrides/be/engine/domManipulator-common.js:/lynxchan/src/be/engine/domManipulator/common.js:ro
+      - ./fe-overrides/be/engine/jsonBuilder.js:/lynxchan/src/be/engine/jsonBuilder.js:ro
       # Custom site logo — replace ./branding/logo.png to rebrand (served at /.static/logo.png)
       - ./branding/logo.png:/lynxchan/src/fe/static/logo.png:ro
       # Customized front-page template (infoBox title text). Copy of PenumbraLynx's

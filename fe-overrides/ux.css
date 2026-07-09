@@ -2867,15 +2867,21 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
    ux.js and safe from the native themeLoader's body.className rewrites)
    re-tints the cool grey dark palette to a neutral #1F1F1E ground, keeping
    a faint warm-cream ink + sage-green accent for the Cream identity.
-   Token map:  bg #1F1F1E · well #161615 · panel #2A2A28 · panel-2 #363634 ·
-   border #454542 · ink #E8E6DF · sage #A6C185.
+
+   SHARED TOKEN CONTRACT (see also body.theme_cream, below): both Cream
+   themes define the SAME custom-property names — every component (catalog
+   cards, the signature editorial moves) is written ONCE against var(--x);
+   only the values differ per theme. Don't add a one-off hex value to a
+   component when a token already carries that meaning — add/adjust the
+   token instead, so both themes move together.
    ========================================================================== */
 html.rchan-warmdark {
   --ground: #1F1F1E; --well: #161615; --surface: #2A2A28; --surface-2: #363634;
-  --border: #454542; --ink: #E8E6DF; --ink-faint: #9b9b94; --accent: #A6C185;
+  --line: #454542; --ink: #E8E6DF; --ink-soft: #C7C4B8; --ink-faint: #9b9b94;
+  --accent: #A6C185; --sage-text: #9CC96F; --wine: #E38A6E;
 }
 html.rchan-warmdark body.theme_dark,
-html.rchan-warmdark .theme_dark { background: #1F1F1E !important; color: #E8E6DF !important; }
+html.rchan-warmdark .theme_dark { background: var(--ground) !important; color: var(--ink) !important; }
 
 /* deepest wells */
 html.rchan-warmdark #rchan-tip, html.rchan-warmdark #rchan-toast,
@@ -2887,7 +2893,7 @@ html.rchan-warmdark #rchan-youbox, html.rchan-warmdark #rchan-reports,
 html.rchan-warmdark #rchan-find, html.rchan-warmdark #rchan-conv,
 html.rchan-warmdark #rchan-set, html.rchan-warmdark .rchan-keys-box,
 html.rchan-warmdark .rchan-preview, html.rchan-warmdark .rchan-sheet-box .rchan-sheet-cancel {
-  background: #161615 !important; border-color: #454542 !important;
+  background: #161615 !important; border-color: var(--line) !important;
 }
 
 /* panels: cells, nav, forms, menus, popovers, inputs */
@@ -2907,7 +2913,7 @@ html.rchan-warmdark #rchan-qr, html.rchan-warmdark .modalInnerPanel,
 html.rchan-warmdark .quoteTooltip, html.rchan-warmdark .quoteTooltip .innerPost,
 html.rchan-warmdark .quoteTooltip .innerOP, html.rchan-warmdark .rchan-filechip,
 html.rchan-warmdark input, html.rchan-warmdark textarea, html.rchan-warmdark select {
-  background: #2A2A28 !important; color: #E8E6DF !important; border-color: #454542 !important;
+  background: var(--surface) !important; color: var(--ink) !important; border-color: var(--line) !important;
 }
 html.rchan-warmdark .innerOP { background: transparent !important; }
 
@@ -2925,44 +2931,44 @@ html.rchan-warmdark .rchan-set-head, html.rchan-warmdark .rchan-set-group summar
 html.rchan-warmdark .rchan-filter-form button, html.rchan-warmdark .rchan-css-save,
 html.rchan-warmdark .rchan-ed-bar button, html.rchan-warmdark .rchan-sheet-box button,
 html.rchan-warmdark #rchan-ptrind, html.rchan-warmdark #watchedMenu > label {
-  background: #363634 !important; color: #E8E6DF !important; border-color: #454542 !important;
+  background: var(--surface-2) !important; color: var(--ink) !important; border-color: var(--line) !important;
 }
 
 /* borders */
 html.rchan-warmdark #rchan-banner, html.rchan-warmdark #settingsFieldset form,
 html.rchan-warmdark #settingsFieldset hr, html.rchan-warmdark .rchan-set-sub {
-  border-color: #454542 !important;
+  border-color: var(--line) !important;
 }
 html.rchan-warmdark .rchan-hist-row, html.rchan-warmdark .rchan-set-row,
 html.rchan-warmdark .rchan-filter-row, html.rchan-warmdark #watchedMenu .watchedCell,
 html.rchan-warmdark .rchan-pal-row, html.rchan-warmdark .rchan-set-news {
-  border-color: #45454266 !important;
+  border-color: #45454266 !important;   /* var(--line) at ~40% alpha — hex+alpha can't compose with var() */
 }
 
 /* text + accents */
-html.rchan-warmdark a { color: #A6C185 !important; }
+html.rchan-warmdark a { color: var(--accent) !important; }
 html.rchan-warmdark a:hover { color: #BED49F !important; }
-html.rchan-warmdark .greenText { color: #9CC96F !important; }
-html.rchan-warmdark .redText { color: #E38A6E !important; }
+html.rchan-warmdark .greenText { color: var(--sage-text) !important; }
+html.rchan-warmdark .redText { color: var(--wine) !important; }
 html.rchan-warmdark .labelSubject { color: #E6C88A !important; }
 html.rchan-warmdark .linkName, html.rchan-warmdark .labelName { color: #C6BE9A !important; }
-html.rchan-warmdark .linkQuote, html.rchan-warmdark .linkSelf { color: #E8E6DF !important; }
-html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: #A6C185 !important; }
-html.rchan-warmdark .rchan-catprev-id { color: #E8E6DF !important; }
+html.rchan-warmdark .linkQuote, html.rchan-warmdark .linkSelf { color: var(--ink) !important; }
+html.rchan-warmdark .quoteLink, html.rchan-warmdark .panelBacklinks a { color: var(--accent) !important; }
+html.rchan-warmdark .rchan-catprev-id { color: var(--ink) !important; }
 /* controls that were blue in the cool-dark base → sage green */
 html.rchan-warmdark .coloredIcon, html.rchan-warmdark .watchButton, html.rchan-warmdark #favouriteButton,
 html.rchan-warmdark #sideCatalogRefreshButton, html.rchan-warmdark #rchan-findbtn,
 html.rchan-warmdark #rchan-expandbtn, html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark .rchan-convbtn,
 html.rchan-warmdark .rchan-reportbtn, html.rchan-warmdark .rchan-fhash, html.rchan-warmdark .rchan-hist-clear,
-html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: #A6C185 !important; }
+html.rchan-warmdark .rchan-chipedit, html.rchan-warmdark #quick-reply td.small { color: var(--accent) !important; }
 /* side nav: sage-green blocks with a dark glyph for contrast (was blue #274a6b) */
-html.rchan-warmdark #rchan-nav button { background: #A6C185 !important; color: #1F1F1E !important; }
+html.rchan-warmdark #rchan-nav button { background: var(--accent) !important; color: var(--ground) !important; }
 html.rchan-warmdark #rchan-nav button.rchan-on { background: #BED49F !important; }
 
 /* body copy: Arial 10pt (titles stay serif; body reads as plain sans). */
 html.rchan-warmdark .divMessage {
   font-family: "Liberation Sans", "Arial", "sans-serif";
-  font-size: 10pt; line-height: 1.5; color: #E8E6DF !important;
+  font-size: 10pt; line-height: 1.5; color: var(--ink) !important;
 }
 /* greentext/quotes read as quoted PROSE, not code: EXACTLY the body register,
    differing in COLOUR only. The engine sets a font on .greenText that beat the
@@ -2983,7 +2989,7 @@ html.rchan-warmdark #catalogId .title, html.rchan-warmdark #labelBoard {
 }
 /* thread subjects in Arial (bold), keeping their hue */
 html.rchan-warmdark .labelSubject { font-family: "Liberation Sans", "Arial", "sans-serif" !important; font-weight: 700; }
-html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: #E8E6DF !important; }
+html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: var(--ink) !important; }
 
 /* ==========================================================================
    CREAM (DARK): CATALOG POLISH PASS — fills over strokes, full-bleed thumbs,

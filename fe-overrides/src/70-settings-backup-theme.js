@@ -25,6 +25,19 @@
     { g: "Reading", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
     { g: "Reading", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
     { g: "Reading", k: "follow", t: "Follow live threads", d: "Reading at the bottom? New posts scroll into view as they arrive; scroll up and it stands down" },
+    { g: "Reading", t: "Infinite scroll", d: "Board index and catalog load more automatically as you scroll near the bottom, instead of paging",
+      get: function () { return infScrollOn(); },
+      set: function (on) {
+        setPut("infscroll", on);
+        if (on) { initInfiniteScroll(); initCatalogInfiniteScroll(); }
+        else {
+          // best-effort teardown so it stops immediately instead of waiting for a reload
+          if (isState.io) { isState.io.disconnect(); }
+          if (csState.io) { csState.io.disconnect(); }
+          var hidden = document.querySelectorAll(".catalogCell[data-inf-hidden]");
+          for (var i = 0; i < hidden.length; i++) { hidden[i].style.removeProperty("display"); hidden[i].removeAttribute("data-inf-hidden"); }
+        }
+      } },
     { g: "Media", t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },

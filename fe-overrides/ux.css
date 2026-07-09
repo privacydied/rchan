@@ -618,6 +618,43 @@ body .catalogCell .labelSubject { font-weight: 700; padding: 0; }
   .rchan-cat-l .linkThumb img, .rchan-cat-xl .linkThumb img { max-width: 42vw; max-height: 42vw; }
 }
 
+/* ================= Infinite scroll: generic ornaments =======================
+   Base layer so index/catalog infinite scroll looks reasonable under EVERY
+   theme; Academia's more specific `.theme_academia .rchan-*` rules (further
+   down) refine these further and win on specificity. Keyframes are declared
+   once here — @keyframes aren't selector-scoped, so Academia's rules just
+   reference them by name. ============================================== */
+.rchan-pagedivider {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 18px 0; color: #6b6b66; font-size: .8125rem;
+}
+.rchan-pagedivider::before, .rchan-pagedivider::after {
+  content: ""; flex: 1; max-width: 120px; height: 1px; background: #CFCFC4;
+}
+.rchan-scroll-loader { text-align: center; padding: 18px 0; }
+.rchan-scroll-loader .rchan-ellipsis { font-size: 22px; color: #6b6b66; letter-spacing: .18em; line-height: 1; }
+.rchan-scroll-loader .rchan-ellipsis span { animation: rchan-dot 1.2s infinite; }
+.rchan-scroll-loader .rchan-ellipsis span:nth-child(2) { animation-delay: .2s; }
+.rchan-scroll-loader .rchan-ellipsis span:nth-child(3) { animation-delay: .4s; }
+@keyframes rchan-dot { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+.rchan-scroll-end {
+  text-align: center; padding: 24px 0; text-transform: uppercase;
+  letter-spacing: .18em; font-size: .6875rem; color: #6b6b66; font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) { .rchan-scroll-loader .rchan-ellipsis span { animation: none; opacity: .6; } }
+/* new threads/cards fade+rise in as they're appended or revealed */
+.opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rchan-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: none; } }
+.theme_dark .rchan-pagedivider, .theme_dark .rchan-scroll-loader .rchan-ellipsis, .theme_dark .rchan-scroll-end { color: #8b929e; }
+.theme_dark .rchan-pagedivider::before, .theme_dark .rchan-pagedivider::after { background: #2c2f36; }
+html.rchan-warmdark .rchan-pagedivider, html.rchan-warmdark .rchan-scroll-loader .rchan-ellipsis, html.rchan-warmdark .rchan-scroll-end { color: #9b9b94; }
+html.rchan-warmdark .rchan-pagedivider::before, html.rchan-warmdark .rchan-pagedivider::after { background: #454542; }
+/* catalog markers are inserted OUTSIDE #divThreads (a CSS grid there) so they
+   never become a fixed-height grid row; index markers sit inline in normal
+   block flow (#divThreads isn't a grid on index pages) and need no such care. */
+.rchan-cat-scroll-marker { margin: 8px 16px; }
+
 /* ================= Cream catalog: uniform grid + fixed-height cards ==========
    The default catalog packs inline-block cells sized from content → ragged rows
    and orphan gaps. Give the Cream themes a real grid with fixed-height cards:
@@ -1601,7 +1638,9 @@ body.theme_academia .rchan-catprev-name { color: var(--ink-soft) !important; fon
 body.theme_academia .rchan-catprev-id { color: var(--ink-faint) !important; font-family: var(--mono) !important; }
 body.theme_academia .rchan-catprev-msg { color: var(--ink) !important; font-family: var(--serif) !important; }
 
-/* ======================= INFINITE SCROLL ornaments ======================= */
+/* ======================= INFINITE SCROLL ornaments =======================
+   Academia-specific refinement over the generic base layer (keyframes
+   rchan-dot/rchan-rise are declared once, in the base layer). ============ */
 body.theme_academia .rchan-pagedivider {
   grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: var(--s3);
   margin: var(--s6) 0; color: var(--ink-faint);
@@ -1620,16 +1659,18 @@ body.theme_academia .rchan-scroll-loader .rchan-ellipsis {
 body.theme_academia .rchan-scroll-loader .rchan-ellipsis span { animation: rchan-dot 1.2s infinite; }
 body.theme_academia .rchan-scroll-loader .rchan-ellipsis span:nth-child(2) { animation-delay: .2s; }
 body.theme_academia .rchan-scroll-loader .rchan-ellipsis span:nth-child(3) { animation-delay: .4s; }
-@keyframes rchan-dot { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
 body.theme_academia .rchan-scroll-end {
   text-align: center; padding: var(--s8) 0; font-family: var(--sans) !important; text-transform: uppercase;
   letter-spacing: .22em; font-size: var(--t6); color: var(--ink-faint) !important;
 }
 @media (prefers-reduced-motion: reduce) { body.theme_academia .rchan-scroll-loader .rchan-ellipsis span { animation: none; opacity: .6; } }
 /* new threads fade+rise in as they're appended */
-body.theme_academia .opCell.rchan-appeared { animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both; }
-@keyframes rchan-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { body.theme_academia .opCell.rchan-appeared { animation: none; } }
+body.theme_academia .opCell.rchan-appeared, body.theme_academia .catalogCell.rchan-appeared {
+  animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.theme_academia .opCell.rchan-appeared, body.theme_academia .catalogCell.rchan-appeared { animation: none; }
+}
 
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /

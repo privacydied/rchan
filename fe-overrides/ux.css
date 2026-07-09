@@ -3,7 +3,9 @@
 
    ============================ DESIGN SYSTEM ============================
    EXACT COPY of 4chan's yotsubluenew.716.css structure & typography,
-   re-palette'd to CREAM, with SQUARE offset shadows. Tokens:
+   re-palette'd to CREAM, with SQUARE offset shadows. Legacy tokens (still
+   drive the yotsuba-clone reply/OP cells, links, nav — untouched by the
+   catalog-card token contract below):
 
    - Base type: "Liberation Sans", "Arial", "sans-serif" @ .833rem (10pt at the 16px
      browser default — rem so user font-size preferences scale the site).
@@ -27,6 +29,25 @@
      floating panels 4px 4px 0 rgba(0,0,0,.18). Radius: 0 everywhere.
    - Exception kept by request: file info uses Roboto Mono (self-hosted).
    ======================================================================= */
+
+/* ============================ TOKEN CONTRACT ============================
+   Light Cream's half of the shared catalog-card contract (Cream (Dark)'s is
+   defined at html.rchan-warmdark, further down) — same custom-property
+   names, values tuned for a warm-ivory ground. The SHARED CATALOG CARD
+   SYSTEM block (also further down, after both token sets exist) is written
+   ONCE against these names; only the values differ per theme. --accent is
+   darkened from the initially-proposed #5E7D6C (3.87:1 on --ground, under
+   AA) to #547163 (4.57:1) — same sage hue, verified against WCAG AA 4.5:1.
+   ========================================================================== */
+body.theme_cream {
+  --ground: #EFEDE4; --surface: #F7F5EE; --surface-2: #FFFFFF;
+  --ink: #2A2721; --ink-soft: #5A554A; --ink-faint: #8A8477;
+  --line: #D8D4C6; --line-hover: #C2BCA8;
+  --accent: #547163; --sage-text: #4F7355; --wine: #8A4A4A;
+  --shadow-rest: 0 1px 2px rgba(42,39,33,.06), 0 2px 8px rgba(42,39,33,.05);
+  --shadow-hover: 0 4px 16px rgba(42,39,33,.12);
+  --card-hover-bg: #F7F5EE;   /* = --surface: light stays put on hover, the border does the work */
+}
 
 /* ---------- Base (yotsuba: body / links / hr / images) ---------- */
 html body {
@@ -127,7 +148,7 @@ body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_crea
   /* letterpress: crisp white edge-catch below (no blur), warm ambient drop
      below with more blur than offset. Warmed black so it reads as depth on
      the ivory, not a grey sticker. */
-  text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(42,38,32,.15);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(42,39,33,.12);
 }
 /* cream: thread subjects in Arial (bold), keeping their hue */
 body.theme_cream .labelSubject {
@@ -2877,8 +2898,11 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
    ========================================================================== */
 html.rchan-warmdark {
   --ground: #1F1F1E; --well: #161615; --surface: #2A2A28; --surface-2: #363634;
-  --line: #454542; --ink: #E8E6DF; --ink-soft: #C7C4B8; --ink-faint: #9b9b94;
+  --line: #454542; --line-hover: #5A5A56; --ink: #E8E6DF; --ink-soft: #C7C4B8; --ink-faint: #9b9b94;
   --accent: #A6C185; --sage-text: #9CC96F; --wine: #E38A6E;
+  --shadow-rest: 0 1px 3px rgba(0,0,0,.3);
+  --shadow-hover: 0 6px 16px rgba(0,0,0,.35);
+  --card-hover-bg: #363634;   /* = --surface-2: dark gets a visible fill-lift on hover */
 }
 html.rchan-warmdark body.theme_dark,
 html.rchan-warmdark .theme_dark { background: var(--ground) !important; color: var(--ink) !important; }
@@ -2942,7 +2966,7 @@ html.rchan-warmdark #settingsFieldset hr, html.rchan-warmdark .rchan-set-sub {
 html.rchan-warmdark .rchan-hist-row, html.rchan-warmdark .rchan-set-row,
 html.rchan-warmdark .rchan-filter-row, html.rchan-warmdark #watchedMenu .watchedCell,
 html.rchan-warmdark .rchan-pal-row, html.rchan-warmdark .rchan-set-news {
-  border-color: #45454266 !important;   /* var(--line) at ~40% alpha — hex+alpha can't compose with var() */
+  border-color: color-mix(in srgb, var(--line) 40%, transparent) !important;
 }
 
 /* text + accents */
@@ -2992,74 +3016,169 @@ html.rchan-warmdark .labelSubject { font-family: "Liberation Sans", "Arial", "sa
 html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-empty-title { color: var(--ink) !important; }
 
 /* ==========================================================================
-   CREAM (DARK): CATALOG POLISH PASS — fills over strokes, full-bleed thumbs,
-   hover life. De-1.0 the catalog card without touching the small type scale.
+   SHARED CATALOG CARD SYSTEM — Cream + Cream (Dark)
+   Fills over strokes, full-bleed thumbs, hover life. ONE component, written
+   once against the token contract (both themes' :root-equivalent blocks
+   define the same custom-property names, above) — only token VALUES differ
+   per theme, never the rule structure. Light still gets a real --line stroke
+   (fills alone don't separate on a light ground); dark's --line is close
+   enough to --surface to read as "barely-there" — same declaration, themed
+   values doing the work.
    ========================================================================== */
 
-/* 1. Card surface: definition from the fill sitting one step above --ground,
-   not the stroke. Barely-there edge + soft resting shadow; hover lifts. */
-html.rchan-warmdark .catalogCell {
+/* 1. Card surface: definition from the fill sitting one step above --ground.
+   Hover lifts (both themes); background shift on hover is dark-only —
+   --card-hover-bg literally equals --surface on light, a no-op. */
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell {
   background: var(--surface) !important;
-  border: 1px solid rgba(255,255,255,.04) !important;
+  border: 1px solid var(--line) !important;
   border-radius: 8px !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  box-shadow: var(--shadow-rest);
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
-html.rchan-warmdark .catalogCell:hover {
-  background: var(--surface-2) !important;
-  border-color: rgba(255,255,255,.09) !important;
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell:hover {
+  background: var(--card-hover-bg) !important;
+  border-color: var(--line-hover) !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  box-shadow: var(--shadow-hover);
 }
 
 /* 2. Full-bleed thumb: edge-to-edge at the card top, radius matches the card's
    top corners, fixed-height band, cover-cropped. The image edge IS the divider —
    no hairline between thumb and body. */
-html.rchan-warmdark .catalogCell > a.linkThumb {
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell > a.linkThumb {
   height: 160px; border-radius: 8px 8px 0 0; overflow: hidden;
 }
+:is(body.theme_cream, html.rchan-warmdark).rchan-cat-s .catalogCell > a.linkThumb,
 html.rchan-warmdark.rchan-cat-s .catalogCell > a.linkThumb { height: 120px; }
 
 /* 3. Stat line: plain text at the card bottom, no border, a faint --ground
    wash for grounding. Compact "R 1 · I 0 · P 1" format (set in JS —
-   decorateCreamDarkCatalog). */
-html.rchan-warmdark .catalogCell > p.threadStats {
+   decorateCreamDarkCatalog, runs for both themes). color-mix so the wash
+   itself needs no extra per-theme alpha token. */
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell > p.threadStats {
   border-top: none !important;
-  background: rgba(31,31,30,.4);
+  background: color-mix(in srgb, var(--ground) 40%, transparent);
   font-size: 10px !important; color: var(--ink-faint) !important;
   padding: 12px !important; letter-spacing: .04em;
 }
-html.rchan-warmdark .rchan-nofile-open {
+:is(body.theme_cream, html.rchan-warmdark) .rchan-nofile-open {
   float: right; color: var(--accent); text-decoration: none; font-weight: 700;
 }
-html.rchan-warmdark .rchan-nofile-open:hover { text-decoration: underline; }
+:is(body.theme_cream, html.rchan-warmdark) .rchan-nofile-open:hover { text-decoration: underline; }
 
-/* 4. Teaser clamp: clean line-boundary cut instead of scroll-in-place (which
-   Cream/light keeps) — clamp is the default state for this pass. */
+/* 4. Teaser clamp: clean line-boundary cut instead of scroll-in-place. Cream
+   (Dark) only for now — light Cream keeps the scroll-in-place teaser it
+   already shipped; not part of this pass's light-parity scope. */
 html.rchan-warmdark .catalogCell > .divMessage {
   display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
   overflow: hidden; overflow-y: hidden;
 }
 
-/* 5. Color diet: cream text, grey metadata, sage interactive — nothing else.
-   Subjects go ink (not gold); the whole card is the hover target, so the
-   subject picks up --accent when the CARD is hovered, not just itself. */
-html.rchan-warmdark .catalogCell .labelSubject { color: var(--ink) !important; font-weight: 600; }
-html.rchan-warmdark .catalogCell:hover .labelSubject { color: var(--accent) !important; }
-html.rchan-warmdark .catalogCell .greenText { color: var(--ink-faint) !important; }
-html.rchan-warmdark .checkedFavouriteButton { color: var(--ink-faint) !important; }
+/* 5. Color diet: ink text, faint metadata, accent interactive — nothing else.
+   Subjects go ink (not the legacy gold/blue); the whole card is the hover
+   target, so the subject picks up --accent when the CARD is hovered, not
+   just itself. */
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell .labelSubject { color: var(--ink) !important; font-weight: 600; }
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell:hover .labelSubject { color: var(--accent) !important; }
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell .greenText { color: var(--ink-faint) !important; }
+/* the ★ next to the board/catalog title: never the legacy gold — quiet
+   outline (--ink-faint) unfavorited, --accent once favorited (a state cue,
+   not decoration). */
+:is(body.theme_cream, html.rchan-warmdark) #favouriteButton { color: var(--ink-faint) !important; }
+:is(body.theme_cream, html.rchan-warmdark) .checkedFavouriteButton { color: var(--accent) !important; }
 
 /* 6. No-image cells: --surface-2 band where the thumb would be (same fixed
    height), a centered muted glyph instead of raw "Open" text (folded into the
    stat line instead — see .rchan-nofile-open above and decorateCreamDarkCatalog). */
-html.rchan-warmdark .catalogCell.rchan-nofile > a.linkThumb {
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell.rchan-nofile > a.linkThumb {
   display: flex; align-items: center; justify-content: center;
   background: var(--surface-2) !important;
 }
-html.rchan-warmdark .rchan-nofile-glyph {
+:is(body.theme_cream, html.rchan-warmdark) .rchan-nofile-glyph {
   color: var(--ink-faint); font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* ==========================================================================
+   SIGNATURE EDITORIAL MOVES — Cream + Cream (Dark), shared, token-driven.
+   Restraint rule: these five plus the serif/eyebrow pairing carry the WHOLE
+   register. No other ornament gets added beyond what's specified here.
+   ========================================================================== */
+
+/* (a) Small-caps eyebrows: metadata reads as quiet marginalia, never
+   competes with the serif headline (poster name) or body copy. */
+:is(body.theme_cream, html.rchan-warmdark) .labelCreated,
+:is(body.theme_cream, html.rchan-warmdark) .relativeTime,
+:is(body.theme_cream, html.rchan-warmdark) .spanId,
+:is(body.theme_cream, html.rchan-warmdark) .labelId,
+:is(body.theme_cream, html.rchan-warmdark) .sizeLabel,
+:is(body.theme_cream, html.rchan-warmdark) .dimensionLabel,
+:is(body.theme_cream, html.rchan-warmdark) .originalNameLink {
+  font-family: "Liberation Sans", "Arial", "sans-serif" !important;
+  font-size: 10.5px !important; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--ink-faint) !important;
+}
+
+/* (b) Footnote post numbers: "№ 61" in the display serif, --accent, the
+   number slightly superscripted — reads like a footnote marker, not a UI
+   counter. .linkSelf ("No.") + the adjacent .linkQuote (the bare number)
+   are two separate elements in the engine's markup; the "No." text is
+   swapped for № via ::before (font-size:0 hides the original glyphs without
+   touching the DOM). Scoped to the header's OWN number (linkSelf + the
+   sibling linkQuote right after it) — NOT every .linkQuote on the page. */
+:is(body.theme_cream, html.rchan-warmdark) .linkSelf {
+  font-size: 0 !important;
+}
+:is(body.theme_cream, html.rchan-warmdark) .linkSelf::before {
+  content: "№"; font-size: .8125rem; font-family: "New York Large", Georgia, "Times New Roman", serif;
+  color: var(--accent);
+}
+:is(body.theme_cream, html.rchan-warmdark) .linkSelf + .linkQuote {
+  font-family: "New York Large", Georgia, "Times New Roman", serif !important;
+  color: var(--accent) !important; vertical-align: super; font-size: .78em !important;
+  text-decoration: none !important;
+}
+/* quote backlinks ("replied to by >>61…"): stay mono-ish, recolor to --accent */
+:is(body.theme_cream, html.rchan-warmdark) .quoteLink,
+:is(body.theme_cream, html.rchan-warmdark) .panelBacklinks a { color: var(--accent) !important; }
+
+/* (c) Drop rule on OPs: a double hairline under the OP's header block — the
+   "chapter opening" cue, replacing a generic border. Reply headers stay
+   plain (the rule marks where a THREAD begins, not every post). */
+:is(body.theme_cream, html.rchan-warmdark) .innerOP .opHead {
+  border-bottom: 3px double var(--line);
+  padding-bottom: 6px; margin-bottom: 8px; display: block;
+}
+
+/* (d) Marginalia reply count: catalog stat line is already eyebrow-styled
+   (font-size/letter-spacing set in the shared card system above); on hover,
+   append last-bump relative time (set as a data attribute by
+   decorateCatalogLastBump — degrades to an empty, invisible ::after when no
+   data was available). */
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell > p.threadStats {
+  font-family: "Liberation Sans", "Arial", "sans-serif" !important;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell > p.threadStats[data-lastbump]::after {
+  content: " \00b7 " attr(data-lastbump) " \00b7 ";
+  opacity: 0; transition: opacity 150ms ease;
+}
+:is(body.theme_cream, html.rchan-warmdark) .catalogCell:hover > p.threadStats[data-lastbump]::after {
+  opacity: 1;
+}
+
+/* (e) Ornamented terminators: one glyph (⁂, the printer's asterism for a
+   section break), used consistently everywhere a plain "the end" marker
+   used to sit — infinite-scroll's fin mark and page dividers (text set in
+   27-infinite-scroll.js). Larger + quieter than body text; IS the mark. */
+:is(body.theme_cream, html.rchan-warmdark) .rchan-scroll-end {
+  font-size: 18px !important; letter-spacing: 0 !important; text-transform: none !important;
+  color: var(--ink-faint) !important; font-weight: 400 !important;
+}
+:is(body.theme_cream, html.rchan-warmdark) .rchan-pagedivider span {
+  color: var(--ink-faint) !important; font-size: 15px;
 }
 
 /* 7. Floating button bar: one compact pill (not the full-width sticky footer

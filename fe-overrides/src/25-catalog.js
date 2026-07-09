@@ -227,12 +227,15 @@
       }
     }
   }
-  /* ---------- Cream (Dark) catalog polish: compact stat line + no-file cells ----------
+  /* ---------- Cream (both) catalog polish: compact stat line + no-file cells ----------
      Separate from decorateCatalogCards' Brutalist/Academia register system (no
      eyebrow row here) — just the stat-line reformat ("R 1 · I 0 · P 1") and the
-     no-image placeholder band, folding its "Open" link into the stat line. */
+     no-image placeholder band, folding its "Open" link into the stat line.
+     Runs for both Cream themes (name kept for history — it started
+     Dark-only, the CSS/JS split now shares the whole card system). */
   function decorateCreamDarkCatalog(root) {
-    if (!document.documentElement.classList.contains("rchan-warmdark") || !isCatalog()) { return; }
+    var cream = document.body.classList.contains("theme_cream") || document.documentElement.classList.contains("rchan-warmdark");
+    if (!cream || !isCatalog()) { return; }
     var cells = (root || document).getElementsByClassName("catalogCell");
     for (var i = 0; i < cells.length; i++) {
       var cell = cells[i];
@@ -261,6 +264,41 @@
           stats.appendChild(openLink);
         }
       }
+    }
+  }
+  /* ---------- Catalog marginalia: "· last reply Xh ago ·" on card hover ----------
+     catalog.json carries lastBump per thread already — fetch once per board,
+     stash a formatted relative-time string as a data attribute on each card's
+     stat line (CSS reveals it via ::after on hover, see ux.css). Degrades
+     silently: no fetch/no lastBump -> no attribute -> ::after renders empty. */
+  var catLastBump = {}, catLastBumpBoard = null, catLastBumpPending = false;
+  function decorateCatalogLastBump(root) {
+    var cream = document.body.classList.contains("theme_cream") || document.documentElement.classList.contains("rchan-warmdark");
+    if (!cream || !isCatalog()) { return; }
+    var b = getBoard(); if (!b) { return; }
+    if (catLastBumpBoard !== b) {
+      if (!catLastBumpPending) {
+        catLastBumpPending = true;
+        fetch("/" + b + "/catalog.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (list) {
+          catLastBumpPending = false;
+          if (!list) { return; }
+          catLastBump = {}; catLastBumpBoard = b;
+          for (var i = 0; i < list.length; i++) { if (list[i].lastBump && list[i].threadId) { catLastBump[list[i].threadId] = list[i].lastBump; } }
+          decorateCatalogLastBump(document);   // re-run now that data is in
+        }).catch(function () { catLastBumpPending = false; });
+      }
+      return;
+    }
+    var cells = (root || document).getElementsByClassName("catalogCell");
+    for (var j = 0; j < cells.length; j++) {
+      var cell = cells[j];
+      if (cell.getAttribute("data-lastbump-done")) { continue; }
+      var tid = catThreadId(cell);
+      var lb = tid && catLastBump[tid];
+      if (!lb) { continue; }
+      cell.setAttribute("data-lastbump-done", "1");
+      var stats = cell.querySelector("p.threadStats");
+      if (stats) { stats.setAttribute("data-lastbump", "last reply " + fmtAgo(new Date(lb).getTime()) + " ago"); }
     }
   }
   /* ---------- Deep search: reply-level search across the whole board ----------

@@ -48,11 +48,18 @@
   }
   function pageUrl(n) { return "/" + isState.board + "/" + (n <= 1 ? "index.html" : n + ".html"); }
 
+  // Cream + Cream (Dark) get the theme's one ornament (⁂, a printer's asterism)
+  // in place of plain punctuation — the signature terminator mark. Every other
+  // theme (Academia has its own styling for these, Brutalist/Dark/base don't
+  // want the glyph) keeps the plain text.
+  function isCreamTheme() {
+    return document.body.classList.contains("theme_cream") || document.documentElement.classList.contains("rchan-warmdark");
+  }
   function makeDivider(n) {
     var d = document.createElement("div");
     d.className = "rchan-pagedivider";
     var s = document.createElement("span");
-    s.textContent = "— Page " + n + " —";
+    s.textContent = isCreamTheme() ? "⁂ Page " + n + " ⁂" : "— Page " + n + " —";
     d.appendChild(s);
     return d;
   }
@@ -66,7 +73,7 @@
     if (document.querySelector(".rchan-scroll-end")) { return; }
     var e = document.createElement("div");
     e.className = "rchan-scroll-end";
-    e.textContent = "· fin ·";
+    e.textContent = isCreamTheme() ? "⁂" : "· fin ·";
     var dt = document.getElementById("divThreads");
     if (isState.sentinel && isState.sentinel.parentNode === dt) { dt.insertBefore(e, isState.sentinel); }
     else if (dt) { dt.appendChild(e); }
@@ -171,7 +178,7 @@
     if (!dt || !dt.parentNode || document.querySelector(".rchan-scroll-end")) { return; }
     var e = document.createElement("div");
     e.className = "rchan-scroll-end rchan-cat-scroll-marker";
-    e.textContent = "· fin ·";
+    e.textContent = isCreamTheme() ? "⁂" : "· fin ·";
     dt.parentNode.insertBefore(e, dt.nextSibling);   // OUTSIDE the grid, never a grid item
   }
   function retargetCatalogObserver() {

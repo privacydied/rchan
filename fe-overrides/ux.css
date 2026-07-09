@@ -2936,6 +2936,15 @@ html.rchan-warmdark {
 html.rchan-warmdark body.theme_dark,
 html.rchan-warmdark .theme_dark { background: var(--ground) !important; color: var(--ink) !important; }
 
+/* Homepage landing (rchan.xyz / boards.rchan.xyz/): brand the front page with
+   the Cream (Dark) ground (#1F1F1E) so its background matches the default theme
+   for every dark visitor — the warm ground, not the cool grey #16171b a plain-
+   "Dark" pick would otherwise show. Scoped to dark contexts only (html.predark
+   or body.theme_dark) via :has(#indexWrapper), so light-theme visitors keep a
+   readable light homepage (no dark-on-dark). */
+html.predark body:has(#indexWrapper),
+body.theme_dark:has(#indexWrapper) { background: #1F1F1E !important; }
+
 /* deepest wells */
 html.rchan-warmdark #rchan-tip, html.rchan-warmdark #rchan-toast,
 html.rchan-warmdark .divMessage code, html.rchan-warmdark .rchan-css-input,

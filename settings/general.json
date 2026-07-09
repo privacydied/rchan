@@ -18,6 +18,7 @@
   "defaultTheme": "cream",
   "videoThumbPercentage": 25,
   "mediaThumb": true,
+  "thumbSize": 320,
   "wsPort": 8082,
   "addons": [
     "geoflags",

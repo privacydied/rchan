@@ -692,6 +692,22 @@ body .catalogCell .labelSubject { font-weight: 700; padding: 0; }
 .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both; }
 @keyframes rchan-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: none; } }
+/* Progressive thread rendering: keep scroll anchoring on so above-viewport
+   inserts (WS pushes, late images) never shove the reader's content down. */
+body, .divPosts { overflow-anchor: auto; }
+/* "N earlier posts" stub — one quiet clickable bar, only on long threads */
+.rchan-earlier-stub {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 8px auto 12px; padding: 7px 16px; width: fit-content; cursor: pointer;
+  border: 1px solid #d5d5c8; border-radius: 999px; background: transparent;
+  color: #6b6b66; font-size: .78rem; font-weight: 600; letter-spacing: .02em;
+  text-transform: uppercase; user-select: none; transition: background .12s, border-color .12s;
+}
+.rchan-earlier-stub:hover, .rchan-earlier-stub:focus-visible { background: rgba(0,0,0,.05); border-color: #b8b8a8; outline: none; }
+.theme_dark .rchan-earlier-stub { border-color: #2c2f36; color: #8b929e; }
+.theme_dark .rchan-earlier-stub:hover, .theme_dark .rchan-earlier-stub:focus-visible { background: rgba(255,255,255,.06); border-color: #3a3f47; }
+html.rchan-warmdark .rchan-earlier-stub { border-color: #454542; color: #9b9b94; }
+html.rchan-warmdark .rchan-earlier-stub:hover, html.rchan-warmdark .rchan-earlier-stub:focus-visible { background: rgba(255,255,255,.05); border-color: #56564f; }
 .theme_dark .rchan-pagedivider, .theme_dark .rchan-scroll-loader .rchan-ellipsis, .theme_dark .rchan-scroll-end { color: #8b929e; }
 .theme_dark .rchan-pagedivider::before, .theme_dark .rchan-pagedivider::after { background: #2c2f36; }
 html.rchan-warmdark .rchan-pagedivider, html.rchan-warmdark .rchan-scroll-loader .rchan-ellipsis, html.rchan-warmdark .rchan-scroll-end { color: #9b9b94; }

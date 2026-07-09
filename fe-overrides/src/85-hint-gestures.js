@@ -90,6 +90,7 @@
     }));
     if (curThreadId()) {
       box.appendChild(sheetBtn("Show this conversation only", function () { openConv(no); }));
+      box.appendChild(sheetBtn("Save this thread", function () { saveThreadArchive(); }));
     }
     box.appendChild(sheetBtn("Copy link to post", function () {
       var b2 = getBoard(), t2 = ids ? ids.thread : curThreadId();

@@ -122,6 +122,7 @@
     if (curThreadId()) {
       add("action", "Filter posts in this thread", "find bar (f)", function () { toggleFind(); });
       add("action", "Expand all images", "this thread (e per post)", function () { setExpandAll(!expandAllOn); });
+      add("action", "Save this thread", "download a self-contained HTML archive", saveThreadArchive);
     }
     add("action", "Replies to you", "the (You) inbox" + (youboxUnread() ? " — " + youboxUnread() + " unread" : ""), toggleYoubox);
     add("action", (setOn("wsmode", false) ? "Disable" : "Enable") + " work-safe mode", "blur all media until hovered", function () {

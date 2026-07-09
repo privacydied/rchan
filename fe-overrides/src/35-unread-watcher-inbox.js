@@ -264,13 +264,31 @@
         }
       } catch (e2) {}
     }
-    w.iterateWatchedThreads = function (urls, index) {
-      index = index || 0;
-      if (index >= urls.length) {
-        w.updateWatcherCounter();
-        w.scheduleWatchedThreadsCheck();
-        return;
-      }
+    /* Bandwidth: the native sweep pulled EVERY watched thread's full JSON every
+       cycle. Instead fetch each board's single catalog.json ONCE per sweep and
+       read its per-thread postCount; only pull a thread's full JSON when that
+       count actually moved. 30 watched threads across 2 boards with nothing new
+       collapses from 30 fetches to 2 (the catalogs). A thread not on the catalog
+       (archived / pruned / off the last page) still falls back to a full fetch,
+       so the dead-strike logic and archived-thread updates are unchanged. */
+    var COUNT_KEY = "rchan_watchcount";
+    var catCycle = {};                                   // board -> {threadId: postCount} | null, one per sweep
+    function watchCounts() { try { return JSON.parse(localStorage.getItem(COUNT_KEY) || "{}"); } catch (e) { return {}; } }
+    function saveWatchCounts(m) { try { localStorage.setItem(COUNT_KEY, JSON.stringify(m)); } catch (e) {} }
+    function clearStrike(k) {
+      try { var s = strikes(); if (s[k]) { delete s[k]; localStorage.setItem(DEAD_KEY, JSON.stringify(s)); } } catch (e) {}
+    }
+    function ensureCatalog(board, cb) {
+      if (Object.prototype.hasOwnProperty.call(catCycle, board)) { cb(catCycle[board]); return; }
+      fetch("/" + board + "/catalog.json", { credentials: "same-origin" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (list) {
+          var m = null;
+          if (list) { m = {}; for (var i = 0; i < list.length; i++) { m[list[i].threadId] = (list[i].postCount || 0); } }
+          catCycle[board] = m; cb(m);
+        }).catch(function () { catCycle[board] = null; cb(null); });
+    }
+    function fetchFullWatched(urls, index, onDone) {
       var u = urls[index];
       api.localRequest("/" + u.board + "/res/" + u.thread + ".json", function (error, data) {
         try {
@@ -284,8 +302,35 @@
             localStorage.setItem(DEAD_KEY, JSON.stringify(s));
           }
         } catch (e) {}
+        if (onDone) { try { onDone(!error); } catch (e2) {} }
         if (error) { w.iterateWatchedThreads(urls, ++index); }
         else { w.processThread(urls, index, data); }
+      });
+    }
+    w.iterateWatchedThreads = function (urls, index) {
+      index = index || 0;
+      if (index === 0) { catCycle = {}; }                // new sweep: fresh per-board catalog cache
+      if (index >= urls.length) {
+        w.updateWatcherCounter();
+        w.scheduleWatchedThreadsCheck();
+        return;
+      }
+      var u = urls[index];
+      ensureCatalog(u.board, function (catMap) {
+        var counts = watchCounts(), k = u.board + "/" + u.thread;
+        if (catMap && Object.prototype.hasOwnProperty.call(catMap, u.thread)) {
+          var pc = catMap[u.thread];
+          clearStrike(k);                                // present on catalog = alive
+          if (counts[k] != null && counts[k] === pc) {
+            w.iterateWatchedThreads(urls, ++index);      // postCount unchanged: no new posts, skip full fetch
+            return;
+          }
+          fetchFullWatched(urls, index, function (ok) {
+            if (ok) { var c2 = watchCounts(); c2[k] = pc; saveWatchCounts(c2); }
+          });
+          return;
+        }
+        fetchFullWatched(urls, index);                   // not on the catalog: full fetch + strike logic, as before
       });
     };
   }

@@ -217,11 +217,13 @@
       galMedia = im;
     }
     main.appendChild(galMedia);
-    // preload neighbours (images only — videos buffer on demand)
-    [galIdx - 1, galIdx + 1].forEach(function (n) {
-      var nx = galItems[n];
-      if (nx && nx.type === "img") { var p = new Image(); p.src = nx.url; }
-    });
+    // preload neighbours (images only — videos buffer on demand); Data Saver opts out
+    if (!dataSaver()) {
+      [galIdx - 1, galIdx + 1].forEach(function (n) {
+        var nx = galItems[n];
+        if (nx && nx.type === "img") { var p = new Image(); p.src = nx.url; }
+      });
+    }
     var meta = gal.querySelector(".rchan-gal-meta");
     meta.firstChild.textContent = (galIdx + 1) + " / " + galItems.length + " · " + it.name;
     // download keeps the ORIGINAL filename (media URLs are content hashes, so

@@ -207,7 +207,9 @@ tooltips.processQuote = function(quote, backLink) {
 tooltips.generateHTMLFromData = function(postingData, tooltip, quoteUrl) {
 
   if (!postingData) {
-    tooltip.innerHTML = 'Not found';
+    // The thread loaded but this post isn't in it: deleted or rotated out of a
+    // cyclic thread. Say so plainly instead of a silent/ambiguous dead-end.
+    tooltip.innerHTML = '<span class="rchan-deadquote">post deleted or pruned</span>';
     return;
   }
 
@@ -259,7 +261,8 @@ tooltips.loadQuote = function(tooltip, quoteUrl) {
     delete tooltips.loadingPreviews[quoteUrl];
 
     if (error) {
-      tooltip.innerHTML = 'Not found';
+      // Whole thread is gone (404) — every quote into it is dead.
+      tooltip.innerHTML = '<span class="rchan-deadquote">post deleted or pruned</span>';
       return;
     }
 

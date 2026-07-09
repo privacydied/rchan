@@ -214,6 +214,7 @@
      banner to roll another. Upload banners per-board via board management. */
   function buildBanner() {
     if (!setOn("banners")) { return; }
+    if (dataSaver()) { return; }                          // Data Saver: skip the decorative banner fetch
     var b = getBoard();
     if (!b || b.charAt(0) === "." || document.getElementById("rchan-bannerwrap")) { return; }
     var anchor = document.querySelector(".boardHeader, #catalogId");

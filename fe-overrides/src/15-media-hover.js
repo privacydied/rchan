@@ -91,6 +91,7 @@
   }
   function onVidOver(e) {
     if (!setOn("vidpop")) { return; }
+    if (dataSaver()) { return; }                          // Data Saver: don't autoload video on hover
     var img = e.target;
     if (!img || img.tagName !== "IMG") { return; }     // only the thumbnail image, like image-zoom
     var info = videoUrlFor(img); if (!info) { return; }

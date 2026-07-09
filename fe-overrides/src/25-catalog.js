@@ -417,6 +417,7 @@
   // prefetch a thread page when hovering its catalog cell (snappier open)
   var prefetched = {};
   function onCatHover(e) {
+    if (dataSaver()) { return; }                          // Data Saver: don't spend bytes on speculation
     var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
     if (!a) { return; }
     var href = a.getAttribute("href");

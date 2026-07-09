@@ -38,6 +38,20 @@
   // Respect the OS "reduce motion" preference for our scripted scrolling.
   var SB = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
 
+  /* ---------- Data-saver: honour the browser's own bandwidth intent ----------
+     When the user has Data Saver on (or the connection reports itself as 2g),
+     navigator.connection.saveData is true. That's an explicit "don't spend my
+     bytes" — so our proactive, non-essential fetches (catalog prefetch, video
+     hover pop-out, decorative banners, gallery neighbour preloading) step aside.
+     No UI: the preference already exists at the OS/browser level; we just obey. */
+  function dataSaver() {
+    try {
+      var c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+      if (!c) { return false; }
+      return !!c.saveData || /(^|-)2g$/.test(c.effectiveType || "");
+    } catch (e) { return false; }
+  }
+
   // Default theme is cream for everyone (server sets body.theme_cream). Dark is opt-in via the
   // theme switcher — we intentionally do NOT auto-switch to dark based on the OS preference.
 

@@ -153,6 +153,48 @@
     document.body.appendChild(wrap);
   }
 
+  /* ---------- Thumbnail cache-busting (mass-regen fallback) ----------
+     Thumb URLs (/.media/t_<hash>) are addressed by the ORIGINAL file's hash,
+     not the thumb's own bytes -- regenerating a thumbnail in place (e.g. at
+     a higher resolution) never changes the URL, so browsers that already
+     cached the old bytes keep serving them until their own cache naturally
+     expires; a Cloudflare purge only clears the EDGE, not client caches.
+     gridFsHandler.js's cache-control fix (max-age 1yr -> 1 day +
+     must-revalidate) prevents this for FUTURE cache entries, but does nothing
+     for copies already sitting in browsers under the old year-long policy.
+     This appends a global, manually-bumped version query so EVERY thumb URL
+     changes at once, forcing a fresh fetch regardless of any cached entry's
+     remaining max-age. Bump THUMB_CACHE_V after any mass thumbnail regen.
+     Gated behind a per-browser localStorage flag: rewriting src ALWAYS races
+     the browser's own eager preload of the un-versioned src already in the
+     HTML (it starts fetching the instant the parser sees the tag, long before
+     any script runs), so every rewrite costs a double-fetch (confirmed: 44
+     thumbs -> 88 requests, un-versioned then versioned). Once a browser has
+     been busted to the current version, the NOW-short cache-control header
+     (max-age 1 day + must-revalidate) keeps it fresh on its own -- no reason
+     to keep paying that double-fetch on every single page load forever. */
+  var THUMB_CACHE_V = "2";
+  var THUMB_CACHE_V_KEY = "rchan_thumbv";
+  function bustThumbCache(root) {
+    try { if (localStorage.getItem(THUMB_CACHE_V_KEY) === THUMB_CACHE_V) { return; } } catch (e) {}
+    var imgs = (root || document).querySelectorAll('.linkThumb img[src*="/.media/t_"], .imgLink img[src*="/.media/t_"]');
+    var sawUnbusted = false;
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      if (img.getAttribute("data-vbust") === THUMB_CACHE_V) { continue; }
+      img.setAttribute("data-vbust", THUMB_CACHE_V);
+      var src = img.getAttribute("src") || "";
+      if (!src) { continue; }
+      sawUnbusted = true;
+      var base = src.split("?")[0];
+      img.src = base + "?v=" + THUMB_CACHE_V;
+    }
+    // only certify this browser once real work was done — a page with zero
+    // thumbs (e.g. a text-only thread) shouldn't mark it "done" and cause a
+    // LATER, thumb-having page to wrongly skip busting for this version.
+    if (sawUnbusted) { try { localStorage.setItem(THUMB_CACHE_V_KEY, THUMB_CACHE_V); } catch (e) {} }
+  }
+
   /* ---------- Thumbnail skeletons (shimmer until the image loads) ---------- */
   function decorateThumbs(root) {
     var imgs = (root || document).querySelectorAll(".imgLink img, .linkThumb img");

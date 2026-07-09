@@ -107,7 +107,7 @@
       }
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
-    [buildNav, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
+    [buildNav, ensureNavSettings, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); },
      function () { decorateYou(document); }, function () { decorateCatalogCards(document); }, decorateAcademiaChrome, initInfiniteScroll, markNewInThread, markNewInCatalog, markVisitedInCatalog, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,

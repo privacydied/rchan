@@ -77,6 +77,27 @@
   }
 
   /* ---------- Floating nav buttons (top / catalog-toggle / bottom) ---------- */
+  // Catalog loads a lean engine bundle that omits settingsMenu.js, so the native
+  // top-nav #settingsButton (present on thread/index) never appears there. Inject
+  // a matching gear into #navLinkSpan (before the theme select, the engine's spot)
+  // wired to our own settings panel, so the navbar is consistent across pages.
+  function ensureNavSettings() {
+    if (!isCatalog()) { return; }                            // thread/index have the native one
+    if (document.getElementById("settingsButton")) { return; }
+    var posting = document.getElementById("navPosting");
+    var span = document.getElementById("navLinkSpan");
+    if (!posting || !span) { return; }
+    var a = document.createElement("a");
+    a.id = "settingsButton"; a.className = "coloredIcon"; a.href = "#";
+    a.setAttribute("data-tooltip", "Settings"); a.setAttribute("aria-label", "Settings");
+    // empty on purpose: the engine's .coloredIcon::before renders the gear glyph
+    // (its CSS is loaded on catalog), so this matches the native button exactly.
+    a.addEventListener("click", function (e) { e.preventDefault(); toggleSetPanel(); });
+    var sel = document.getElementById("themeSelector");
+    if (sel && sel.parentNode === span) { span.insertBefore(a, sel); }
+    else { posting.parentNode.insertBefore(a, posting.nextSibling); }
+  }
+
   function buildNav() {
     if (document.getElementById("rchan-nav")) { return; }
     var wrap = document.createElement("div");

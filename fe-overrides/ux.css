@@ -283,6 +283,8 @@ html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark #rchan-expandbtn, html.rc
 /* glyphs unified to ~16px within their 28px boxes (font-icons + svgs) */
 body.theme_cream #navLinkSpan > a.coloredIcon,
 html.rchan-warmdark #navLinkSpan > a.coloredIcon { font-size: 16px; }
+body.theme_cream #navLinkSpan > a.coloredIcon svg,
+html.rchan-warmdark #navLinkSpan > a.coloredIcon svg { width: 16px; height: 16px; display: block; }
 body.theme_cream #rchan-galbtn svg, body.theme_cream #rchan-expandbtn svg, body.theme_cream #rchan-findbtn svg,
 html.rchan-warmdark #rchan-galbtn svg, html.rchan-warmdark #rchan-expandbtn svg, html.rchan-warmdark #rchan-findbtn svg {
   width: 16px !important; height: 16px !important; display: block;

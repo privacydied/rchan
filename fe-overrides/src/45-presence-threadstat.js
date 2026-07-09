@@ -332,7 +332,16 @@
     if (presenceCount) { segs.push(tsSeg(String(presenceCount), TS_SVG.anon, presenceCount + (presenceCount === 1 ? " anon here now" : " anons here now"))); }
     if (presenceTyping) { segs.push(tsSeg(String(presenceTyping), TS_SVG.pen, presenceTyping + (presenceTyping === 1 ? " anon typing…" : " anons typing…"))); }
     if (threadFlags) {
-      if (threadFlags.autoSage) { segs.push(tsChip("bump limit", "Bump limit reached — replies no longer bump this thread", true)); }
+      // Bump-limit awareness: nothing normally, one warning segment once the
+      // thread is within ~10% of the limit (default autoSageLimit 500; this
+      // site sets no override) so posters learn a thread is dying while it
+      // still matters — not only after it has already stopped bumping.
+      var BUMP_LIMIT = 500;
+      if (threadFlags.autoSage) {
+        segs.push(tsChip("bump limit", "Bump limit reached — replies no longer bump this thread", true));
+      } else if (replies >= Math.floor(BUMP_LIMIT * 0.9)) {
+        segs.push(tsChip("near bump limit", "Approaching the bump limit (~" + BUMP_LIMIT + " replies) — this thread will soon stop bumping", true));
+      }
       if (threadFlags.cyclic) { segs.push(tsChip("cyclic", "Cyclic thread — oldest replies rotate out")); }
     }
     var html = segs.join('<span class="rchan-ts-dot" aria-hidden="true">·</span>');

@@ -125,6 +125,68 @@
     }
   }
 
+  /* ---------- Click-to-embed external video ----------
+     A bare YouTube/Vimeo link in a post is a tab-switch away from the thread.
+     Append a small ▶ affordance; on click it swaps in an inline player. Nothing
+     auto-loads and NO third-party request is made until the reader asks — so it
+     stays private (youtube-nocookie) and clutter-free (one glyph, click to play,
+     click to remove). CSP here is script-src 'self' only, so external <iframe>
+     frames are permitted. */
+  var EMBED_PLAY = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  function embedUrlFor(href) {
+    try {
+      var u = new URL(href, location.href), host = u.hostname.replace(/^www\./, ""), id;
+      if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+        if (u.pathname === "/watch") { id = u.searchParams.get("v"); }
+        else { var m = u.pathname.match(/^\/(?:shorts|embed|v)\/([\w-]{6,})/); if (m) { id = m[1]; } }
+        if (id && /^[\w-]{6,}$/.test(id)) { return "https://www.youtube-nocookie.com/embed/" + id; }
+      } else if (host === "youtu.be") {
+        id = u.pathname.slice(1).split("/")[0];
+        if (id && /^[\w-]{6,}$/.test(id)) { return "https://www.youtube-nocookie.com/embed/" + id; }
+      } else if (host === "vimeo.com" || host === "player.vimeo.com") {
+        var mm = u.pathname.match(/\/(\d{6,})/);
+        if (mm) { return "https://player.vimeo.com/video/" + mm[1]; }
+      }
+    } catch (e) {}
+    return null;
+  }
+  function decorateEmbeds(root) {
+    var links = (root || document).querySelectorAll(".divMessage a[href]");
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.getAttribute("data-embed")) { continue; }
+      a.setAttribute("data-embed", "1");
+      if (a.closest && a.closest(".quoteTooltip, .rchan-inline-quote")) { continue; }
+      var eu = embedUrlFor(a.getAttribute("href") || a.href);
+      if (!eu) { continue; }
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "rchan-embed-btn";
+      btn.innerHTML = EMBED_PLAY;
+      btn.setAttribute("data-tooltip", "Play inline");
+      btn.setAttribute("aria-label", "Play this video inline");
+      btn.addEventListener("click", (function (url, anchor, b) {
+        return function (e) {
+          e.preventDefault(); e.stopPropagation();
+          if (b.__box) {                                   // toggle closed
+            if (b.__box.parentNode) { b.__box.parentNode.removeChild(b.__box); }
+            b.__box = null; b.classList.remove("rchan-embed-on");
+            return;
+          }
+          var box = document.createElement("div");
+          box.className = "rchan-embed";
+          var fr = document.createElement("iframe");
+          fr.src = url; fr.loading = "lazy"; fr.allowFullscreen = true;
+          fr.setAttribute("allow", "fullscreen; encrypted-media; picture-in-picture");
+          fr.setAttribute("referrerpolicy", "no-referrer");
+          box.appendChild(fr);
+          anchor.parentNode.insertBefore(box, anchor.nextSibling);
+          b.__box = box; b.classList.add("rchan-embed-on");
+        };
+      })(eu, a, btn));
+      a.parentNode.insertBefore(btn, a.nextSibling);
+    }
+  }
+
   /* ---------- Instant styled tooltip (any element with data-tooltip) ---------- */
   var tip = null;
   function tipTarget(el) {

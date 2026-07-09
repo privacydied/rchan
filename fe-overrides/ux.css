@@ -157,7 +157,7 @@ body .divMessage {
 }
 /* cream: body copy in Arial 10pt (titles stay serif; body reads as plain sans). */
 body.theme_cream .divMessage {
-  font-family: arial, helvetica, sans-serif;
+  font-family: "Liberation Sans", "Arial", "sans-serif";
   font-size: 10pt;
   line-height: 1.5;
   color: #2A2620;                       /* warm charcoal, not #000 */
@@ -350,6 +350,10 @@ body.theme_cream #rchan-threadstat, html.rchan-warmdark #rchan-threadstat { alig
 }
 html body { margin-top: 36px; }              /* clear the fixed nav */
 body #sideCatalogDiv { top: 36px; height: calc(100vh - 36px); }
+/* #rchan-nav is now a full-width sticky FOOTER bar (was a floating corner
+   stack, needed no clearance) — give the page bottom room so the global
+   footer (Rules/Contact) and the last post/reply box aren't hidden under it. */
+html body { padding-bottom: 60px; box-sizing: border-box; }
 /* footer (4chan #absbot: x-small) */
 body footer { font-size: x-small; }
 
@@ -496,10 +500,12 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .rchan-active-meta { display: block; font-size: x-small; opacity: .85; }
 .theme_dark .rchan-active-cell { background: #1f2126; border-color: #2c2f36; }
 
-/* ---------- Floating nav buttons ---------- */
+/* ---------- Nav buttons: horizontal sticky footer bar ---------- */
 #rchan-nav {
-  position: fixed; right: 12px; bottom: 12px; z-index: 9999;
-  display: flex; flex-direction: column; gap: 6px;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  align-items: center; justify-content: center;
+  gap: 6px; width: 100%; box-sizing: border-box; padding: 6px 10px;
 }
 #rchan-nav button {
   width: 40px; height: 40px; border: 0; cursor: pointer;
@@ -987,14 +993,17 @@ body.theme_brutalist { margin-top: 48px !important; }
 body.theme_brutalist #catalogId, body.theme_brutalist .boardHeader { margin-top: var(--s5) !important; }
 body.theme_brutalist #sideCatalogDiv { top: 48px !important; height: calc(100vh - 48px) !important; }
 
-/* floating side buttons: one segmented card (shared borders, single group shadow), 40px squares */
-body.theme_brutalist #rchan-nav { right: 0 !important; bottom: 24px; gap: 0 !important; box-shadow: var(--shadow) !important; }
+/* sticky footer bar: one segmented card (shared borders, single group shadow), 40px squares */
+body.theme_brutalist #rchan-nav {
+  left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
+  gap: 0 !important; box-shadow: var(--shadow) !important; justify-content: center;
+}
 body.theme_brutalist #rchan-nav button {
   width: 40px !important; height: 40px !important; padding: 0 !important; line-height: 1 !important;
   background: var(--bg) !important; color: var(--ink) !important;
-  border: var(--bw) solid var(--ink) !important; border-bottom: 0 !important; box-shadow: none !important;
+  border: var(--bw) solid var(--ink) !important; border-right: 0 !important; box-shadow: none !important;
 }
-body.theme_brutalist #rchan-nav button:last-child { border-bottom: var(--bw) solid var(--ink) !important; }
+body.theme_brutalist #rchan-nav button:last-child { border-right: var(--bw) solid var(--ink) !important; }
 body.theme_brutalist #rchan-nav button:hover, body.theme_brutalist #rchan-nav button.rchan-on { background: var(--ink) !important; color: var(--bg) !important; }
 body.theme_brutalist #rchan-nav button#rchan-penbtn { background: var(--bg) !important; color: var(--ink) !important; }
 body.theme_brutalist #rchan-nav button svg { width: 18px; height: 18px; }
@@ -1569,17 +1578,18 @@ body.theme_academia .rchan-catwatch { background: rgba(42,38,32,.42) !important;
 body.theme_academia .rchan-catwatch:hover { background: var(--clay) !important; }
 body.theme_academia .rchan-catwatch.rchan-on { color: var(--clay) !important; }
 
-/* floating side buttons: one soft white pill card */
+/* sticky footer bar: one soft white pill card, edge-to-edge */
 body.theme_academia #rchan-nav {
-  right: 12px !important; bottom: 24px; gap: 0 !important; background: var(--card) !important;
-  border: 1px solid var(--hair) !important; border-radius: var(--radius) !important; box-shadow: var(--shadow-card) !important; overflow: hidden;
+  left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
+  gap: 0 !important; background: var(--card) !important; justify-content: center;
+  border: 1px solid var(--hair) !important; border-radius: 0 !important; box-shadow: var(--shadow-card) !important; overflow: hidden;
 }
 body.theme_academia #rchan-nav button {
   width: 40px !important; height: 40px !important; padding: 0 !important; line-height: 1 !important;
   background: transparent !important; color: var(--ink-soft) !important; border: 0 !important;
-  border-bottom: 1px solid var(--hair) !important; box-shadow: none !important; border-radius: 0 !important;
+  border-right: 1px solid var(--hair) !important; box-shadow: none !important; border-radius: 0 !important;
 }
-body.theme_academia #rchan-nav button:last-child { border-bottom: 0 !important; }
+body.theme_academia #rchan-nav button:last-child { border-right: 0 !important; }
 body.theme_academia #rchan-nav button:hover, body.theme_academia #rchan-nav button.rchan-on { background: var(--paper-2) !important; color: var(--clay) !important; transform: none; }
 body.theme_academia #rchan-nav button svg { width: 18px; height: 18px; }
 
@@ -2745,7 +2755,6 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
   /* the floating new-thread box (board/catalog) gets the same treatment —
      its desktop 425px + right:30px overflows a 390px viewport */
   #rchan-qr { left: 2vw !important; right: 2vw !important; width: 96vw !important; max-width: 96vw !important; min-width: 0; top: 48px; resize: none; }
-  #rchan-nav { right: 10px; bottom: 10px; }
   body .innerPost, body .markedPost { display: block; }   /* shrink-wrap doesn't fit phones */
   body .divMessage { margin: 8px 10px; }
   .postCell { margin: 8px 4px; }
@@ -2917,7 +2926,7 @@ html.rchan-warmdark #rchan-nav button.rchan-on { background: #BED49F !important;
 
 /* body copy: Arial 10pt (titles stay serif; body reads as plain sans). */
 html.rchan-warmdark .divMessage {
-  font-family: arial, helvetica, sans-serif;
+  font-family: "Liberation Sans", "Arial", "sans-serif";
   font-size: 10pt; line-height: 1.5; color: #E8E6DF !important;
 }
 /* greentext/quotes read as quoted PROSE, not code: EXACTLY the body register,

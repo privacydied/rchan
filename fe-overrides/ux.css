@@ -65,7 +65,14 @@ body .panelBacklinks { font-size: x-small; }                     /* 4chan .backl
 /* (catalog card sizes live in the catalog section below, 4chan-exact) */
 body .sideCatalogCell, body .small { font-size: x-small; }
 
-/* ---------- Rotating board banner (above the board title) ---------- */
+/* ---------- Rotating board banner (above the board title) ----------
+   Hide the native #bannerImage (board/thread/overboard templates only —
+   catalog never had one) — buildBanner()/#rchan-bannerwrap is our own
+   client-side replacement: it skips rendering entirely for boards with no
+   REAL uploaded banner (never shows the engine's stock defaultBanner.png),
+   and adds click-to-reroll. Showing both stacks two copies of the same
+   image once a board has a real banner uploaded. */
+#bannerImage { display: none !important; }
 #rchan-bannerwrap { text-align: center; margin-top: 70px; }
 #rchan-banner {
   max-width: min(300px, 92vw); height: auto; cursor: pointer;

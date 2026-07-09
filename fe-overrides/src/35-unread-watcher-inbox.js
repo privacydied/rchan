@@ -411,7 +411,7 @@
   function markVisitedInCatalog() {
     if (!isCatalog()) { return; }
     var board = getBoard(); if (!board) { return; }
-    var on = setOn("visiteddim");
+    var on = setOn("visiteddim", false);   // default OFF — don't grey out threads you've opened
     var all = seenAll(), cells = catCells();
     for (var i = 0; i < cells.length; i++) {
       var cell = cells[i], tid = catThreadId(cell);

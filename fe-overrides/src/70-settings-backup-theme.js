@@ -21,7 +21,7 @@
     { g: "Posting", k: "drafts", t: "Draft autosave", d: "Keep unposted reply text per thread until it's posted" },
     { g: "Advanced", k: "filterrecurse", t: "Hide replies to filtered posts", d: "Collapse posts that quote a filtered or hidden post" },
     { g: "Appearance", k: "banners", t: "Board banners", d: "Rotating banner above the board title (boards that have banners uploaded)" },
-    { g: "Reading", k: "visiteddim", t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
+    { g: "Reading", k: "visiteddim", def: false, t: "Dim read threads in the catalog", d: "Threads you've opened (with nothing new since) fade back so the unread ones pop" },
     { g: "Advanced", k: "stickyop", t: "Sticky OP bar", d: "When the OP scrolls away, a slim bar keeps its thumb + subject — click to jump back" },
     { g: "Advanced", k: "minimap", t: "Thread minimap", d: "Long threads (30+ posts, desktop) get a right-edge map — your posts red, replies to you green, images amber" },
     { g: "Advanced", k: "follow", t: "Follow live threads", d: "Reading at the bottom? New posts scroll into view as they arrive; scroll up and it stands down" },

@@ -136,6 +136,20 @@
        cloned), so captcha, file tray and fmtbar keep working. */
     var inThread = /\/res\//.test(location.pathname);
     var qrBox = null, origLink = null;
+    // On the catalog/index the engine (catalog.js) hides #newPostFieldset and
+    // shows a native #togglePosting "Post thread" button in its place — so just
+    // un-collapsing our wrapper reveals only that button, forcing a second click.
+    // Reveal the real fieldset ourselves whenever we open the form.
+    function revealFieldset() {
+      var npf = document.getElementById("newPostFieldset");
+      if (!npf) { return; }
+      var hidden = npf.style.display === "none" ||
+                   (window.getComputedStyle && getComputedStyle(npf).display === "none");
+      if (!hidden) { return; }
+      var tp = document.getElementById("togglePosting");
+      if (tp) { tp.style.display = "none"; }
+      npf.style.display = "inline-block";
+    }
     function closeFloatForm() {
       if (!qrBox) { return; }
       qrBox.style.display = "none";
@@ -175,6 +189,7 @@
       }
       document.getElementById("rchan-qr-body").appendChild(form); // move the real form in
       form.classList.remove("rchan-collapsed");
+      revealFieldset();                                          // un-hide the native fieldset, not just the wrapper
       qrBox.style.display = "block";
       if (msg) { msg.focus(); }
     }
@@ -193,6 +208,7 @@
         origLink.parentNode.insertBefore(form, origLink.nextSibling);
       }
       setCollapsed(false);
+      revealFieldset();                                         // show the real fields, not just the "Post thread" button
       try { localStorage.removeItem(COLLAPSE_KEY); } catch (e3) {}
       try { form.scrollIntoView({ behavior: SB, block: "nearest" }); } catch (e4) {}
       if (msg) { try { msg.focus(); } catch (e5) {} }

@@ -19,6 +19,7 @@
   "videoThumbPercentage": 25,
   "mediaThumb": true,
   "thumbSize": 480,
+  "thumbExtension": "webp",
   "thumbAssetVersion": 2,
   "wsPort": 8082,
   "addons": [

@@ -2592,6 +2592,28 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 }
 .theme_dark .divMessage code { background: #0f1013; border-color: #2c2f36; color: #d7dae0; }
 
+/* ---------- Code block syntax highlighting (generic tokenizer, no language tag) ---------- */
+.rchan-tok-kw { color: #7b2d8e; font-weight: 700; }
+.rchan-tok-str { color: #b5341f; }
+.rchan-tok-num { color: #0d5b73; }
+.rchan-tok-cmt { color: #6b6b66; font-style: italic; }
+.theme_dark .rchan-tok-kw { color: #c586c0; font-weight: 700; }
+.theme_dark .rchan-tok-str { color: #ce9178; }
+.theme_dark .rchan-tok-num { color: #79c0ff; }
+.theme_dark .rchan-tok-cmt { color: #8b929e; font-style: italic; }
+body.theme_brutalist .rchan-tok-kw { color: var(--accent) !important; font-weight: 700; }
+body.theme_brutalist .rchan-tok-str { color: var(--accent-2) !important; }
+body.theme_brutalist .rchan-tok-num { color: var(--ink) !important; font-weight: 700; }
+body.theme_brutalist .rchan-tok-cmt { color: var(--ink) !important; opacity: .5; font-style: italic; }
+body.theme_academia .rchan-tok-kw { color: var(--wine) !important; font-weight: 600; }
+body.theme_academia .rchan-tok-str { color: var(--clay) !important; }
+body.theme_academia .rchan-tok-num { color: var(--sage) !important; }
+body.theme_academia .rchan-tok-cmt { color: var(--ink-faint) !important; font-style: italic; }
+html.rchan-warmdark .rchan-tok-kw { color: #CE9BD9; font-weight: 700; }
+html.rchan-warmdark .rchan-tok-str { color: #E3A67A; }
+html.rchan-warmdark .rchan-tok-num { color: #8FBFDE; }
+html.rchan-warmdark .rchan-tok-cmt { color: #9b9b94; font-style: italic; }
+
 /* ---------- Thumbnail skeleton shimmer ---------- */
 .rchan-skel {
   background-image: linear-gradient(90deg, #0000000d 25%, #0000001c 37%, #0000000d 63%);

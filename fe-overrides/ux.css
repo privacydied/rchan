@@ -3121,24 +3121,15 @@ html.rchan-warmdark .catalogCell > .divMessage {
   letter-spacing: .08em; color: var(--ink-faint) !important;
 }
 
-/* (b) Footnote post numbers: "№ 61" in the display serif, --accent, the
-   number slightly superscripted — reads like a footnote marker, not a UI
-   counter. .linkSelf ("No.") + the adjacent .linkQuote (the bare number)
-   are two separate elements in the engine's markup; the "No." text is
-   swapped for № via ::before (font-size:0 hides the original glyphs without
-   touching the DOM). Scoped to the header's OWN number (linkSelf + the
-   sibling linkQuote right after it) — NOT every .linkQuote on the page. */
-:is(body.theme_cream, html.rchan-warmdark) .linkSelf {
-  font-size: 0 !important;
-}
-:is(body.theme_cream, html.rchan-warmdark) .linkSelf::before {
-  content: "№"; font-size: .8125rem; font-family: "New York Large", Georgia, "Times New Roman", serif;
-  color: var(--accent);
-}
+/* (b) Post numbers: plain "No. 72" in the sans metadata register — reverted
+   from an earlier serif/superscript "№" footnote treatment (clashed with the
+   metadata eyebrow register). .linkSelf ("No.") stays as-is (inherits the
+   normal ink/ metadata styling already set elsewhere); the adjacent
+   .linkQuote (the clickable number) gets --accent as its link color, normal
+   baseline, same size as the rest of the header line — no font-family or
+   font-size override at all. */
 :is(body.theme_cream, html.rchan-warmdark) .linkSelf + .linkQuote {
-  font-family: "New York Large", Georgia, "Times New Roman", serif !important;
-  color: var(--accent) !important; vertical-align: super; font-size: .78em !important;
-  text-decoration: none !important;
+  color: var(--accent) !important;
 }
 /* quote backlinks ("replied to by >>61…"): stay mono-ish, recolor to --accent */
 :is(body.theme_cream, html.rchan-warmdark) .quoteLink,

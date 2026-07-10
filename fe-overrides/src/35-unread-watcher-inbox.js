@@ -409,10 +409,11 @@
     }
   }
   // Replies to your (You) posts: a floating indicator that cycles through them.
-  var youHits = [], youIdx = -1, youBtn = null;
+  var youHits = [], youIdx = -1, youBtn = null, youDismissedSig = null;
   function scanRepliesToYou() {
     var mine = load(YOU_KEY); if (!mine.length) { if (youBtn) { youBtn.style.display = "none"; } return; }
     var set = {}; for (var k = 0; k < mine.length; k++) { set[mine[k]] = 1; }
+    var board = getBoard();
     var posts = document.querySelectorAll(".postCell, .opCell");
     youHits = [];
     for (var i = 0; i < posts.length; i++) {
@@ -421,27 +422,56 @@
       // reply's quotes AGAIN for the OP — inflating the count.
       var inner = posts[i].querySelector(".innerPost, .innerOP, .markedPost");
       if (!inner || set[postId(inner)]) { continue; }               // missing / your own post
+      // Hidden posts (filter-hidden, progressive-thread collapse) can't be
+      // jumped to — counting them reads as a phantom "N replies" that scrolls
+      // nowhere. Visible posts only.
+      if (posts[i].offsetParent === null) { continue; }
       var qs = inner.getElementsByClassName("quoteLink");
       for (var j = 0; j < qs.length; j++) {
         if (qs[j].closest && qs[j].closest(".rchan-inline-quote")) { continue; }  // embedded copy, not this post's quote
-        var m = (qs[j].getAttribute("href") || "").match(/(\d+)\s*$/) || (qs[j].textContent || "").match(/(\d+)/);
+        var href = qs[j].getAttribute("href") || "";
+        // (You) ids are bare post numbers with NO board scoping — the same
+        // number exists on every board. Only a quote that points at THIS
+        // board (or a same-page #hash) can be a reply to YOUR post; anything
+        // else is a number collision on another board.
+        if (board && href && href.charAt(0) !== "#" && href.indexOf("/" + board + "/") !== 0) { continue; }
+        var m = href.match(/(\d+)\s*$/) || (qs[j].textContent || "").match(/(\d+)/);
         if (m && set[m[1]]) { youHits.push(posts[i]); break; }
       }
     }
-    if (!youHits.length) { if (youBtn) { youBtn.style.display = "none"; } return; }
+    // stable signature of the current hit set — a dismissed pill stays gone
+    // until a NEW reply changes the set
+    var sig = youHits.map(function (el) {
+      var inn = el.querySelector(".innerPost, .innerOP, .markedPost");
+      return inn ? postId(inn) : "?";
+    }).join(",");
+    if (!youHits.length || sig === youDismissedSig) { if (youBtn) { youBtn.style.display = "none"; } return; }
     if (!youBtn) {
       youBtn = document.createElement("button"); youBtn.id = "rchan-youbtn"; youBtn.type = "button";
       youBtn.title = "Jump to replies to your posts";
       youBtn.setAttribute("aria-label", "Jump to replies to your posts");
       youBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg><span></span>';
+      var x = document.createElement("span");
+      x.className = "rchan-yb-x"; x.setAttribute("role", "button"); x.setAttribute("tabindex", "0");
+      x.setAttribute("aria-label", "Dismiss"); x.setAttribute("data-tooltip", "Dismiss");
+      x.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+      function dismiss(ev) {
+        ev.stopPropagation(); ev.preventDefault();
+        youDismissedSig = youBtn.getAttribute("data-sig");
+        youBtn.style.display = "none";
+      }
+      x.addEventListener("click", dismiss);
+      x.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { dismiss(ev); } });
+      youBtn.appendChild(x);
       youBtn.addEventListener("click", function () {
         youIdx = (youIdx + 1) % youHits.length;
         youHits[youIdx].scrollIntoView({ behavior: SB, block: "center" });
       });
       document.body.appendChild(youBtn);
     }
+    youBtn.setAttribute("data-sig", sig);
     youBtn.style.display = "";
-    youBtn.lastChild.textContent = youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
+    youBtn.children[1].textContent = youHits.length + " repl" + (youHits.length > 1 ? "ies" : "y") + " to you";
   }
 
   /* ---------- (You) inbox: replies to your posts, persisted ----------

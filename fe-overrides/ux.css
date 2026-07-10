@@ -2132,6 +2132,12 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
 }
 #rchan-youbtn svg { display: block; flex: none; }
 #rchan-youbtn:hover { opacity: 1; }
+/* dismiss ✕ inside the pill: its own hit area, quiet until hovered */
+#rchan-youbtn .rchan-yb-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-left: 2px; padding: 3px; border-radius: 3px; opacity: .75; cursor: pointer;
+}
+#rchan-youbtn .rchan-yb-x:hover { opacity: 1; background: rgba(255,255,255,.18); }
 
 /* ---------- Post form: collapse toggle + toolbar, char counter, drag-drop, previews ---------- */
 #rchan-formtoggle {

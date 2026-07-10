@@ -16,7 +16,6 @@
     t.setAttribute("role", "button");
     t.setAttribute("tabindex", "0");
     t.setAttribute("aria-label", "Refresh this page");
-    t.setAttribute("data-tooltip", "Refresh");
     function go() {
       if (window.thread && typeof thread.refreshPosts === "function") {
         try { thread.refreshPosts(true); return; } catch (e) {}

@@ -100,6 +100,34 @@ settings UI (the sentinel stops the entrypoint from re-creating root).
 ## Config changes
 Edit `settings/general.json`, then `sudo docker compose restart lynxchan`.
 
+## SEO (the rules, and where each lives)
+One spelling per page, machine-readable everywhere, utility surfaces kept out:
+
+- **Two hosts only** — `rchan.xyz` (homepage) and `boards.rchan.xyz` (content).
+  `www` 301s to the apex (own server block, `nginx/default.conf`).
+- **One URL per page** — `.html` requests 301 to the clean spelling;
+  `/index.html` → `/`. Every HTML page carries a single `<link rel="canonical">`
+  from the `$rchan_canon` map: homepage → apex, bare board index → its catalog
+  (the actual landing view), `.html` stripped.
+- **robots.txt per host** — content (media included; image search is discovery
+  traffic) crawlable; account/login/mod/captcha/addon/JSON paths disallowed;
+  both point at the sitemap.
+- **noindex enforcement** — `$rchan_noindex` map emits `X-Robots-Tag` on the
+  utility surfaces and JSON mirrors (disallow only stops crawling; noindex is
+  what keeps a linked URL out). Content pages carry no such header.
+- **Live sitemap** — `sitemap` addon (read-only DB projections, 10-min cache)
+  at `/sitemap.xml`: apex home, board catalogs, every living thread with
+  `lastmod` from `lastBump`. Dead threads drop out on their own.
+- **Snippets & structured data** — `fe-overrides/be/static.js` injects
+  `<meta name="description">` on thread/board/catalog pages and
+  `DiscussionForumPosting` JSON-LD per thread (headline, dates, author,
+  comment count — the schema Google's forum result treatment reads);
+  the homepage template carries `WebSite`/`Organization` JSON-LD.
+- **After adding a board or major content**: nothing to do — canonical map,
+  robots, sitemap and tags are all generated, not hand-listed.
+- **One-time, off-box**: verify both hosts in Google Search Console + Bing
+  Webmaster Tools and submit `https://boards.rchan.xyz/sitemap.xml`.
+
 ## Backups
 The `backup` service (`mongo:4.4`) runs `mongodump` of the `lynxchan` DB to
 `/volume1/cloud/Dropbox/rchan-backups/` — one dump immediately on start, then every 24h,

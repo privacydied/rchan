@@ -235,7 +235,48 @@ exports.setThreadTitle = function(document, threadData) {
         + (large ? 'summary_large_image' : 'summary') + '">'
         + '<meta name="twitter:title" content="' + escT(ogTitle) + '">'
         + '<meta name="twitter:description" content="' + escT(ogDesc) + '">'
-        + '<meta name="twitter:image" content="' + escU(ogImg) + '">';
+        + '<meta name="twitter:image" content="' + escU(ogImg) + '">'
+        // SEO: search snippet (og:description is ignored by search engines)
+        + '<meta name="description" content="' + escT(ogDesc) + '">';
+
+    // SEO: DiscussionForumPosting structured data — the schema.org type Google
+    // documents for forum threads (eligible for the "Discussions and forums"
+    // result treatment). Non-executing data block: CSP script-src doesn't
+    // apply, crawlers read it either way. The .html in the url is stripped by
+    // the router's clean-URL sub_filter, same as og:url — one URL spelling
+    // everywhere. All fields are guarded; a missing one is omitted, and the
+    // whole block rides this try/catch so it can never break rendering.
+    try {
+      var ld = {
+        '@context' : 'https://schema.org',
+        '@type' : 'DiscussionForumPosting',
+        '@id' : ogUrl,
+        url : ogUrl,
+        headline : String(ogTitle).substring(0, 110),
+        text : ogDesc,
+        author : { '@type' : 'Person',
+          name : String(threadData.name || 'Anonymous').substring(0, 70) }
+      };
+      if (threadData.creation) {
+        ld.datePublished = new Date(threadData.creation).toISOString();
+      }
+      if (threadData.lastBump) {
+        ld.dateModified = new Date(threadData.lastBump).toISOString();
+      }
+      if (large) { ld.image = ogImg; }
+      if (typeof threadData.postCount === 'number') {
+        ld.interactionStatistic = {
+          '@type' : 'InteractionCounter',
+          interactionType : 'https://schema.org/CommentAction',
+          userInteractionCount : threadData.postCount
+        };
+      }
+      og += '<script type="application/ld+json">'
+          + JSON.stringify(ld).replace(/</g, '\\u003c') + '</script>';
+    } catch (ldErr) {
+      // structured data is a bonus, never a dependency
+    }
+
     document = document.replace('</head>', function() {
       return og + '</head>';
     });
@@ -540,18 +581,22 @@ exports.page = function(page, threads, pageCount, boardData, flagData,
           .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
           .replace(/_/g, '&#95;');
     };
+    var bDesc = bEsc(String(boardData.boardDescription || '').substring(0, 200));
     var bOg = '<meta property="og:type" content="website">'
         + '<meta property="og:site_name" content="rchan">'
+        + '<meta property="og:url" content="https://boards.rchan.xyz/'
+        + boardUri + '/' + (page > 1 ? page : '') + '">'
         + '<meta property="og:title" content="'
         + bEsc('/' + boardData.boardUri + '/ - ' + (boardData.boardName || ''))
         + '">'
-        + '<meta property="og:description" content="'
-        + bEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">'
+        + '<meta property="og:description" content="' + bDesc + '">'
         + '<meta property="og:image" '
         + 'content="https://boards.rchan.xyz/.static/logo.png">'
         + '<meta name="twitter:card" content="summary">'
         + '<meta name="twitter:image" '
-        + 'content="https://boards.rchan.xyz/.static/logo.png">';
+        + 'content="https://boards.rchan.xyz/.static/logo.png">'
+        // SEO: search snippet for board index pages
+        + '<meta name="description" content="' + bDesc + '">';
     document = document.replace('</head>', function() {
       return bOg + '</head>';
     });
@@ -729,7 +774,10 @@ exports.setCatalogElements = function(boardData, language, threads, flagData) {
         + '<meta name="twitter:description" content="'
         + cEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">'
         + '<meta name="twitter:image" '
-        + 'content="https://boards.rchan.xyz/.static/logo.png">';
+        + 'content="https://boards.rchan.xyz/.static/logo.png">'
+        // SEO: search snippet — the catalog is each board's canonical landing
+        + '<meta name="description" content="'
+        + cEsc(String(boardData.boardDescription || '').substring(0, 200)) + '">';
     document = document.replace('</head>', function() {
       return cOg + '</head>';
     });

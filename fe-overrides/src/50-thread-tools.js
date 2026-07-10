@@ -55,6 +55,9 @@
     findActive = false;
     var hidden = document.getElementsByClassName("rchan-findhide");
     for (var i = hidden.length - 1; i >= 0; i--) { hidden[i].classList.remove("rchan-findhide"); }
+    // hand focus back to whatever opened the bar (nav button / ID funnel)
+    var op = findBar.__opener; findBar.__opener = null;
+    if (op && document.contains(op)) { try { op.focus({ preventScroll: true }); } catch (e) {} }
   }
   function toggleFind(preset) {
     if (!curThreadId()) { return; }
@@ -81,6 +84,7 @@
     }
     findBar.style.display = "flex";
     findActive = true;
+    if (!findBar.__opener) { findBar.__opener = document.activeElement; }
     if (preset != null) { findInput.value = preset; }
     findInput.focus(); findInput.select();
     applyFind();

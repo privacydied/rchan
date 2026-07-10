@@ -37,6 +37,8 @@
         if (!pill) {
           pill = document.createElement("button");
           pill.id = "rchan-boardpill"; pill.type = "button";
+          pill.setAttribute("aria-live", "polite");
+          pill.setAttribute("aria-atomic", "true");
           pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
           pill.setAttribute("aria-label", "New activity — refresh the page");
           pill.addEventListener("click", function () { location.reload(); });
@@ -232,6 +234,8 @@
     if (!wsPill) {
       wsPill = document.createElement("button");
       wsPill.id = "rchan-wspill"; wsPill.type = "button";
+      wsPill.setAttribute("aria-live", "polite");
+      wsPill.setAttribute("aria-atomic", "true");
       wsPill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
       wsPill.setAttribute("aria-label", "Posts arrived while disconnected — refresh");
       wsPill.addEventListener("click", function () { location.reload(); });
@@ -360,7 +364,15 @@
       if (op && op.parentNode) {
         mEl = document.createElement("div");
         mEl.id = "rchan-mstats";
-        mEl.setAttribute("aria-hidden", "true");     // duplicate of the nav line for small screens
+        // On phones the nav status line is display:none, so this in-flow strip
+        // is the ONLY place the stats exist — it must be readable by AT (it was
+        // previously aria-hidden, leaving mobile screen-reader users with none).
+        // No aria-live: it refreshes every 30s and each segment already carries
+        // an aria-label, so it reads on demand without announcing on a timer.
+        // (On desktop this element is display:none, so AT skips it there — no
+        // double-read with the visible nav line.)
+        mEl.setAttribute("role", "group");
+        mEl.setAttribute("aria-label", "Thread status");
         op.parentNode.insertBefore(mEl, op.nextSibling);
       }
     }

@@ -24,6 +24,11 @@
   }
   function dialogOpened(panel, focusEl) {
     trapDialog(panel);
+    // Announce these overlays as modal to assistive tech: role="dialog" so
+    // they're exposed as dialogs, aria-modal so the AT virtual cursor stays
+    // inside (mirroring the Tab trap above for keyboard users).
+    if (!panel.getAttribute("role")) { panel.setAttribute("role", "dialog"); }
+    panel.setAttribute("aria-modal", "true");
     panel.__opener = document.activeElement;
     var target = focusEl || dlgFocusables(panel)[0] || panel;
     try { target.focus({ preventScroll: true }); } catch (e) { try { target.focus(); } catch (e2) {} }

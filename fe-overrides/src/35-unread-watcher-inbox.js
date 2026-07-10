@@ -50,6 +50,10 @@
     if (!newPill) {
       newPill = document.createElement("button");
       newPill.id = "rchan-newpill"; newPill.type = "button";
+      // Announce arrivals: the pill's label updates when new posts land, so make
+      // it a polite atomic live region rather than a silently-appearing button.
+      newPill.setAttribute("aria-live", "polite");
+      newPill.setAttribute("aria-atomic", "true");
       newPill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg><span></span>';
       newPill.addEventListener("click", function () {
         var t = document.getElementById("rchan-newline") || newPill.__target;

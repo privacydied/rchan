@@ -68,10 +68,17 @@
   // scrolled it offscreen, in which case it re-syncs to where you're looking.
   var kbCurEl = null;
   function kbSelect(el) {
-    if (kbCurEl && kbCurEl.classList) { kbCurEl.classList.remove("rchan-kbcur"); }
+    if (kbCurEl && kbCurEl.classList) {
+      kbCurEl.classList.remove("rchan-kbcur");
+      kbCurEl.removeAttribute("tabindex");
+    }
     kbCurEl = el;
     el.classList.add("rchan-kbcur");
+    // Make the selection a real focus stop so screen readers follow j/k and
+    // read the post the sighted highlight lands on (it was visual-only before).
+    el.setAttribute("tabindex", "-1");
     try { el.scrollIntoView({ behavior: SB, block: "center" }); } catch (e) {}
+    try { el.focus({ preventScroll: true }); } catch (e) {}
   }
   function navPosts(dir) {
     var list = Array.prototype.slice.call(document.querySelectorAll(".opCell, .postCell"));

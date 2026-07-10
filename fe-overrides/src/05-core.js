@@ -43,9 +43,17 @@
      navigator.connection.saveData is true. That's an explicit "don't spend my
      bytes" — so our proactive, non-essential fetches (catalog prefetch, video
      hover pop-out, decorative banners, gallery neighbour preloading) step aside.
-     No UI: the preference already exists at the OS/browser level; we just obey. */
+     navigator.connection is Chromium-only, though — Firefox/Safari users could
+     never opt in — so a manual override rides on top: the settings panel's
+     "Data saver" select stores "1"/"0" in DATASAVER_KEY, absent = auto (obey
+     the browser signal). Guards call dataSaver() at event time, so the select
+     applies instantly. */
+  var DATASAVER_KEY = "rchan_datasaver";
   function dataSaver() {
     try {
+      var pref = localStorage.getItem(DATASAVER_KEY);   // "1" force on · "0" force off · null = auto
+      if (pref === "1") { return true; }
+      if (pref === "0") { return false; }
       var c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
       if (!c) { return false; }
       return !!c.saveData || /(^|-)2g$/.test(c.effectiveType || "");

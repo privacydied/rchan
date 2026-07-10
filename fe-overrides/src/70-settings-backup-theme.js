@@ -41,6 +41,12 @@
     { g: "Media", t: "Work-safe mode", d: "Blur every thumbnail, image and video until you hover it — for reading in public",
       get: function () { return setOn("wsmode", false); },
       set: function (on) { setPut("wsmode", on); applyWorkSafe(); } },
+    { g: "Media", t: "Data saver", d: "Skip speculative fetches (video hover autoplay, catalog prefetch, banners, gallery preload). Auto follows your browser's Data Saver signal — Chrome only; force On elsewhere",
+      options: [["auto", "Auto"], ["1", "On"], ["0", "Off"]],
+      get: function () { try { return localStorage.getItem(DATASAVER_KEY) || "auto"; } catch (e) { return "auto"; } },
+      set: function (v) {
+        try { v === "auto" ? localStorage.removeItem(DATASAVER_KEY) : localStorage.setItem(DATASAVER_KEY, v); } catch (e) {}
+      } },
     { g: "Advanced", k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { g: "Posting", k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
     { g: "Notifications", k: "yousound", def: false, t: "Sound on replies to you", d: "Short chime when a new post quotes one of yours" },

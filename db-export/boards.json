@@ -7,12 +7,15 @@
 	"boardDescription": "General discussion.",
 	"owner": "admin",
 	"settings": [
-		"disableIds"
+		"disableIds",
+		"requireThreadFile"
 	],
-	"uniqueIps": 4,
-	"lastPostId": 71,
+	"uniqueIps": 9,
+	"lastPostId": 100,
 	"captchaMode": 0,
 	"postsPerHour": 0,
-	"threadCount": 26
+	"threadCount": 30,
+	"anonymousName": "",
+	"tags": []
 }]
 

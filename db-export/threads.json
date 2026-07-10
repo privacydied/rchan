@@ -95,7 +95,7 @@
 			"height": 619
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"fileCount": 5,
 	"postCount": 5,
 	"autoSage": null,
@@ -135,7 +135,7 @@
 			"height": 2048
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"fileCount": 6,
 	"postCount": 7,
 	"autoSage": null,
@@ -158,7 +158,7 @@
 	},
 	"subject": "Bbw thread",
 	"pinned": false,
-	"locked": true,
+	"locked": false,
 	"signedRole": null,
 	"name": "Anonymous",
 	"message": "Fat chick review thread",
@@ -229,7 +229,7 @@
 	"threadId": 23,
 	"id": "8189b3",
 	"lastBump": {
-		"$date": "2026-07-06T17:44:17.279Z"
+		"$date": "2026-07-09T06:14:59.989Z"
 	},
 	"creation": {
 		"$date": "2026-07-06T17:44:16.282Z"
@@ -253,11 +253,13 @@
 			"height": 1009
 		}
 	],
-	"page": 3,
+	"page": 2,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/gb.png",
-	"flagName": "United Kingdom"
+	"flagName": "United Kingdom",
+	"fileCount": 0,
+	"postCount": 1
 },
 {
 	"_id": {
@@ -314,12 +316,12 @@
 	},
 	"subject": "mashed potato no milk",
 	"pinned": false,
-	"locked": false,
+	"locked": true,
 	"signedRole": null,
 	"name": "Anonymous",
 	"message": "mashed potato recipe without milk low calorie low fat tasty garlic",
 	"email": null,
-	"page": 2,
+	"page": 3,
 	"autoSage": null,
 	"cyclic": false,
 	"files": null,
@@ -358,7 +360,7 @@
 			"height": 3024
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"fileCount": 0,
 	"postCount": 2,
 	"autoSage": null,
@@ -398,7 +400,7 @@
 			"height": 237
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"fileCount": 1,
 	"postCount": 2,
 	"autoSage": null,
@@ -438,7 +440,7 @@
 			"height": 1080
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"autoSage": null,
 	"cyclic": false,
 	"fileCount": 1,
@@ -454,7 +456,7 @@
 	"threadId": 35,
 	"id": "6fe288",
 	"lastBump": {
-		"$date": "2026-07-07T09:03:03.292Z"
+		"$date": "2026-07-10T03:04:39.756Z"
 	},
 	"creation": {
 		"$date": "2026-07-07T06:38:30.092Z"
@@ -478,9 +480,9 @@
 			"height": 1280
 		}
 	],
-	"page": 2,
-	"fileCount": 3,
-	"postCount": 7,
+	"page": 1,
+	"fileCount": 7,
+	"postCount": 14,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/th.png",
@@ -518,7 +520,7 @@
 			"height": 449
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/us.png",
@@ -556,7 +558,7 @@
 			"height": 1056
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"fileCount": 6,
 	"postCount": 7,
 	"autoSage": null,
@@ -634,7 +636,7 @@
 			"height": 281
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/gb.png",
@@ -672,7 +674,7 @@
 			"height": 960
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"fileCount": 0,
 	"postCount": 1,
 	"autoSage": null,
@@ -712,7 +714,7 @@
 			"height": 640
 		}
 	],
-	"page": 2,
+	"page": 3,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/us.png",
@@ -750,7 +752,7 @@
 			"height": 527
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"fileCount": 1,
 	"postCount": 1,
 	"autoSage": null,
@@ -790,7 +792,7 @@
 			"height": 354
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"autoSage": null,
 	"cyclic": false,
 	"flag": "/.static/flags/pt.png",
@@ -828,7 +830,7 @@
 			"height": 432
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"fileCount": 1,
 	"postCount": 1,
 	"flag": "/.static/flags/us.png",
@@ -868,7 +870,7 @@
 			"height": 508
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"flag": "/.static/flags/us.png",
 	"flagName": "United States",
 	"autoSage": null,
@@ -910,9 +912,11 @@
 			"height": 1122
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"fileCount": 1,
-	"postCount": 1
+	"postCount": 1,
+	"autoSage": null,
+	"cyclic": false
 },
 {
 	"_id": {
@@ -948,9 +952,11 @@
 			"height": 1200
 		}
 	],
-	"page": 1,
+	"page": 2,
 	"fileCount": 1,
-	"postCount": 1
+	"postCount": 1,
+	"autoSage": null,
+	"cyclic": false
 },
 {
 	"_id": {
@@ -986,7 +992,9 @@
 			"height": 1024
 		}
 	],
-	"page": 1
+	"page": 2,
+	"autoSage": null,
+	"cyclic": false
 },
 {
 	"_id": {
@@ -996,7 +1004,7 @@
 	"threadId": 68,
 	"id": null,
 	"lastBump": {
-		"$date": "2026-07-08T23:01:08.984Z"
+		"$date": "2026-07-09T13:29:23.092Z"
 	},
 	"creation": {
 		"$date": "2026-07-08T22:24:23.43Z"
@@ -1023,7 +1031,293 @@
 		}
 	],
 	"page": 1,
+	"fileCount": 1,
+	"postCount": 2,
+	"autoSage": null,
+	"cyclic": false
+},
+{
+	"_id": {
+		"$oid": "6a4fb68781b3d1ad307e3874"
+	},
+	"boardUri": "gen",
+	"threadId": 74,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T19:50:29.39Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T14:56:06.453Z"
+	},
+	"subject": "🇪🇺 Chat Control has passed",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "They can and will now legally scan any person's messages, emails and photos you send without a warrant\r\n\r\nThe way they passed this law when the majority of the European Parliament was against it will shock you:\r\n\r\nThey waited until most EP members were on holiday so only a few were present and then created an \"urgent\" vote for it to pass it through\r\n\r\nThere's nothing democratic about any of it and big powerful forces are behind this that can manipulate the EU for whatever they want\r\n\r\nDemocracy in Europe died a bit today",
+	"email": null,
+	"flagName": "United Kingdom",
+	"flag": "/.static/flags/gb.png",
+	"files": [
+		{
+			"originalName": "image.png",
+			"path": "/.media/f68bf9911d492041f605d79e46d3f4af803d4f53b8fc41fab323322a83176a7d.png",
+			"mime": "image/png",
+			"thumb": "/.media/t_f68bf9911d492041f605d79e46d3f4af803d4f53b8fc41fab323322a83176a7d",
+			"size": 3958899,
+			"sha256": "f68bf9911d492041f605d79e46d3f4af803d4f53b8fc41fab323322a83176a7d",
+			"width": 1536,
+			"height": 2048
+		}
+	],
+	"page": 1,
+	"fileCount": 1,
+	"postCount": 5
+},
+{
+	"_id": {
+		"$oid": "6a4fbde55742d963a6fbf56a"
+	},
+	"boardUri": "gen",
+	"threadId": 75,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T15:27:33.542Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T15:27:32.851Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Be serious. What's actually stopping England winning the World Cup?",
+	"email": null,
+	"flagName": "United Kingdom",
+	"flag": "/.static/flags/gb.png",
+	"files": [
+		{
+			"originalName": "image.png",
+			"path": "/.media/40d38721842af9a2a57e1e46cdbbf710122a50571aef0325a3fcf73be2d30ff6.png",
+			"mime": "image/png",
+			"thumb": "/.media/t_40d38721842af9a2a57e1e46cdbbf710122a50571aef0325a3fcf73be2d30ff6",
+			"size": 3859635,
+			"sha256": "40d38721842af9a2a57e1e46cdbbf710122a50571aef0325a3fcf73be2d30ff6",
+			"width": 1639,
+			"height": 2048
+		}
+	],
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4fc1df5c4fbf68d7d79dff"
+	},
+	"boardUri": "gen",
+	"threadId": 78,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T15:50:13.628Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T15:44:31.014Z"
+	},
+	"subject": "Conversion Therapy",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "I am sick to my stomach of disgusting rude awful women. Everyday they are so cruel to me. I do nothing to deserve this. Unfortunately I love women. How can I stop? Is there a way to become homosexual? If I watch enough gay porn will I flip? Please advise /gen/tiles",
+	"email": null,
+	"flagName": "United States",
+	"flag": "/.static/flags/us.png",
+	"files": [
+		{
+			"originalName": "images.jpg",
+			"path": "/.media/e6a208027fae1d56ad953effa0ac0bb57886a1574041e09dd7ac1ea7f5402113.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_e6a208027fae1d56ad953effa0ac0bb57886a1574041e09dd7ac1ea7f5402113",
+			"size": 43198,
+			"sha256": "e6a208027fae1d56ad953effa0ac0bb57886a1574041e09dd7ac1ea7f5402113",
+			"width": 627,
+			"height": 489
+		}
+	],
+	"page": 1,
 	"fileCount": 0,
+	"postCount": 2
+},
+{
+	"_id": {
+		"$oid": "6a4fc29b5742d963a6fbf579"
+	},
+	"boardUri": "gen",
+	"threadId": 79,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T15:47:39.042Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T15:47:38.969Z"
+	},
+	"subject": "How to dress",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "What's your aesthetic? I usually stick to a plain polo and jeans but am looking to branch out fashionwise. Any cool outfits for a 44 year old accountant looking to get into clothes?",
+	"email": null,
+	"flagName": "United States",
+	"flag": "/.static/flags/us.png",
+	"files": [
+		{
+			"originalName": "HMyMRuWWoAEG9ZW.jpg",
+			"path": "/.media/98628845774ba1360d45369205cbe301f0aa6b41848b181b0a6261cf55b13dbb.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/t_98628845774ba1360d45369205cbe301f0aa6b41848b181b0a6261cf55b13dbb",
+			"size": 87100,
+			"sha256": "98628845774ba1360d45369205cbe301f0aa6b41848b181b0a6261cf55b13dbb",
+			"width": 680,
+			"height": 510
+		}
+	],
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4fc6c3c9be6dfe40e3be62"
+	},
+	"boardUri": "gen",
+	"threadId": 85,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T19:51:36.654Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T16:05:23.161Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "Should men and women be segregated in the workplace?",
+	"email": null,
+	"flagName": "Thailand",
+	"flag": "/.static/flags/th.png",
+	"files": [
+		{
+			"originalName": "1WcyQ1jjFxpeoiew.mp4",
+			"path": "/.media/ee12e7d73476e96531361f27456d90cd28cb1e697bd02a7dc81a61e1eb43efba.mp4",
+			"mime": "video/mp4",
+			"thumb": "/.media/t_ee12e7d73476e96531361f27456d90cd28cb1e697bd02a7dc81a61e1eb43efba",
+			"size": 528424,
+			"sha256": "ee12e7d73476e96531361f27456d90cd28cb1e697bd02a7dc81a61e1eb43efba",
+			"width": 320,
+			"height": 568
+		}
+	],
+	"page": 1,
+	"fileCount": 1,
+	"postCount": 2
+},
+{
+	"_id": {
+		"$oid": "6a4fd6f0c9be6dfe40e3be7f"
+	},
+	"boardUri": "gen",
+	"threadId": 89,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T17:14:24.871Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T17:14:24.626Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "https://www.nbcnews.com/business/consumer/microsoft-layoffs-xbox-gaming-rcna353019\r\n\r\nAs of 2024, Microsoft was the 6th largest H-1B sponsor and the 4th largest user of H-1Bs among American companies. They have tens of thousands of H-1B applications in process. No company that initiates mass layoffs, for any reason, should be allowed to retain H-1B employees. Total failure of legislation and policy to allow this.\r\n\r\n3200 from the XBox division, 1600 from other divisions. Is being a white-collar worker in the West just a perpetual humiliation ritual cycle at this point? Nightmarish to actually search for a job and go through the interview process, shit pay, boss lays you off every 2 years after some peabrained executive decision to go balls deep on a new trend that obviously isn't going to last.",
+	"email": null,
+	"flagName": "United States",
+	"flag": "/.static/flags/us.png",
+	"files": [
+		{
+			"originalName": "image.png",
+			"path": "/.media/9e3791841d21f4025352c29ada8d6a75a46998a1c8b0e66b6bbcb73d5a24e3ec.png",
+			"mime": "image/png",
+			"thumb": "/.media/t_9e3791841d21f4025352c29ada8d6a75a46998a1c8b0e66b6bbcb73d5a24e3ec",
+			"size": 716127,
+			"sha256": "9e3791841d21f4025352c29ada8d6a75a46998a1c8b0e66b6bbcb73d5a24e3ec",
+			"width": 873,
+			"height": 949
+		}
+	],
+	"page": 1
+},
+{
+	"_id": {
+		"$oid": "6a4fee41156cf4ff448fd576"
+	},
+	"boardUri": "gen",
+	"threadId": 90,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-09T19:00:18.807Z"
+	},
+	"creation": {
+		"$date": "2026-07-09T18:53:53.993Z"
+	},
+	"subject": "In Xanadu did zoomer-kun a stately gooner den decree",
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "My brother who spends all day either at work or playing video games. He doesn't go out on the weekends and seems to only interact with friends in multiplayer games. He's in his early 20s and very good looking but intensely shy around women. What's the solution here? I try to shame him but it runs off his back like water. Should I smash his gaming pc?",
+	"email": null,
+	"flagName": "United States",
+	"flag": "/.static/flags/us.png",
+	"page": 1,
+	"fileCount": 1,
 	"postCount": 1
+},
+{
+	"_id": {
+		"$oid": "6a5040fc8d663d0f68fc3a70"
+	},
+	"boardUri": "gen",
+	"threadId": 98,
+	"id": null,
+	"lastBump": {
+		"$date": "2026-07-10T00:46:52.558Z"
+	},
+	"creation": {
+		"$date": "2026-07-10T00:46:47.038Z"
+	},
+	"subject": null,
+	"pinned": false,
+	"locked": false,
+	"signedRole": null,
+	"name": "Anonymous",
+	"message": "“Ever since I fumbled us, I’ve pretty much only had sex with girls everyone says look exactly like you. I finally found one I really like and I think I’m gonna date her\r\n\r\nJust wanted to let you know I’m not imagining you while I’m with her or anything weird like that”",
+	"email": null,
+	"flagName": "United Kingdom",
+	"flag": "/.static/flags/gb.png",
+	"files": [
+		{
+			"originalName": "OaE-ymwiKHCLPemZ.mp4",
+			"path": "/.media/2c9ebcb2d8ccb53ae3299b394cf9309a721eb08f6bb3fdaedc56116edc49e632.mp4",
+			"mime": "video/mp4",
+			"thumb": "/.media/t_2c9ebcb2d8ccb53ae3299b394cf9309a721eb08f6bb3fdaedc56116edc49e632",
+			"size": 7242480,
+			"sha256": "2c9ebcb2d8ccb53ae3299b394cf9309a721eb08f6bb3fdaedc56116edc49e632",
+			"width": 1080,
+			"height": 1920
+		}
+	],
+	"page": 1
 }]
 

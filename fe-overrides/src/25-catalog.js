@@ -125,21 +125,28 @@
     // element references (catalog.searchField etc.) intact — nothing re-binds.
     var dt = document.getElementById("divTools");
     if (dt) { bar.appendChild(dt); }
+    // Right-side group (count + sort/size/view). A dedicated flex group +
+    // space-between on the bar pins search LEFT / controls RIGHT structurally,
+    // instead of leaning on an auto margin that theme rules (warmdark's
+    // `#divTools { margin: 0 !important }`, the themes' own catcount autos)
+    // can silently defeat.
+    var ctrl = document.createElement("span"); ctrl.id = "rchan-catctrl";
     var count = document.createElement("span"); count.id = "rchan-catcount";   // "N threads" (left of the controls)
     var nc = catCells().length;
     count.textContent = nc + (nc === 1 ? " thread" : " threads");
-    bar.appendChild(count);
-    bar.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
-    bar.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
+    ctrl.appendChild(count);
+    ctrl.appendChild(mkSelect("rchan-catsort", "Index Sort", SORT_MODES, SORT_NAMES, curSort, function (v) { localStorage.setItem(SORT_KEY, v); sortCatalog(v); }));
+    ctrl.appendChild(mkSelect("rchan-catsize", "Size", CAT_SIZES, CAT_NAMES, curSize, function (v) { localStorage.setItem(CAT_KEY, v); applyCatSize(v); }));
     // "Index" = the REAL old-school board index (OP + last replies, pages) at
     // /<board>/?index — not a CSS re-layout of the catalog cells. Remember the
     // choice as the preferred board landing view (same cookie toggleCatalog sets).
-    bar.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, "catalog", function (v) {
+    ctrl.appendChild(mkSelect("rchan-catview", "View", VIEW_MODES, VIEW_NAMES, "catalog", function (v) {
       if (v !== "index") { return; }
       var b = getBoard(); if (!b) { return; }
       try { document.cookie = "rchan_view=index; path=/; max-age=31536000; SameSite=Lax"; } catch (e) {}
       location.href = "/" + b + "/?index";
     }));
+    bar.appendChild(ctrl);
     threads.parentNode.insertBefore(bar, threads);
   }
   /* ---------- Thread lifecycle chips: catalog side ----------

@@ -632,13 +632,16 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 .coloredIcon[data-tooltip] { cursor: pointer; }
 
 /* ---------- Catalog toolbar (sort + card size) + native search tools ---------- */
-/* One row: native #divTools (search/refresh — DOM-moved into the bar by
-   buildCatalogTools) sits left with margin-right:auto; count + sort/size/view
-   selects gather on the right. flex-wrap keeps phones sane: the native tools
-   take their own line and the controls wrap under. Brutalist/Academia already
-   flex this bar with their own rules; divTools simply joins their row. */
-#rchan-cattools { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 2px 8px; margin: 10px 8px 2px; font-size: .833rem; font-weight: 700; }
-#rchan-cattools #divTools { margin: 0 auto 0 0; text-align: left; font-weight: 400; }
+/* One row, two structural groups: native #divTools (search/refresh — DOM-moved
+   into the bar by buildCatalogTools) pinned LEFT, #rchan-catctrl (count +
+   sort/size/view) pinned RIGHT via space-between — deliberately NOT an auto
+   margin, which theme rules (warmdark's `#divTools { margin: 0 !important }`,
+   the themes' catcount autos) can silently defeat. catctrl's margin-left:auto
+   keeps it right even if divTools is missing. flex-wrap keeps phones sane:
+   the native tools take their own line and the controls wrap under. */
+#rchan-cattools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 8px; margin: 10px 8px 2px; font-size: .833rem; font-weight: 700; }
+#rchan-cattools #divTools { margin: 0; text-align: left; font-weight: 400; }
+#rchan-catctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-left: auto; }
 #rchan-cattools label { margin: 0; }
 #rchan-cattools select { margin-left: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
 #divTools { text-align: center; margin: 4px 0 2px; font-size: .833rem; }

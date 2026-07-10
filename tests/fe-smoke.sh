@@ -27,7 +27,9 @@ board=$(curl -s -H "$H" "$B/boards.js?json=1" | grep -o '"boardUri":"[A-Za-z0-9]
 if [ -n "$board" ]; then
   chk "/$board/catalog" 200
   thread=$(curl -s -H "$H" "$B/$board/catalog.json" | grep -o '"threadId":[0-9]*' | head -1 | grep -o '[0-9]*')
-  [ -n "$thread" ] && chk "/$board/res/$thread.html" 200
+  # clean URL is the canonical spelling (SEO); the .html spelling must 301 to it
+  [ -n "$thread" ] && chk "/$board/res/$thread" 200
+  [ -n "$thread" ] && chk "/$board/res/$thread.html" 301
 else
   echo "  FAIL couldn't discover a board from /boards.js"; fail=1
 fi

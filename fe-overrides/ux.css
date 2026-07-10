@@ -154,6 +154,15 @@ body.theme_cream #catalogId, body.theme_cream #catalogId .title, body.theme_crea
 body.theme_cream .labelSubject {
   font-family: "Liberation Sans", "Arial", "sans-serif"; font-weight: 700;
 }
+/* board title (#labelName, index/thread) doubles as a one-click refresh. The
+   class is added by ux.js only where it wires the handler (never where the
+   title is already a link), so the affordance shows exactly where it works. */
+#labelName.rchan-titlerefresh { cursor: pointer; transition: color .15s ease; }
+/* :root + !important: the per-theme title colours (e.g. html.rchan-warmdark
+   .boardHeader p#labelName { color:… !important }) are (1,2,2) !important rules
+   declared later — this must be a MORE specific !important to shift on hover.
+   :root lifts it to (1,3,0). --accent falls back to the site red. */
+:root #labelName.rchan-titlerefresh:hover { color: var(--accent, #c8102e) !important; }
 
 /* ---------- Posts (yotsuba: div.post / div.reply / div.op) ---------- */
 .postCell { margin: 4px 0; }
@@ -164,7 +173,6 @@ body .innerPost {
   border-left: none;
   border-top: none;
   border-radius: 5px;
-  display: table;
   padding: 2px;
   box-shadow: 2px 2px 0 rgba(0,0,0,.1);   /* square shadow kept */
 }
@@ -176,6 +184,39 @@ body .innerOP {
   padding: 0;
 }
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
+/* ---- Post media-object (flex): the message is a stable column BESIDE the
+   thumbnail, not a float the text wraps around — so a short reply next to a
+   big image no longer squeezes into a one-word-per-line sliver. The header
+   (postInfo/opHead) and any injected panels take a full-width row of their own
+   (flex-basis:100% forces the wrap); the file column + message share the row
+   below. Replaces the old `display:table` float layout. ---- */
+body .innerPost, body .innerOP {
+  display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px;
+}
+body .innerPost > *, body .innerOP > * { flex: 0 0 100%; min-width: 0; }
+body .innerPost > .panelUploads, body .innerOP > .panelUploads,
+body .innerPost > .opUploadPanel, body .innerOP > .opUploadPanel { flex: 0 0 auto; }
+body .innerPost > .divMessage, body .innerOP > .divMessage {
+  flex: 1 1 0; min-width: 0; margin: 4px 0 10px 0;
+}
+/* Keep the file column and message ADJACENT (so they share one row) across the
+   two DOM shapes: a reply is [header, files, message], but an OP is [files,
+   header, ipPanel, message] — the header before the files and the (mod-only,
+   usually empty) IP panel between files and message would otherwise wrap the
+   message onto its own line. Pin the header to the top and the IP panel to the
+   bottom with order; nothing else moves. */
+body .innerPost > .postInfo, body .innerOP > .opHead { order: -1; }
+body .innerPost > .panelIpContainer, body .innerOP > .panelIpContainer { order: 1; }
+/* click-to-expand: the file column breaks to full width (below the header), so
+   the enlarged image gets the room and the message reflows underneath it. */
+body .innerPost > .panelUploads:has(.imgExpanded), body .innerOP > .panelUploads:has(.imgExpanded),
+body .innerPost > .opUploadPanel:has(.imgExpanded), body .innerOP > .opUploadPanel:has(.imgExpanded) {
+  flex: 0 0 100%;
+}
+/* Mobile keeps the same flex ROW — a 42vw thumb (cap below) leaves a readable
+   text column beside it even at 390px, which is more compact than stacking and
+   still sliver-free. (column-direction + flex-wrap would flow items into
+   accidental multi-columns, so it's deliberately not used.) */
 /* message: blockquote-style indentation (4chan blockquote.postMessage) */
 body .divMessage {
   display: block;
@@ -213,20 +254,26 @@ body.theme_cream .divMessage .greenText, body.theme_cream .divMessage .redText {
 .panelUploads, .opUploadPanel {
   font-family: "Courier New", Courier, monospace;
 }
-/* OP thumbnail floats beside the post (4chan: div.post div.file .fileThumb) */
-.innerOP .imgLink { margin: 3px 20px 5px 20px; }
-.innerOP { overflow: hidden; }   /* contain the float (4chan div.post) */
+/* thumbnail sits in its own flex column now — no float to contain or space out */
+.innerOP .imgLink, .innerPost .imgLink { display: block; margin: 2px 0; }
 /* thumbnails: never overflow */
 .imgLink img, .imgExpanded { max-width: 100%; height: auto; }
-/* engine bug: posting.css's `.uploadCell img:not(.imgExpanded) { max-width: 125px }`
-   is meant for the COMPOSE-form "you selected these files" preview, but the
-   SAME class wraps posted thumbnails in rendered threads/index too (server-side
-   domManipulator/common.js reuses <figure class="uploadCell">), so every OP and
-   reply thumbnail was stuck at 125px regardless of the actual thumbnail size.
-   Restore full size for rendered posts only — scoped to .innerPost/.innerOP,
-   which the compose form (#postingForm/#quick-reply) is never inside. */
-.innerPost .uploadCell img:not(.imgExpanded), .innerOP .uploadCell img:not(.imgExpanded) {
-  max-width: 100% !important;
+/* Thumbnail DISPLAY size, decoupled from source resolution. The engine
+   regenerates LARGE thumbs (thumbSize 480 = a retina SOURCE); cap the on-screen
+   box at 180px so a 480px thumb renders at ~2.6x density — crisp on any phone —
+   without a wide thumb dominating the post or slivering the text beside it.
+   (This also overrides posting.css's `.uploadCell img { max-width: 125px }`,
+   meant for the compose-form preview but leaking onto every rendered thumbnail
+   because domManipulator reuses <figure class="uploadCell">.) .imgExpanded is
+   exempt — click-to-expand shows full size. Mobile cap (42vw) below. */
+body .innerPost .uploadCell img:not(.imgExpanded), body .innerOP .uploadCell img:not(.imgExpanded) {
+  max-width: 180px !important; max-height: 180px !important;
+  width: auto !important; height: auto !important;
+}
+@media (max-width: 599px) {
+  body .innerPost .uploadCell img:not(.imgExpanded), body .innerOP .uploadCell img:not(.imgExpanded) {
+    max-width: 42vw !important; max-height: 55vh !important;
+  }
 }
 
 /* ---------- Form/table colours (cream) ---------- */
@@ -2914,8 +2961,9 @@ html.rchan-ptr, html.rchan-ptr body { overscroll-behavior-y: contain; }
     background: #fff !important; color: #000 !important;
     font-size: 11pt; margin: 0 !important;
   }
-  .innerPost, .innerOP, .markedPost {
-    display: block; background: #fff !important; color: #000 !important;
+  body .innerPost, body .innerOP, body .markedPost {
+    display: block !important;   /* override the flex media-object for print */
+    background: #fff !important; color: #000 !important;
     border: 1px solid #bbb !important; box-shadow: none !important;
     page-break-inside: avoid;
   }

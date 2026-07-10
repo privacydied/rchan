@@ -10,15 +10,24 @@
 // search engines see every living thread with an honest <lastmod>, and
 // nothing else.
 //
+// Also: IndexNow auto-ping. Every PING_MS one worker (cross-worker lease
+// lock, same pattern as the webpush addon) collects threads whose lastBump
+// moved since the last ping — new threads and fresh replies both bump — and
+// POSTs their URLs to api.indexnow.org, so Bing/Yandex/Seznam/Naver index
+// new content in minutes instead of at next crawl. Saged replies don't move
+// lastBump and are deliberately not pinged (they're minor updates; the next
+// bump or crawl picks them up).
+//
 // ── Safety / isolation ────────────────────────────────────────────────────
-//   • READ-ONLY: two indexed find()s (boards, threads projections); it never
-//     writes anything, anywhere. No new collections, no state.
-//   • The result is cached in memory for 10 minutes, so crawler traffic
-//     costs at most one pair of queries per window per worker.
-//   • formRequest is try/caught — a failure returns a plain 500 and can
-//     never throw into the engine.
+//   • The sitemap itself is READ-ONLY: two find() projections, no writes.
+//   • The pinger's ONLY write is its own single lock/cursor document in its
+//     OWN new collection (rchanSeo) — engine data is never touched.
+//   • Everything is try/caught; a failed ping logs and waits for the next
+//     tick, a failed request returns a plain 500 — nothing can throw into
+//     the engine.
 
 var db = require('../db');
+var https = require('https');
 
 exports.engineVersion = '2.3';
 
@@ -28,9 +37,85 @@ var CACHE_MS = 10 * 60 * 1000;
 var MAX_URLS = 5000;             // sitemap spec allows 50k; far beyond need
 var cachedXml = null, cachedAt = 0;
 
+// IndexNow: the key is public by design (ownership proof is serving it at
+// /<key>.txt — the router does; see nginx/default.conf).
+var IN_KEY = 'b0df0ad131c7bcf890cfffaa9d4e60c7cd74207a71702eeb';
+var IN_HOST = 'boards.rchan.xyz';
+var PING_MS = 5 * 60 * 1000;     // scan cadence
+var PING_MAX = 500;              // URLs per submission (API allows 10k)
+var LOCK_ID = 'indexnow-lock';   // lease lock + cursor doc, in rchanSeo
+
+function seoCol() { return db.conn().collection('rchanSeo'); }
+
 exports.init = function () {
-  console.log('[sitemap] live sitemap enabled (/addon.js/sitemap)');
+  // Every worker arms the timer; the lease lock makes exactly one of them
+  // ping per tick. First claim seeds the cursor to "now" — no backlog replay.
+  setInterval(function () {
+    try { pingTick(); } catch (e) { console.log('[sitemap] ping throw: ' + e); }
+  }, PING_MS);
+  console.log('[sitemap] live sitemap enabled (/addon.js/sitemap), IndexNow ping every '
+    + (PING_MS / 60000) + 'min');
 };
+
+function pingTick() {
+  var c = seoCol();
+  var now = new Date();
+  var lease = new Date(Date.now() + Math.floor(PING_MS * 0.8));
+  c.findOneAndUpdate(
+    { _id : LOCK_ID, until : { $lt : now } },
+    { $set : { until : lease, lastPing : now } },
+    { returnDocument : 'before', includeResultMetadata : true }
+  ).then(function (res) {
+    var prev = res && res.value;
+    if (!prev) {
+      // first run creates the doc (seeding the cursor); a duplicate-key error
+      // just means another worker holds it — skip this tick either way.
+      return c.insertOne({ _id : LOCK_ID, until : lease, lastPing : now })
+        .catch(function () {});
+    }
+    return doPing(prev.lastPing || now);
+  }).catch(function (e) { console.log('[sitemap] ping lock error: ' + e); });
+}
+
+function doPing(since) {
+  return db.conn().collection('threads')
+    .find({ lastBump : { $gt : since }, trash : { $ne : true } },
+      { projection : { boardUri : 1, threadId : 1 } })
+    .limit(PING_MAX).toArray().then(function (ts) {
+
+    var urls = (ts || []).filter(function (t) { return t.boardUri && t.threadId; })
+      .map(function (t) { return SITE + '/' + t.boardUri + '/res/' + t.threadId; });
+    if (!urls.length) { return; }
+
+    var body = JSON.stringify({
+      host : IN_HOST,
+      key : IN_KEY,
+      keyLocation : SITE + '/' + IN_KEY + '.txt',
+      urlList : urls
+    });
+
+    return new Promise(function (resolve) {
+      var req = https.request({
+        hostname : 'api.indexnow.org', path : '/indexnow', method : 'POST',
+        headers : { 'Content-Type' : 'application/json; charset=utf-8',
+                    'Content-Length' : Buffer.byteLength(body) },
+        timeout : 20000
+      }, function (res) {
+        res.resume();   // drain
+        console.log('[sitemap] IndexNow ping: ' + res.statusCode + ' for '
+          + urls.length + ' url' + (urls.length === 1 ? '' : 's'));
+        resolve();
+      });
+      req.on('error', function (e) {
+        console.log('[sitemap] IndexNow ping failed: ' + e.message);
+        resolve();
+      });
+      req.on('timeout', function () { req.destroy(new Error('timeout')); });
+      req.end(body);
+    });
+
+  }).catch(function (e) { console.log('[sitemap] ping error: ' + e); });
+}
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')

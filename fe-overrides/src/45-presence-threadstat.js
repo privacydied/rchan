@@ -19,40 +19,67 @@
       });
       return m;
     }
-    function check() {
-      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); }).then(function (list) {
-        var cur = snapshot(list);
-        if (!base) { base = cur; return; }
-        var newThreads = 0, newPosts = 0;
-        Object.keys(cur.threads).forEach(function (id) {
-          if (!base.threads[id]) { newThreads++; return; }          // brand new thread: its whole post
-          // count is "new threads", not "new posts" -- even if it already
-          // has replies by the time this poll saw it.
-          var delta = cur.threads[id] - base.threads[id];
-          if (delta > 0) { newPosts += delta; }                     // ignore shrinkage (pruned/deleted posts)
-        });
-        // hidden tab: board pages get the same "(N)" title + favicon badge threads have
-        if (document.hidden) { setTitleUnread(newThreads + newPosts); }
-        if (newThreads <= 0 && newPosts <= 0) { if (pill) { pill.style.display = "none"; } return; }
-        if (!pill) {
-          pill = document.createElement("button");
-          pill.id = "rchan-boardpill"; pill.type = "button";
-          pill.setAttribute("aria-live", "polite");
-          pill.setAttribute("aria-atomic", "true");
-          pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
-          pill.setAttribute("aria-label", "New activity — refresh the page");
-          pill.addEventListener("click", function () { location.reload(); });
-          document.body.appendChild(pill);
-        }
-        var txt = [];
-        if (newThreads > 0) { txt.push(newThreads + " new thread" + (newThreads > 1 ? "s" : "")); }
-        if (newPosts > 0) { txt.push(newPosts + " new post" + (newPosts > 1 ? "s" : "")); }
-        pill.lastChild.textContent = txt.join(" · ") + " — refresh";
-        pill.style.display = "inline-flex";
-      }).catch(function () {});
+    function diffList(list) {
+      var cur = snapshot(list);
+      if (!base) { base = cur; return; }
+      var newThreads = 0, newPosts = 0;
+      Object.keys(cur.threads).forEach(function (id) {
+        if (!base.threads[id]) { newThreads++; return; }            // brand new thread: its whole post
+        // count is "new threads", not "new posts" -- even if it already
+        // has replies by the time this poll saw it.
+        var delta = cur.threads[id] - base.threads[id];
+        if (delta > 0) { newPosts += delta; }                       // ignore shrinkage (pruned/deleted posts)
+      });
+      // hidden tab: board pages get the same "(N)" title + favicon badge threads have
+      if (document.hidden) { setTitleUnread(newThreads + newPosts); }
+      if (newThreads <= 0 && newPosts <= 0) { if (pill) { pill.style.display = "none"; } return; }
+      if (!pill) {
+        pill = document.createElement("button");
+        pill.id = "rchan-boardpill"; pill.type = "button";
+        pill.setAttribute("aria-live", "polite");
+        pill.setAttribute("aria-atomic", "true");
+        pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
+        pill.setAttribute("aria-label", "New activity — refresh the page");
+        pill.addEventListener("click", function () { location.reload(); });
+        document.body.appendChild(pill);
+      }
+      var txt = [];
+      if (newThreads > 0) { txt.push(newThreads + " new thread" + (newThreads > 1 ? "s" : "")); }
+      if (newPosts > 0) { txt.push(newPosts + " new post" + (newPosts > 1 ? "s" : "")); }
+      pill.lastChild.textContent = txt.join(" · ") + " — refresh";
+      pill.style.display = "inline-flex";
     }
-    fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
-      .then(function (list) { base = snapshot(list); }).catch(function () {});
+    function check() {
+      // On the catalog page the native auto-refresh already polls catalog.json,
+      // and the getCatalogData hook below diffs off ITS response — so don't fetch
+      // a second copy while native auto-refresh is running (that was the double
+      // poll). When native auto-refresh is off, or on the threaded index (which
+      // has no native refresher), fall back to our own fetch.
+      if (isCatalog() && window.catalog && catalog.autoRefresh) { return; }
+      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
+        .then(diffList).catch(function () {});
+    }
+    // Piggyback on the native catalog refresher: every time it (re)fetches
+    // catalog.json — auto tick or manual button — diff off the very same data
+    // it just parsed into catalog.catalogThreads, no extra request.
+    if (isCatalog() && window.catalog && catalog.getCatalogData && !catalog.__rchanLive) {
+      catalog.__rchanLive = true;
+      if (catalog.catalogThreads) { base = snapshot(catalog.catalogThreads); }
+      var origGet = catalog.getCatalogData;
+      catalog.getCatalogData = function (cb) {
+        return origGet.call(this, function (err) {
+          if (!err) { try { diffList(catalog.catalogThreads); } catch (e) {} }
+          if (cb) { return cb.apply(this, arguments); }
+        });
+      };
+    }
+    // Seed a baseline for the own-fetch path. Skip on the catalog page — base is
+    // seeded from catalog.catalogThreads / the first native refresh via the hook,
+    // so no duplicate load-time fetch there.
+    if (!base && !isCatalog()) {
+      fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
+        .then(function (list) { if (!base) { base = snapshot(list); } }).catch(function () {});
+    }
     setInterval(check, 60000);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) { check(); } });
   }

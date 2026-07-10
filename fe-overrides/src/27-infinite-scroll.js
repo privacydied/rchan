@@ -200,6 +200,60 @@
     if (!remaining.length) { if (csState.io) { csState.io.disconnect(); } showCatalogEnd(); return; }
     retargetCatalogObserver();
   }
+  /* ---------- Catalog scroll restore ----------
+     Back/forward (or reload) used to dump you at chunk 1, row 1: the reveal
+     state lives only in memory, so when this init re-hides everything past
+     the first chunk the page shrinks and the browser's own scroll restoration
+     gets clamped to the top. Persist {revealed, y} per board in
+     sessionStorage (per-tab: back-button memory, not a bookmark), rebuild the
+     reveal state, then re-apply the offset. Fresh link navigations clear the
+     slate — only back/forward/reload restore. If bfcache serves the page,
+     none of this runs and the DOM comes back intact anyway. */
+  function catPosKey() { return "rchan_catpos_" + (getBoard() || ""); }
+  function saveCatPos() {
+    try {
+      var n = catalogCells().filter(function (c) { return !c.hasAttribute("data-inf-hidden"); }).length;
+      sessionStorage.setItem(catPosKey(), JSON.stringify({ n: n, y: Math.round(window.scrollY || window.pageYOffset || 0) }));
+    } catch (e) {}
+  }
+  function hookCatPosSave() {
+    if (csState.saveHooked) { return; }
+    csState.saveHooked = true;
+    var pending = false;
+    window.addEventListener("scroll", function () {
+      if (pending) { return; }
+      pending = true;
+      setTimeout(function () { pending = false; saveCatPos(); }, 250);
+    }, { passive: true });
+    window.addEventListener("pagehide", saveCatPos);
+  }
+  function restoreCatPos() {
+    var type = "navigate", st = null;
+    try {
+      var nav = performance.getEntriesByType && performance.getEntriesByType("navigation");
+      if (nav && nav.length && nav[0].type) { type = nav[0].type; }
+    } catch (e) {}
+    if (type !== "back_forward" && type !== "reload") {
+      try { sessionStorage.removeItem(catPosKey()); } catch (e2) {}   // fresh visit: fresh view
+      return;
+    }
+    try { st = JSON.parse(sessionStorage.getItem(catPosKey()) || "null"); } catch (e3) {}
+    if (!st || !(st.n > 0)) { return; }
+    var cells = catalogCells();
+    for (var i = 0; i < cells.length && i < st.n; i++) {
+      if (cells[i].hasAttribute("data-inf-hidden")) {
+        cells[i].removeAttribute("data-inf-hidden");
+        cells[i].style.removeProperty("display");   // instant: no .rchan-appeared cascade on a bulk rebuild
+      }
+    }
+    retargetCatalogObserver();
+    if (!(st.y > 0)) { return; }
+    var y = st.y;
+    requestAnimationFrame(function () {           // after the reveals lay out
+      if (Math.abs((window.scrollY || 0) - y) > 40) { window.scrollTo(0, y); }
+    });
+  }
+
   function initCatalogInfiniteScroll() {
     if (!infScrollOn() || !isCatalog()) { return; }
     if (!("IntersectionObserver" in window)) { return; }
@@ -226,4 +280,6 @@
     }, { root: null, rootMargin: "0px 0px 200px 0px", threshold: 0 });
     var t = lastVisibleCatalogCell();
     if (t) { csState.io.observe(t); }
+    hookCatPosSave();
+    restoreCatPos();
   }

@@ -117,8 +117,12 @@
     tog.type = "button"; tog.id = "rchan-formtoggle";
     form.parentNode.insertBefore(tog, form);
     form.classList.add("rchan-form");
-    var setCollapsed = function (c) {
+    var setCollapsed = function (c, skipLabel) {
       form.classList.toggle("rchan-collapsed", c);
+      // skipLabel: the "Original Form" link drives the INLINE slide only — the
+      // toggle button's own action (float box / QR) is unaffected, so its
+      // label must not flip to "Hide … form" when that link is what opened it.
+      if (skipLabel) { return; }
       var L = formLabels();
       tog.textContent = c ? L.show : L.hide;
       tog.setAttribute("aria-expanded", c ? "false" : "true");
@@ -208,11 +212,11 @@
         qrBox.style.display = "none";
         origLink.parentNode.insertBefore(form, origLink.nextSibling);
       } else if (!form.classList.contains("rchan-collapsed")) {
-        setCollapsed(true);                                     // visible inline → retract
+        setCollapsed(true, true);                               // visible inline → retract
         try { localStorage.setItem(COLLAPSE_KEY, "1"); } catch (e2) {}
         return;
       }
-      setCollapsed(false);
+      setCollapsed(false, true);
       revealFieldset();                                         // show the real fields, not just the "Post thread" button
       try { localStorage.removeItem(COLLAPSE_KEY); } catch (e3) {}
       try { form.scrollIntoView({ behavior: SB, block: "nearest" }); } catch (e4) {}

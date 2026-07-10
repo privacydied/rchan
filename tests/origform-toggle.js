@@ -18,7 +18,8 @@ const puppeteer = require("puppeteer");
   const state = () => page.evaluate(() => {
     const f = document.getElementById("postingForm");
     const collapsed = f ? f.classList.contains("rchan-collapsed") : null;
-    return { collapsed, key: localStorage.getItem("rchan_form_collapsed") };
+    return { collapsed, key: localStorage.getItem("rchan_form_collapsed"),
+             togLabel: (document.getElementById("rchan-formtoggle") || {}).textContent };
   });
 
   const seq = [];

@@ -2770,7 +2770,22 @@ html.rchan-warmdark .rchan-tok-cmt { color: #9b9b94; font-style: italic; }
 #rchan-stickyop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #rchan-stickyop:hover { border-color: #c8102e; color: #c8102e; }
 .theme_dark #rchan-stickyop { background: #262a31; color: #c9ccd1; border-color: #333; }
-@media (max-width: 640px) { #rchan-stickyop { display: none !important; } } /* nav wraps there */
+/* Mobile: the desktop centered pill (top:40px) collides with the fixed nav
+   once it wraps, and the whole bottom zone is taken by #rchan-nav and the
+   pills — so show a slim full-width strip pinned to the very top edge instead.
+   It still only appears once the OP has scrolled off (JS-toggled), giving
+   phone readers the thread's subject + a one-tap route back to the top while
+   deep in a long thread — the one spot they lose orientation. z 9998 keeps it
+   above the engine nav but below dialogs (10008+), which cover it when open. */
+@media (max-width: 640px) {
+  #rchan-stickyop {
+    top: 0; left: 0; right: 0; transform: none;
+    width: 100%; max-width: none; box-sizing: border-box;
+    justify-content: flex-start; border-radius: 0;
+    border-width: 0 0 1px 0; padding: 5px 12px; z-index: 9998;
+  }
+  #rchan-stickyop img { width: 22px; height: 22px; }
+}
 
 /* ---------- Thread minimap (right edge, desktop, long threads) ---------- */
 #rchan-minimap {

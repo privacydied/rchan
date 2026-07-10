@@ -184,39 +184,22 @@ body .innerOP {
   padding: 0;
 }
 .innerPost:target, .innerOP:target { box-shadow: 0 0 0 2px #c8102e88; }
-/* ---- Post media-object (flex): the message is a stable column BESIDE the
-   thumbnail, not a float the text wraps around — so a short reply next to a
-   big image no longer squeezes into a one-word-per-line sliver. The header
-   (postInfo/opHead) and any injected panels take a full-width row of their own
-   (flex-basis:100% forces the wrap); the file column + message share the row
-   below. Replaces the old `display:table` float layout. ---- */
-body .innerPost, body .innerOP {
-  display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 16px;
-}
-body .innerPost > *, body .innerOP > * { flex: 0 0 100%; min-width: 0; }
-body .innerPost > .panelUploads, body .innerOP > .panelUploads,
-body .innerPost > .opUploadPanel, body .innerOP > .opUploadPanel { flex: 0 0 auto; }
-body .innerPost > .divMessage, body .innerOP > .divMessage {
-  flex: 1 1 0; min-width: 0; margin: 4px 0 10px 0;
-}
-/* Keep the file column and message ADJACENT (so they share one row) across the
-   two DOM shapes: a reply is [header, files, message], but an OP is [files,
-   header, ipPanel, message] — the header before the files and the (mod-only,
-   usually empty) IP panel between files and message would otherwise wrap the
-   message onto its own line. Pin the header to the top and the IP panel to the
-   bottom with order; nothing else moves. */
-body .innerPost > .postInfo, body .innerOP > .opHead { order: -1; }
-body .innerPost > .panelIpContainer, body .innerOP > .panelIpContainer { order: 1; }
-/* click-to-expand: the file column breaks to full width (below the header), so
-   the enlarged image gets the room and the message reflows underneath it. */
-body .innerPost > .panelUploads:has(.imgExpanded), body .innerOP > .panelUploads:has(.imgExpanded),
-body .innerPost > .opUploadPanel:has(.imgExpanded), body .innerOP > .opUploadPanel:has(.imgExpanded) {
-  flex: 0 0 100%;
-}
-/* Mobile keeps the same flex ROW — a 42vw thumb (cap below) leaves a readable
-   text column beside it even at 390px, which is more compact than stacking and
-   still sliver-free. (column-direction + flex-wrap would flow items into
-   accidental multi-columns, so it's deliberately not used.) */
+/* ---- Canonical chan post flow (block + float, NOT flex) ----
+   Row 1: header (.postInfo/.opHead) — block, full width (the OP's DOM puts its
+          file panel first; ux.js moves the header above it — fixOpHeaderOrder).
+   Row 2: file-info line (.uploadDetails) — block, full width (engine default).
+   Row 3: thumbnail floats left (engine: .imgLink/.uploadCell img float:left),
+          message text starts at the thumb's TOP beside it and wraps to full
+          width below a longer thumb.
+   Flex was tried and reverted: a flex message column top-aligns with the file-
+   info LINE (the panel is one flex item), leaving short messages floating
+   mid-air right of the metadata. The float's old jank — one-word slivers next
+   to huge thumbs — can't recur because thumbs are display-capped at 180px/42vw
+   below, which always leaves a wide text column. flow-root contains the float
+   inside the post box (padding-bottom kept the old display:table's breathing
+   room). */
+body .innerPost { display: flow-root; padding: 2px 6px 6px; }
+body .innerOP { display: flow-root; }
 /* message: blockquote-style indentation (4chan blockquote.postMessage) */
 body .divMessage {
   display: block;
@@ -254,8 +237,15 @@ body.theme_cream .divMessage .greenText, body.theme_cream .divMessage .redText {
 .panelUploads, .opUploadPanel {
   font-family: "Courier New", Courier, monospace;
 }
-/* thumbnail sits in its own flex column now — no float to contain or space out */
-.innerOP .imgLink, .innerPost .imgLink { display: block; margin: 2px 0; }
+/* The engine's own posting.css supplies the canonical float layout
+   (.imgLink { float:left }, .uploadCell img { float:left; margin-right:1em },
+   .uploadDetails block row) — nothing to override here. Click-to-expand is the
+   one exception: a full-size image must NOT be floated (text would wrap beside
+   a huge image again — the original jank); unfloat it so it takes the full post
+   width and the message reflows below. */
+.innerPost .imgLink:has(.imgExpanded), .innerOP .imgLink:has(.imgExpanded) {
+  float: none; display: block;
+}
 /* thumbnails: never overflow */
 .imgLink img, .imgExpanded { max-width: 100%; height: auto; }
 /* Thumbnail DISPLAY size, decoupled from source resolution. The engine

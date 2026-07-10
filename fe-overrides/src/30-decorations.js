@@ -1,3 +1,25 @@
+  /* ---------- OP header first ----------
+     The engine renders the OP as [file panel, header, ipPanel, message] — the
+     file-info line and thumbnail land ABOVE the poster/date/No. line. Replies
+     are [header, files, message]. Move the OP header above its file panel so
+     both shapes read: header row, file-info row, thumb+text. A DOM move (not
+     CSS order): the layout is plain block flow + floats, which can't reorder.
+     Same-parent relocation of untouched nodes — native JS finds these by
+     class/id lookups, not position. */
+  function fixOpHeaderOrder(root) {
+    var ops = (root || document).querySelectorAll(".innerOP");
+    for (var i = 0; i < ops.length; i++) {
+      var op = ops[i];
+      if (op.__rchanHeadFix) { continue; }
+      op.__rchanHeadFix = true;
+      var head = op.querySelector(":scope > .opHead");
+      var panel = op.querySelector(":scope > .panelUploads, :scope > .opUploadPanel");
+      if (head && panel && (panel.compareDocumentPosition(head) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        op.insertBefore(head, panel);
+      }
+    }
+  }
+
   /* ---------- Icon tooltips (secondaryBar + nav coloredIcons have no labels) ---------- */
   var ICON_TITLES = {
     linkBack: "Return to board index", linkReturn: "Return to board index",

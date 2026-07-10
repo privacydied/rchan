@@ -25,7 +25,28 @@ exports.engineVersion = '2.3';
 
 var WINDOW_MS = 90 * 1000;      // a viewer counts for 90s after their last ping
 var TYPING_MS = 15 * 1000;      // a typist counts for 15s after their last typing ping
+var COUNT_TTL_MS = 15 * 1000;   // reuse a computed count for up to 15s (see below)
 var col = null;
+
+// --- count cache -----------------------------------------------------------
+// Every ping MUST still upsert its own heartbeat (that's what keeps the viewer
+// counted), but the countDocuments() reads that turn the heartbeat into a
+// number are pure aggregates over a public window — identical for every viewer
+// of the same thread. With N viewers each pinging every 45s (plus 8s typing
+// pings), that was N×2 Mongo counts per thread per window for a value that
+// barely changes. Cache the computed {count, typingTotal} per scope for 15s so
+// staggered pings from a busy thread collapse onto one recompute; savings scale
+// with concurrency, which is precisely the load worth cutting. A lone viewer
+// still recomputes each heartbeat (45s > 15s), so quiet threads stay exact.
+var countCache = new Map();     // key -> { count, typingTotal, at }
+
+function freshEntry(e) { return e && (Date.now() - e.at) < COUNT_TTL_MS; }
+
+function pruneCache() {
+  if (countCache.size <= 1000) { return; }
+  var cut = Date.now() - 5 * 60 * 1000;
+  countCache.forEach(function(v, k) { if (v.at < cut) { countCache['delete'](k); } });
+}
 
 function collection() {
   if (!col) { col = db.conn().collection('rchanPresence'); }
@@ -80,13 +101,20 @@ exports.formRequest = function(req, res) {
           { $set : { b : '@site', t : '0', ts : new Date() } },
           { upsert : true }).then(function() {
 
+        var e = countCache.get('@site');
+        if (freshEntry(e)) { return e.count; }
         return c.countDocuments({
           b : '@site',
           ts : { $gt : new Date(Date.now() - WINDOW_MS) }
+        }).then(function(n) {
+          countCache.set('@site', { count : n, typingTotal : 0, at : Date.now() });
+          pruneCache();
+          return n;
         });
 
       }).then(function(n) {
-        reply(res, 200, { status : 'ok', count : n });
+        // we just upserted ourselves, so never report 0 to a live viewer
+        reply(res, 200, { status : 'ok', count : Math.max(n, 1) });
       })['catch'](function(e) {
         reply(res, 500, { status : 'error', data : String(e) });
       });
@@ -108,8 +136,14 @@ exports.formRequest = function(req, res) {
       update.$unset = { ty : '' };
     }
 
+    var cacheKey = board + '-' + thread;
+
     c.updateOne({ _id : docId }, update, { upsert : true }).then(function() {
 
+      var e = countCache.get(cacheKey);
+      if (freshEntry(e)) { return e; }
+      // typingTotal counts ALL current typists (no $ne); each requester
+      // subtracts itself below, so the shared value stays reusable.
       return Promise.all([ c.countDocuments({
         b : board,
         t : thread,
@@ -117,12 +151,20 @@ exports.formRequest = function(req, res) {
       }), c.countDocuments({
         b : board,
         t : thread,
-        _id : { $ne : docId },        // your own typing isn't news to you
         ty : { $gt : new Date(Date.now() - TYPING_MS) }
-      }) ]);
+      }) ]).then(function(counts) {
+        var ne = { count : counts[0], typingTotal : counts[1], at : Date.now() };
+        countCache.set(cacheKey, ne);
+        pruneCache();
+        return ne;
+      });
 
-    }).then(function(counts) {
-      reply(res, 200, { status : 'ok', count : counts[0], typing : counts[1] });
+    }).then(function(e) {
+      // On a typing ping we're inside typingTotal; on a heartbeat we just
+      // $unset our own ty, so we aren't — either way "others typing" is exact.
+      var typing = (String(q.typing || '') === '1')
+        ? Math.max(0, e.typingTotal - 1) : e.typingTotal;
+      reply(res, 200, { status : 'ok', count : Math.max(e.count, 1), typing : typing });
     })['catch'](function(e) {
       reply(res, 500, { status : 'error', data : String(e) });
     });

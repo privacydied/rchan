@@ -81,18 +81,19 @@
         var els = document.getElementsByClassName("relativeTime");
         for (var i = els.length - 1; i >= 0; i--) { els[i].parentNode.removeChild(els[i]); }
       } },
-    { g: "Notifications", t: "Desktop notifications", d: "System notification when a hidden tab gets replies — this thread or any watched thread (same as the bell button)",
+    { g: "Notifications", t: "Desktop notifications", d: "System notification when replies land — this thread or any watched thread. Works even with the tab closed (Web Push); same as the bell button",
       get: function () { try { return localStorage.getItem(NOTIFY_KEY) === "1"; } catch (e) { return false; } },
       set: function (on, report) {
         if (!on) {
           try { localStorage.removeItem(NOTIFY_KEY); } catch (e) {}
+          if (typeof pushDisable === "function") { pushDisable(); }
           syncBell(false); if (report) { report(false); }
           return;
         }
         if (!("Notification" in window)) { toast("This browser doesn't support notifications", true); if (report) { report(false); } return; }
         Notification.requestPermission().then(function (p) {
           var ok = p === "granted";
-          if (ok) { try { localStorage.setItem(NOTIFY_KEY, "1"); } catch (e) {} }
+          if (ok) { try { localStorage.setItem(NOTIFY_KEY, "1"); } catch (e) {} if (typeof pushEnable === "function") { pushEnable(); } }
           else { toast("Notifications are blocked by the browser", true); }
           syncBell(ok); if (report) { report(ok); }
         });

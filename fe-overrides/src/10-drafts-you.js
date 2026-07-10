@@ -65,6 +65,7 @@
       if (window.watcher && watcher.addWatchedCell) {              // render the menu cell live
         try { watcher.addWatchedCell(board, String(threadId), rec); } catch (e2) {}
       }
+      if (typeof pushSync === "function") { pushSync(); }          // keep server push targets current
       return true;
     } catch (e) { return false; }
   }
@@ -86,6 +87,7 @@
         delete w.elementRelation[board][threadId];
       }
     } catch (e2) {}
+    if (typeof pushSync === "function") { pushSync(); }             // server push targets changed
   }
   // Auto-watch: posting in a thread (or creating one) adds it to the native
   // watcher, so the whole notification pipeline fires without the manual
@@ -100,7 +102,7 @@
     clearDraft();                                   // post landed — the draft served its purpose
     flashId = id; flashDeadline = Date.now() + 20000;
     var a = load(YOU_KEY);
-    if (a.indexOf(id) < 0) { a.push(id); save(YOU_KEY, a); refresh(); }
+    if (a.indexOf(id) < 0) { a.push(id); save(YOU_KEY, a); refresh(); if (typeof pushSync === "function") { pushSync(); } }
     var t = curThreadId();
     if (t) { autoWatch(getBoard(), t, threadTitle()); }
   }

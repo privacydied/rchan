@@ -26,7 +26,8 @@
     "geoflags",
     "fixvideothumbs",
     "flagoverride",
-    "presence"
+    "presence",
+    "webpush"
   ],
   "flagOverrideMinRole": 1
 }

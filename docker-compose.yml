@@ -70,6 +70,10 @@ services:
       # presence addon: anonymous per-thread viewer counts ("N anons here") via
       # heartbeat pings into its own TTL'd rchanPresence collection
       - ./fe-overrides/addons/presence.js:/lynxchan/src/be/addons/presence.js:ro
+      # webpush addon: server-sent reply notifications that work with the tab
+      # closed (Web Push). Own rchanPushSubs collection; READS posts to decide
+      # what to notify, never writes engine data. Needs VAPID_* in .env.
+      - ./fe-overrides/addons/webpush.js:/lynxchan/src/be/addons/webpush.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:

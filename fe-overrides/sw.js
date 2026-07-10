@@ -84,3 +84,36 @@ self.addEventListener("fetch", function (e) {
   }
   // everything else (HTML, JSON, live endpoints): browser default, no caching
 });
+
+// ---- Web Push: server-sent reply notifications (fire with every tab closed) ----
+// The webpush addon pushes a JSON payload {title, body, url, tag}; show it as a
+// system notification and, on click, focus an existing tab (navigating it) or
+// open a new one at the post.
+self.addEventListener("push", function (e) {
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) { data = {}; }
+  var title = data.title || "rchan";
+  e.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "New activity",
+    tag: data.tag || "rchan",
+    renotify: !!data.tag,
+    data: { url: data.url || "/" },
+    icon: "/.rchan/icon-192.png",
+    badge: "/.rchan/icon-192.png"
+  }));
+});
+
+self.addEventListener("notificationclick", function (e) {
+  e.notification.close();
+  var target = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (wins) {
+    for (var i = 0; i < wins.length; i++) {
+      var w = wins[i];
+      if ("focus" in w) {
+        try { if ("navigate" in w) { w.navigate(target); } } catch (err) {}
+        return w.focus();
+      }
+    }
+    if (clients.openWindow) { return clients.openWindow(target); }
+  }));
+});

@@ -155,10 +155,17 @@
       pen.id = "rchan-penbtn";   // mobile CSS promotes it to the primary FAB
     }
     if (curThreadId() && "Notification" in window) {
-      var bell = btn(SVG_BELL, "Notify me of new replies — this thread and watched threads (while a tab is open)", function () {
-        if (localStorage.getItem(NOTIFY_KEY) === "1") { localStorage.removeItem(NOTIFY_KEY); bell.classList.remove("rchan-on"); return; }
+      var bell = btn(SVG_BELL, "Notify me of new replies — this thread and watched threads, even with the tab closed", function () {
+        if (localStorage.getItem(NOTIFY_KEY) === "1") {
+          localStorage.removeItem(NOTIFY_KEY); bell.classList.remove("rchan-on");
+          if (typeof pushDisable === "function") { pushDisable(); }   // drop the server push subscription too
+          return;
+        }
         Notification.requestPermission().then(function (p) {
-          if (p === "granted") { localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on"); }
+          if (p === "granted") {
+            localStorage.setItem(NOTIFY_KEY, "1"); bell.classList.add("rchan-on");
+            if (typeof pushEnable === "function") { pushEnable(); }   // + closed-tab notifications via Web Push
+          }
         });
       });
       bell.id = "rchan-bellbtn";

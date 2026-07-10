@@ -27,7 +27,8 @@
     "fixvideothumbs",
     "flagoverride",
     "presence",
-    "webpush"
+    "webpush",
+    "sitemap"
   ],
   "flagOverrideMinRole": 1
 }

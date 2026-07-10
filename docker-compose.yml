@@ -74,6 +74,9 @@ services:
       # closed (Web Push). Own rchanPushSubs collection; READS posts to decide
       # what to notify, never writes engine data. Needs VAPID_* in .env.
       - ./fe-overrides/addons/webpush.js:/lynxchan/src/be/addons/webpush.js:ro
+      # sitemap addon: live XML sitemap at /addon.js/sitemap (router serves it
+      # as /sitemap.xml). Read-only (boards+threads projections), 10-min cache.
+      - ./fe-overrides/addons/sitemap.js:/lynxchan/src/be/addons/sitemap.js:ro
     # No published host port: the engine is reached only via the internal network
     # (rchan-internal) by the router below, as http://lynxchan:8080.
     networks:

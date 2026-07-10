@@ -199,13 +199,18 @@
     form.parentNode.insertBefore(origLink, form);
     origLink.addEventListener("click", function (e) {
       e.preventDefault();
-      // "Original Form" should just slide the inline posting form OUT in one
-      // click — never a toggle (which could collapse it / need a second click)
-      // and never an intermediate step. Pull it back from the floating box if
-      // it's in there, expand it, and drop the cursor in the message box.
-      if (qrBox && qrBox.style.display === "block") {
+      // Toggle the classic inline form: one click slides it out, the next
+      // retracts it. Exception: if the form is currently living in the
+      // floating box, the click means "give me the inline form instead" —
+      // pull it back and expand (never retract-from-floating in one step).
+      var floating = qrBox && qrBox.style.display === "block";
+      if (floating) {
         qrBox.style.display = "none";
         origLink.parentNode.insertBefore(form, origLink.nextSibling);
+      } else if (!form.classList.contains("rchan-collapsed")) {
+        setCollapsed(true);                                     // visible inline → retract
+        try { localStorage.setItem(COLLAPSE_KEY, "1"); } catch (e2) {}
+        return;
       }
       setCollapsed(false);
       revealFieldset();                                         // show the real fields, not just the "Post thread" button

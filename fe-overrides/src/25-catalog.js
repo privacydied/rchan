@@ -119,6 +119,12 @@
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
     var bar = document.createElement("div"); bar.id = "rchan-cattools";
+    // Adopt the native #divTools (search field, refresh button, auto-refresh)
+    // into the bar's left side, so native tools and ours share ONE row instead
+    // of stacking. A DOM move keeps every native listener and the catalog.js
+    // element references (catalog.searchField etc.) intact — nothing re-binds.
+    var dt = document.getElementById("divTools");
+    if (dt) { bar.appendChild(dt); }
     var count = document.createElement("span"); count.id = "rchan-catcount";   // "N threads" (left of the controls)
     var nc = catCells().length;
     count.textContent = nc + (nc === 1 ? " thread" : " threads");

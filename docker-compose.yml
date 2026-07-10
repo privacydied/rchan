@@ -124,7 +124,12 @@ services:
       - rchan-internal
 
   # Nightly mongodump of the imageboard DB to Dropbox (off-box), keeping the last 14.
-  # Runs one backup immediately on start, then every 24h.
+  # Runs one backup immediately on start (a post-deploy safety net), then once a day
+  # anchored to 04:00 local. The dump reads the ENTIRE media corpus out of Mongo and
+  # gzips it — a real I/O+CPU spike that also evicts the hot thumbnail set from Mongo's
+  # 1 GB WiredTiger cache — so it must land at the quietest hour, NOT at whatever
+  # arbitrary time the stack was last restarted (the old flat `sleep 86400` pinned the
+  # run to the restart minute). TZ makes "04:00" mean 04:00 Europe/London, not UTC.
   # Restore:  sudo docker exec -i rchan-mongo mongorestore --gzip --archive --drop < rchan-YYYYMMDD-HHMMSS.archive.gz
   backup:
     image: mongo:4.4
@@ -132,6 +137,8 @@ services:
     restart: unless-stopped
     depends_on:
       - mongo
+    environment:
+      TZ: Europe/London
     networks:
       - rchan-internal
     volumes:
@@ -151,7 +158,12 @@ services:
             echo "[backup] FAILED $$ts"; rm -f "/backups/rchan-$$ts.archive.gz"
           fi
           ls -1t /backups/rchan-*.archive.gz 2>/dev/null | tail -n +15 | xargs -r rm -f
-          sleep 86400
+          # sleep until the next 04:00 local (today's if still ahead, else tomorrow's)
+          now=$$(date +%s)
+          target=$$(date -d "today 04:00" +%s)
+          [ "$$target" -le "$$now" ] && target=$$(date -d "tomorrow 04:00" +%s)
+          echo "[backup] next run at $$(date -d "@$$target")"
+          sleep $$(( target - now ))
         done
 
 networks:

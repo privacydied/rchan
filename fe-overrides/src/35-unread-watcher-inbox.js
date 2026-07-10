@@ -250,24 +250,8 @@
       if (Date.now() - last > PERIOD) { try { w.runWatchedThreadsCheck(); } catch (e) {} }
     });
     function strikes() { try { return JSON.parse(localStorage.getItem(DEAD_KEY) || "{}"); } catch (e) { return {}; } }
-    function unwatchDead(b, t) {
-      try {
-        var wd = JSON.parse(localStorage.watchedData || "{}");
-        if (wd[b]) {
-          delete wd[b][t];
-          if (!Object.keys(wd[b]).length) { delete wd[b]; }
-        }
-        localStorage.watchedData = JSON.stringify(wd);
-      } catch (e) {}
-      try {   // drop the menu cell: notification span -> label -> cell -> wrapper
-        var rel = w.elementRelation && w.elementRelation[b] && w.elementRelation[b][t];
-        if (rel) {
-          var wrap = rel.parentNode && rel.parentNode.parentNode && rel.parentNode.parentNode.parentNode;
-          if (wrap && wrap.parentNode) { wrap.parentNode.removeChild(wrap); }
-          delete w.elementRelation[b][t];
-        }
-      } catch (e2) {}
-    }
+    // (unwatchDead was a byte-for-byte copy of unwatchThread from module 10,
+    // which is in scope here — use the shared one instead of a second copy.)
     /* Bandwidth: the native sweep pulled EVERY watched thread's full JSON every
        cycle. Instead fetch each board's single catalog.json ONCE per sweep and
        read its per-thread postCount; only pull a thread's full JSON when that
@@ -299,7 +283,7 @@
           var s = strikes(), k = u.board + "/" + u.thread;
           if (error) {
             s[k] = (s[k] || 0) + 1;
-            if (s[k] >= 3) { unwatchDead(u.board, String(u.thread)); delete s[k]; }
+            if (s[k] >= 3) { unwatchThread(u.board, String(u.thread)); delete s[k]; }
             localStorage.setItem(DEAD_KEY, JSON.stringify(s));
           } else if (s[k]) {
             delete s[k];

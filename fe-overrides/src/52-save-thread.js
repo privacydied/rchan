@@ -116,6 +116,19 @@
              '<div class="files">' + fileBlock(p) + '</div>' +
              '<div class="msg">' + fixMsg(p.message) + '</div></article>';
     }
+    // Be honest about self-containment: thumbs that fetched under the size cap
+    // are embedded as data: URIs; oversized ones (and all full-res media) fall
+    // back to live-site links, so the footer states the actual split instead of
+    // a blanket "thumbnails are embedded" that isn't always true.
+    var embedded = 0, linked = 0;
+    Object.keys(thumbMap).forEach(function (u) {
+      if (thumbMap[u] && String(thumbMap[u]).indexOf("data:") === 0) { embedded++; } else { linked++; }
+    });
+    var footNote = embedded
+      ? (embedded + " thumbnail" + (embedded === 1 ? "" : "s") + " embedded" +
+         (linked ? " · " + linked + " larger thumbnail" + (linked === 1 ? "" : "s") + " and all full-size media link to the live site (need a connection)"
+                 : " · full-size media links to the live site"))
+      : "Full media links to the live site (need a connection).";
     var title = (d.subject || ("Thread " + t)).replace(/\s+/g, " ").trim();
     var css = "body{max-width:960px;margin:0 auto;padding:1em;font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:#1f1f1e;color:#e8e6df}" +
       "a{color:#e08b7a}h1{font-size:1.2em}.meta{opacity:.6;font-size:.85em;margin-bottom:1.5em}" +
@@ -134,7 +147,7 @@
       " · " + items.length + " post" + (items.length === 1 ? "" : "s") +
       " · saved " + esc(new Date().toISOString().slice(0, 16).replace("T", " ")) + "</div>" +
       items.map(postBlock).join("") +
-      "<footer>Self-contained archive built by rchan. Thumbnails are embedded; full media links out to the live site.</footer>" +
+      "<footer>Archive built by rchan · " + esc(footNote) + "</footer>" +
       "</body></html>";
     var blob = new Blob([doc], { type: "text/html" });
     var url = URL.createObjectURL(blob);

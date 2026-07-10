@@ -320,17 +320,38 @@
     (d.posts || []).forEach(one);
     return parts.join(" ").toLowerCase();
   }
+  // On the first deep search we must fetch every not-yet-cached thread's JSON.
+  // The old code fired them ALL in one Promise.all — on a big catalog that's a
+  // few hundred simultaneous res/*.json requests, every one a cache-miss hitting
+  // Mongo at once (a self-inflicted burst the palette's cross-board search is
+  // capped against but this path wasn't). Pool to a few lanes and cap the total,
+  // surfacing the cap in the note so coverage is never silently truncated.
+  var DEEP_MAX = 300, DEEP_CONC = 6, deepCapNote = "";
   function ensureDeepData(ids, done) {
     var b = getBoard();
     var missing = ids.filter(function (id) { return id && deepCache[id] == null; });
+    deepCapNote = missing.length > DEEP_MAX ? (" · only the first " + DEEP_MAX + " threads searched") : "";
+    if (missing.length > DEEP_MAX) { missing = missing.slice(0, DEEP_MAX); }
     if (!missing.length) { done(); return; }
-    if (deepNote) { deepNote.textContent = "fetching " + missing.length + " thread" + (missing.length > 1 ? "s" : "") + "…"; }
-    Promise.all(missing.map(function (id) {
-      return fetch("/" + b + "/res/" + id + ".json")
+    var total = missing.length, finished = 0, next = 0;
+    function pump() {
+      if (next >= missing.length) { return; }
+      var id = missing[next++];
+      fetch("/" + b + "/res/" + id + ".json")
         .then(function (r) { return r.json(); })
         .then(function (d) { deepCache[id] = deepText(d); })
-        .catch(function () { deepCache[id] = ""; });
-    })).then(done);
+        .catch(function () { deepCache[id] = ""; })
+        .then(function () {
+          finished++;
+          if (deepNote) {
+            var left = total - finished;
+            deepNote.textContent = left > 0 ? ("fetching " + left + " thread" + (left === 1 ? "" : "s") + "…") : "";
+          }
+          if (finished === total) { done(); } else { pump(); }
+        });
+    }
+    var lanes = Math.min(DEEP_CONC, missing.length);
+    for (var k = 0; k < lanes; k++) { pump(); }
   }
   function applyDeepSearch() {                          // true = deep handled this search
     var field = document.getElementById("catalogSearchField");
@@ -349,7 +370,7 @@
         cell.classList.toggle("rchan-deephide", !hit);
         if (hit) { shown++; }
       });
-      if (deepNote) { deepNote.textContent = shown + "/" + cells.length + " threads match"; }
+      if (deepNote) { deepNote.textContent = shown + "/" + cells.length + " threads match" + deepCapNote; }
     });
     return true;
   }

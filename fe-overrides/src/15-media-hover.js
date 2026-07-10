@@ -182,19 +182,23 @@
     };
   }
 
-  /* ---------- thread.replyCallback patch: confirm + guarantee a refresh ----------
+  /* ---------- thread.replyCallback patch: confirm + no-reload insert ----------
      Native behaviour after a successful post: clear the form fields, then
      `if (!thread.autoRefresh || !thread.socket) { thread.refreshPosts(true); }`
-     — i.e. it ONLY re-fetches explicitly when the live-update WebSocket is
-     down; otherwise it assumes the socket will push the new post and does
-     NOTHING itself. That assumption doesn't hold here: the WS listens on a
-     bare port (8082) that Cloudflare's proxy doesn't forward for a domain on
-     its standard plan (non-standard ports bypass the edge entirely), so for
-     any visitor going through the CDN the socket never connects and the page
-     silently never updates — no error, no confirmation, nothing. Wrap (not
-     replace) the native callback: let it do its own cleanup first, then
-     unconditionally toast + reload, so posting always has visible feedback
-     and always ends with the new post actually on the page. */
+     — i.e. rely on the live WS to push the post, refetch only when it's down.
+     This patch used to toast + location.reload() unconditionally, because at
+     the time the WS listened on a bare port (8082) Cloudflare doesn't forward,
+     so CDN visitors never got the socket push. That's obsolete: the WS now
+     rides same-origin /.ws (05-core rewrites the URL), and refreshPosts()
+     splices new posts into the DOM from res/N.json — no reload needed. So:
+     let the native callback run, toast, then VERIFY the post actually landed
+     (the API hands us its id; posting.addPost sets it as the cell's DOM id —
+     the same id 10-drafts-you's flash-and-scroll watches for, so that fires
+     unchanged). If it hasn't landed — WS hiccup, or the native refetch was
+     served a ≤15s-stale edge-cached res/N.json — re-fetch cache-busted via
+     softRefreshThread() on a widening schedule. A full reload survives only
+     as the very last rung, so a poster is never stranded staring at a page
+     that silently doesn't contain their post. */
   function patchReplyCallback() {
     var t = window.thread;
     if (!t || !t.replyCallback || t.__rchanReplyPatched) { return; }
@@ -202,10 +206,24 @@
     var orig = t.replyCallback;
     t.replyCallback = function (status, data) {
       orig(status, data);
-      if (status === "ok") {
-        okToast("Post submitted — refreshing…");
-        setTimeout(function () { location.reload(); }, 900);
+      if (status !== "ok") { return; }
+      okToast("Post submitted");
+      // reply API returns the new postId (number); be lenient about shape
+      var pid = String((data && data.postId) || data || "").replace(/\D/g, "");
+      if (!pid) {                                     // can't verify: one blind cache-busted refetch
+        setTimeout(softRefreshThread, 900);
+        return;
       }
+      var waits = [900, 2500, 6000, 12000], step = 0;
+      (function ensure() {
+        if (document.getElementById(pid)) { return; }               // post is on the page — done
+        if (step >= waits.length) { location.reload(); return; }    // last resort
+        setTimeout(function () {
+          if (document.getElementById(pid)) { return; }             // WS/native refetch landed it
+          if (!softRefreshThread()) { location.reload(); return; }  // no refresher on this page
+          setTimeout(ensure, 700);                    // give the refetch time to render, then re-check
+        }, waits[step++]);
+      })();
     };
   }
 

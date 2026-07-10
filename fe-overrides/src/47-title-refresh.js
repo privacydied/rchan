@@ -17,9 +17,9 @@
     t.setAttribute("tabindex", "0");
     t.setAttribute("aria-label", "Refresh this page");
     function go() {
-      if (window.thread && typeof thread.refreshPosts === "function") {
-        try { thread.refreshPosts(true); return; } catch (e) {}
-      }
+      // softRefreshThread = native refreshPosts with the res/N.json edge-cache
+      // (s-maxage=15) busted, so a deliberate refresh can't fetch a stale copy.
+      if (window.thread && softRefreshThread()) { return; }
       if (window.catalog && typeof catalog.refreshCatalog === "function") {
         try { catalog.refreshCatalog(true); return; } catch (e) {}
       }

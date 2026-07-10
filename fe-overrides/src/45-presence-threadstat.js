@@ -7,7 +7,7 @@
     var b = getBoard();
     if (!b || b.charAt(0) === "." || isOverboard(b) || curThreadId()) { return; }   // no catalog.json to diff on the overboard
     if (!document.getElementById("divThreads")) { return; }        // board index or catalog only
-    var base = null, pill = null;
+    var base = null, pill = null, rebaseNext = false;
     // per-thread post counts (not just a grand total) -- needed so a brand
     // new thread that already picked up a reply or two before this poll
     // caught it doesn't get those replies miscounted as "new posts" in an
@@ -21,7 +21,14 @@
     }
     function diffList(list) {
       var cur = snapshot(list);
-      if (!base) { base = cur; return; }
+      // rebaseNext: the pill was clicked and the catalog just soft-refreshed —
+      // this data IS the new baseline, so the pill must not re-announce it.
+      if (!base || rebaseNext) {
+        rebaseNext = false;
+        base = cur;
+        if (pill) { pill.style.display = "none"; }
+        return;
+      }
       var newThreads = 0, newPosts = 0;
       Object.keys(cur.threads).forEach(function (id) {
         if (!base.threads[id]) { newThreads++; return; }            // brand new thread: its whole post
@@ -40,7 +47,20 @@
         pill.setAttribute("aria-atomic", "true");
         pill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
         pill.setAttribute("aria-label", "New activity — refresh the page");
-        pill.addEventListener("click", function () { location.reload(); });
+        pill.addEventListener("click", function () {
+          // Catalog page: the native refresher re-fetches catalog.json and
+          // rebuilds the grid in place (same routine as native auto-refresh,
+          // so every decoration re-runs via the MutationObserver) — no reload.
+          // Our getCatalogData hook then diffs the fresh data; rebaseNext makes
+          // that pass adopt it as the new baseline instead of re-flagging it.
+          // The threaded index has no native refresher: reload stays.
+          if (isCatalog() && window.catalog && typeof catalog.refreshCatalog === "function") {
+            rebaseNext = true;
+            pill.style.display = "none";
+            try { catalog.refreshCatalog(true); return; } catch (e) { rebaseNext = false; }
+          }
+          location.reload();
+        });
         document.body.appendChild(pill);
       }
       var txt = [];
@@ -264,8 +284,13 @@
       wsPill.setAttribute("aria-live", "polite");
       wsPill.setAttribute("aria-atomic", "true");
       wsPill.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08a6 6 0 1 1-1.41-6.24L13 11h7V4l-2.35 2.35z"/></svg><span></span>';
-      wsPill.setAttribute("aria-label", "Posts arrived while disconnected — refresh");
-      wsPill.addEventListener("click", function () { location.reload(); });
+      wsPill.setAttribute("aria-label", "Posts arrived while disconnected — fetch them");
+      wsPill.addEventListener("click", function () {
+        // Thread page: splice the missed posts in via the native JSON refetch
+        // (cache-busted — res/N.json is edge-cached ~15s) instead of reloading.
+        wsPill.style.display = "none";
+        if (!softRefreshThread()) { location.reload(); }
+      });
       document.body.appendChild(wsPill);
     }
     wsPill.lastChild.textContent = "Missed " + n + " post" + (n > 1 ? "s" : "") + " while disconnected — refresh";

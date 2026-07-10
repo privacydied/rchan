@@ -210,6 +210,31 @@
     }
   }
 
+  /* ---------- Soft thread refresh (no reload) ----------
+     thread.refreshPosts is the native no-reload refetch: it pulls res/N.json
+     and splices any new posts into the DOM via posting.addPost — the same
+     path the auto-refresh timer and the live WS use, so every decoration
+     (MutationObserver -> refresh()) runs on the inserted cells. One wrinkle:
+     res/N.json is now edge-cached ~15s at Cloudflare (s-maxage), so a refetch
+     right after an event can be served stale. Bust it with a throwaway query
+     token — the engine ignores the query, the edge treats it as a new cache
+     key. refreshURL is read synchronously inside refreshPosts (api.localRequest
+     captures the string), so restoring it immediately after is safe. */
+  function softRefreshThread() {
+    var t = window.thread;
+    if (!t || typeof t.refreshPosts !== "function") { return false; }
+    var origURL = t.refreshURL;
+    try {
+      if (origURL && origURL.indexOf("?") < 0) { t.refreshURL = origURL + "?rc=" + Date.now(); }
+      t.refreshPosts(true);
+    } catch (e) {
+      return false;
+    } finally {
+      if (origURL) { t.refreshURL = origURL; }
+    }
+    return true;
+  }
+
   /* ---------- localStorage helpers ---------- */
   function load(key) { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
   // When the quota trips, identity quietly stops persisting — every write

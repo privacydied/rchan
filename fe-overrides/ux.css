@@ -305,7 +305,13 @@ body nav, body #dynamicHeader {
    <=812px media query — blank them globally, plus the "[ / / ]" separators */
 body #navLinkSpan a::after, body #navOptionsSpan a::after { content: ''; }
 #navLinkSpan > span, #navOptionsSpan > span { display: none; }
-body #dynamicHeader a, body nav a { display: inline-block; }
+/* With the ::after labels blanked, the engine's glyph-spacing rule
+   (`#navLinkSpan .coloredIcon:before { margin-right: .25em }`) pads nothing
+   but air INSIDE each anchor: the hover/hit box and tooltip anchor extend
+   ~4px right of the visible glyph, so highlight != glyph (offset ring).
+   Zero it on every theme. */
+body #navLinkSpan .coloredIcon::before, body #navOptionsSpan .coloredIcon::before { margin-right: 0; }
+body #dynamicHeader a, body nav a { display: inline-block; vertical-align: middle; }
 /* kill global.css's `nav span, nav a { margin: 0 .2em }` */
 body nav span, body nav a, body #dynamicHeader span, body #dynamicHeader a { margin: 0; }
 /* nav layout: board links pinned LEFT, navLinkSpan (site links + theme picker)
@@ -359,6 +365,14 @@ html.rchan-warmdark #rchan-galbtn, html.rchan-warmdark #rchan-expandbtn, html.rc
 /* glyphs unified to ~16px within their 28px boxes (font-icons + svgs) */
 body.theme_cream #navLinkSpan > a.coloredIcon,
 html.rchan-warmdark #navLinkSpan > a.coloredIcon { font-size: 16px; }
+/* Inside the flex box the ::before pseudo IS the flex item being centered:
+   strip the 'Icons' font's line-box slack (and any residual margin) so the
+   glyph sits dead-center of its 28x28 ring; the blanked ::after would be a
+   second zero-width flex item — remove it so it can't skew centering. */
+body.theme_cream #navLinkSpan > a.coloredIcon::before,
+html.rchan-warmdark #navLinkSpan > a.coloredIcon::before { display: block; line-height: 1; margin: 0; }
+body.theme_cream #navLinkSpan > a.coloredIcon::after,
+html.rchan-warmdark #navLinkSpan > a.coloredIcon::after { display: none; }
 body.theme_cream #navLinkSpan > a.coloredIcon svg,
 html.rchan-warmdark #navLinkSpan > a.coloredIcon svg { width: 16px; height: 16px; display: block; }
 body.theme_cream #rchan-galbtn svg, body.theme_cream #rchan-expandbtn svg, body.theme_cream #rchan-findbtn svg,

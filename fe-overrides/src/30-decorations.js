@@ -66,7 +66,9 @@
       a.setAttribute("data-tip", "1");
       var t = iconLabel(a);
       if (!t) { continue; }
-      a.setAttribute("data-tooltip", t);           // styled tooltip source (no native title)
+      // don't clobber a hand-authored label (e.g. settingsButton's "Settings")
+      // with the humanizeId fallback ("Settings Button")
+      if (!a.getAttribute("data-tooltip")) { a.setAttribute("data-tooltip", t); }   // styled tooltip source (no native title)
       if (!a.getAttribute("aria-label")) { a.setAttribute("aria-label", t); }
     }
   }

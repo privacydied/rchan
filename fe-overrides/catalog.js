@@ -296,7 +296,10 @@ catalog.setCell = function(thread) {
   cell.getElementsByClassName('labelPage')[0].innerHTML = thread.page;
 
   if (thread.subject) {
-    cell.getElementsByClassName('labelSubject')[0].innerHTML = thread.subject;
+    // subject is plain text (not markup) — textContent avoids relying on
+    // server-side sanitization staying correct forever. thread.markdown
+    // below stays innerHTML: it's intentionally server-rendered HTML.
+    cell.getElementsByClassName('labelSubject')[0].textContent = thread.subject;
   }
 
   catalog.setCatalogCellIndicators(thread, cell);

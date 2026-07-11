@@ -138,6 +138,13 @@ self.addEventListener("push", function (e) {
 self.addEventListener("notificationclick", function (e) {
   e.notification.close();
   var target = (e.notification.data && e.notification.data.url) || "/";
+  // Defense-in-depth: the push payload is server-built from boardUri+threadId
+  // today, but this handler shouldn't blindly trust whatever URL rides along
+  // in a push message — pin navigation to same-origin only.
+  try {
+    var u = new URL(target, self.location.origin);
+    if (u.origin !== self.location.origin) { target = "/"; }
+  } catch (err) { target = "/"; }
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (wins) {
     for (var i = 0; i < wins.length; i++) {
       var w = wins[i];

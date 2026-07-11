@@ -125,10 +125,6 @@
       add("action", "Save this thread", "download a self-contained HTML archive", saveThreadArchive);
     }
     add("action", "Replies to you", "the (You) inbox" + (youboxUnread() ? " — " + youboxUnread() + " unread" : ""), toggleYoubox);
-    add("action", (setOn("wsmode", false) ? "Disable" : "Enable") + " work-safe mode", "blur all media until hovered", function () {
-      setPut("wsmode", !setOn("wsmode", false)); applyWorkSafe();
-      okToast("Work-safe mode " + (setOn("wsmode", false) ? "on" : "off"));
-    });
     add("action", "Recent threads panel", "history (🕘)", toggleHistPanel);
     add("action", "Backup my rchan data", "download a merge-safe JSON", exportData);
     add("action", "Home", "front page", "/");
@@ -167,6 +163,33 @@
         add("thread", label, "on this catalog", href);
       });
     }
+    // settings, searchable: every settings-panel row (SET_ROWS, module 70) is
+    // reachable in two keystrokes without opening the panel. Toggles flip and
+    // toast; selects get one entry per choice. Appended LAST so the empty
+    // palette still leads with destinations + actions — these only surface
+    // when typed for (fuzzy score reorders on input).
+    SET_ROWS.forEach(function (row) {
+      function cur() { return row.get ? row.get() : setOn(row.k, row.def); }
+      if (row.options) {
+        row.options.forEach(function (o) {
+          if (cur() === o[0]) { return; }              // current choice: nothing to change
+          add("setting", row.t + ": " + o[1], row.d, function () {
+            if (row.set) { row.set(o[0]); }
+            okToast(row.t + " — " + o[1]);
+          });
+        });
+        return;
+      }
+      var on = !!cur();
+      add("setting", (on ? "Turn off: " : "Turn on: ") + row.t, row.d, function () {
+        var to = !cur();
+        var announced = false;
+        var report = function (v) { announced = true; okToast(row.t + " — " + (v ? "on" : "off")); };
+        if (row.set) { row.set(to, report); }          // async rows (notifications) report the real outcome
+        else { setPut(row.k, to); }
+        if (!announced) { report(to); }
+      });
+    });
     return out;
   }
   function palRender() {

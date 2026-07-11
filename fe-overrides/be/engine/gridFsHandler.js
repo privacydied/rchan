@@ -858,7 +858,16 @@ exports.pickFile = function(fileRequested, req, res, possibleFiles, callback) {
     var file = possibleFiles[i];
 
     if (fileRequested === file.filename) {
-      vanilla = file;
+      // rchan: a regen script (e.g. tests/regen-image-thumbs.js) uploads the
+      // replacement under the SAME filename before deleting the old gridfs
+      // doc, so both can transiently co-exist (or persist, if a regen run
+      // was interrupted between upload and delete). Prefer the newest by
+      // uploadDate instead of just overwriting on every match, which picked
+      // whichever doc happened to sort last with no real ordering guarantee.
+      if (!vanilla || (file.uploadDate && (!vanilla.uploadDate
+          || file.uploadDate > vanilla.uploadDate))) {
+        vanilla = file;
+      }
     } else if (!file.metadata.languages && req.compressed) {
       compressed = file;
     } else if (exports.takeLanguageFile(file, req, language)) {

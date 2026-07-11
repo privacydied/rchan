@@ -217,11 +217,15 @@ exports.setThreadTitle = function(document, threadData) {
     var ogImg = SITE + '/.static/logo.png';   // animated earth gif (Discord animates it)
     var large = false;
     var f = (threadData.files && threadData.files.length) ? threadData.files[0] : null;
-    if (f && /^image\//.test(f.mime || '') && f.path) {
+    // Exclude image/gif from the "use full image" branch: it's exactly the
+    // same "Twitter cards reject GIF" problem the logo.png comment above
+    // describes, so a GIF OP falls through to its (non-GIF) thumb/logo
+    // instead of repeating the failure with the full-size file.
+    if (f && /^image\//.test(f.mime || '') && f.mime !== 'image/gif' && f.path) {
       ogImg = SITE + f.path;
       large = true;
     } else if (f && f.thumb) {
-      ogImg = SITE + f.thumb;
+      ogImg = SITE + versionThumb(f.thumb);
     }
     var ogUrl = SITE + '/' + threadData.boardUri + '/res/'
         + threadData.threadId + '.html';

@@ -199,12 +199,76 @@
      softRefreshThread() on a widening schedule. A full reload survives only
      as the very last rung, so a poster is never stranded staring at a page
      that silently doesn't contain their post. */
+  /* ---------- Optimistic own-post render ----------
+     The reply API answering "ok" means the post EXISTS server-side — the only
+     wait is for a refetch to render it (WS tick, native refresh, or the
+     verification ladder below; the ≤15s edge-cached res/N.json can stretch
+     that). Instead of staring at a cleared form, render the post NOW from the
+     submitted text (renderMarkup, module 60 — the same client renderer the
+     live preview uses, so it inherits every theme) as a dimmed pending cell,
+     and drop it the instant the real render lands. The cell deliberately does
+     NOT use the post's DOM id — the verification ladder polls getElementById
+     to detect the REAL post, and the id must stay free for it. */
+  function insertPendingPost(pid, msg, name, fileCount) {
+    if (document.getElementById(pid) ||
+        document.querySelector('[data-rchan-pending="' + pid + '"]')) { return; }
+    var host = document.querySelector(".divPosts");
+    if (!host) { return; }
+    var cell = document.createElement("div");
+    cell.className = "postCell";
+    cell.setAttribute("data-rchan-pending", pid);
+    var inner = document.createElement("div");
+    inner.className = "innerPost rchan-you rchan-pending";
+    inner.setAttribute("aria-busy", "true");
+    var info = document.createElement("div");
+    info.className = "postInfo title";
+    var nm = document.createElement("a"); nm.className = "linkName noEmailName";
+    nm.textContent = (name || "").trim() || "Anonymous";
+    var created = document.createElement("span"); created.className = "labelCreated";
+    created.textContent = "just now";
+    var self = document.createElement("a"); self.className = "linkSelf"; self.textContent = "No.";
+    var quote = document.createElement("a"); quote.className = "linkQuote"; quote.textContent = pid;
+    info.appendChild(nm);
+    info.appendChild(document.createTextNode(" "));
+    info.appendChild(created);
+    info.appendChild(document.createTextNode(" "));
+    info.appendChild(self);
+    info.appendChild(quote);
+    var body = document.createElement("div");
+    body.className = "divMessage";
+    try { body.innerHTML = renderMarkup(msg || ""); } catch (e) { body.textContent = msg || ""; }
+    if (fileCount > 0) {                     // files exist server-side; thumbs come with the real render
+      var att = document.createElement("span");
+      att.className = "rchan-pending-files";
+      att.setAttribute("aria-label", fileCount + " attachment" + (fileCount > 1 ? "s" : "") + " — appears with the confirmed post");
+      att.setAttribute("data-tooltip", fileCount + " attachment" + (fileCount > 1 ? "s" : "") + " — appears in a moment");
+      att.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+                      (fileCount > 1 ? "<span>×" + fileCount + "</span>" : "");
+      body.appendChild(att);
+    }
+    inner.appendChild(info);
+    inner.appendChild(body);
+    cell.appendChild(inner);
+    host.appendChild(cell);
+    try { cell.scrollIntoView({ behavior: SB, block: "center" }); } catch (e2) {}
+  }
+  function removePendingPost(pid) {
+    var el = document.querySelector('[data-rchan-pending="' + pid + '"]');
+    if (el && el.parentNode) { el.parentNode.removeChild(el); }
+  }
   function patchReplyCallback() {
     var t = window.thread;
     if (!t || !t.replyCallback || t.__rchanReplyPatched) { return; }
     t.__rchanReplyPatched = true;
     var orig = t.replyCallback;
     t.replyCallback = function (status, data) {
+      // capture the submitted text/name BEFORE the native callback clears the form
+      var qrb = document.getElementById("qrbody"), fm = document.getElementById("fieldMessage");
+      var sentMsg = (qrb && qrb.value) || (fm && fm.value) || "";
+      var qn = document.getElementById("qrname"), fn = document.getElementById("fieldName");
+      var sentName = (qn && qn.value) || (fn && fn.value) || "";
+      var sentFiles = 0;
+      try { sentFiles = (window.postCommon && postCommon.selectedFiles && postCommon.selectedFiles.length) || 0; } catch (eF) {}
       orig(status, data);
       if (status !== "ok") { return; }
       okToast("Post submitted");
@@ -214,12 +278,19 @@
         setTimeout(softRefreshThread, 900);
         return;
       }
+      try { insertPendingPost(pid, sentMsg, sentName, sentFiles); } catch (eP) {}
+      // fast watcher: the WS can splice the real post between verification
+      // rungs — never show pending + real side by side for more than ~400ms
+      var rmTimer = setInterval(function () {
+        if (document.getElementById(pid)) { removePendingPost(pid); clearInterval(rmTimer); }
+      }, 400);
+      setTimeout(function () { clearInterval(rmTimer); removePendingPost(pid); }, 45000);   // absolute backstop
       var waits = [900, 2500, 6000, 12000], step = 0;
       (function ensure() {
-        if (document.getElementById(pid)) { return; }               // post is on the page — done
+        if (document.getElementById(pid)) { removePendingPost(pid); return; }   // real post is on the page — done
         if (step >= waits.length) { location.reload(); return; }    // last resort
         setTimeout(function () {
-          if (document.getElementById(pid)) { return; }             // WS/native refetch landed it
+          if (document.getElementById(pid)) { removePendingPost(pid); return; } // WS/native refetch landed it
           if (!softRefreshThread()) { location.reload(); return; }  // no refresher on this page
           setTimeout(ensure, 700);                    // give the refetch time to render, then re-check
         }, waits[step++]);

@@ -246,7 +246,20 @@
       img.src = r.url;
       var insert = function () {
         if (document.getElementById("rchan-bannerwrap")) { return; }
-        if (img.naturalWidth) { img.width = img.naturalWidth; img.height = img.naturalHeight; }
+        if (img.naturalWidth) {
+          img.width = img.naturalWidth; img.height = img.naturalHeight;
+          // rchan: banners are admin-uploaded per board, so resolution isn't
+          // consistent — the CSS max-width (300px) can upscale a genuinely
+          // low-res file past what it can show crisply on a high-DPI phone
+          // (Lighthouse: image-size-responsive, "serves images with low
+          // resolution"). Cap the displayed width to what THIS file's actual
+          // resolution supports at the current device's pixel ratio; only
+          // ever tightens the normal 300px cap, never loosens it, so a
+          // properly-sized banner is unaffected.
+          var dpr = window.devicePixelRatio || 1;
+          var crisp = img.naturalWidth / dpr;
+          if (crisp < 300) { img.style.maxWidth = Math.max(crisp, 1) + "px"; }
+        }
         var wrap = document.createElement("div"); wrap.id = "rchan-bannerwrap";
         wrap.appendChild(img);
         anchor.parentNode.insertBefore(wrap, anchor);

@@ -1,10 +1,41 @@
   /* ---------- init + observe ---------- */
+  /* rchan: both refresh() and init() (below) used to run their whole step
+     list as ONE synchronous call — 30-80 functions back to back, several of
+     which crawl every catalog cell. On a catalog page that's several seconds
+     of solid main-thread time in a single task, which is exactly what
+     Lighthouse's Total Blocking Time measures (any task over 50ms, summed) —
+     confirmed 6.9s of TBT on /gen/catalog, most of it here. runQueued() below
+     runs the same functions, in the same order, with the same per-step
+     try/catch isolation — just one per macrotask instead of all of them in
+     one — so the browser can paint/respond between steps. Total CPU work is
+     unchanged; TBT (and real input responsiveness) drops because no single
+     task is long enough to count as "blocking" anymore. */
+  function runQueued(steps, onDone) {
+    var i = 0;
+    function step() {
+      if (i >= steps.length) { if (onDone) { onDone(); } return; }
+      try { steps[i](); } catch (e) { if (window.console) { console.error("[ux] step failed", e); } }
+      i++;
+      setTimeout(step, 0);
+    }
+    step();
+  }
   var pending = false, refreshWhenVisible = false;
   function refresh() {
     if (document.hidden) { refreshWhenVisible = true; return; }    // hidden tabs defer the whole pipeline
     if (pending) { return; }
     pending = true;
-    setTimeout(function () { pending = false; applyWarmDark(); fixOpHeaderOrder(document); decorateYou(document); decorateIcons(document); decorateThumbs(document); decorateCodeBlocks(document); decorateIdPills(document); decorateFileSearch(document); decorateFileFilterButtons(document); decorateEmbeds(document); decorateSideCatalog(); decorateCatalogCards(document); decorateCreamDarkCatalog(document); decorateCatalogLastBump(document); decorateAcademiaChrome(); markNewInThread(); markVisitedInCatalog(); decorateCatalogFlags(); decorateCatalogWatch(document); scanRepliesToYou(); enhancePostForm(); enhanceQuickReply(); initDrafts(); hookQrDraft(); patchShowQr(); patchReplyCallback(); tryFlashOwnPost(); updateThreadStat(); tidyWatcherBadge(); applyFind(); applyConv(); decorateConvButtons(document); decorateReportButtons(document); decorateQuickMod(document); decorateGets(document); decorateOwnDelete(document); applyExtraFilters(); syncEmptyState(); buildGalleryButton(); decorateSelectedCells(document); refreshMinimap(); if (expandAllOn) { setExpandAll(true); } }, 80);
+    setTimeout(function () {
+      // rchan: pending must stay true for the WHOLE queued pass, not just
+      // this first tick — it's the mutual-exclusion guard against a second
+      // refresh() (fired by the MutationObserver reacting to THIS pass's own
+      // DOM writes, or the auto-refresh timer) stacking a second overlapping
+      // queue on top while the first is still draining. Clearing it early
+      // caused exactly that: overlapping/recursive passes that compounded
+      // into a 10s+ blocking mess. Only clear it once runQueued's onDone
+      // fires, mirroring the original synchronous code's effective duration.
+      runQueued([function () { applyWarmDark(); }, function () { fixOpHeaderOrder(document); }, function () { decorateYou(document); }, function () { decorateIcons(document); }, function () { decorateThumbs(document); }, function () { decorateCodeBlocks(document); }, function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, function () { decorateEmbeds(document); }, decorateSideCatalog, function () { decorateCatalogCards(document); }, function () { decorateCreamDarkCatalog(document); }, function () { decorateCatalogLastBump(document); }, decorateAcademiaChrome, markNewInThread, markVisitedInCatalog, decorateCatalogFlags, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply, initDrafts, hookQrDraft, patchShowQr, patchReplyCallback, tryFlashOwnPost, updateThreadStat, tidyWatcherBadge, applyFind, applyConv, function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); }, function () { decorateQuickMod(document); }, function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, applyExtraFilters, syncEmptyState, buildGalleryButton, function () { decorateSelectedCells(document); }, refreshMinimap, function () { if (expandAllOn) { setExpandAll(true); } }], function () { pending = false; });
+    }, 80);
   }
   /* The observer used to re-run that ~30-scan pipeline on EVERY childList
      mutation — including our own: each decoration, each status-line rewrite
@@ -107,19 +138,22 @@
       }
     });
     // Enhancers — each guarded so one failure can't cascade and kill the rest (or the listeners above).
-    [applyWarmDark, fixOpHeaderOrder, buildNav, ensureNavSettings, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); }, function () { decorateCodeBlocks(document); },
+    // Queued one-per-macrotask (see runQueued above) instead of one giant
+    // synchronous pass — same functions, same order, same isolation.
+    runQueued([applyWarmDark, fixOpHeaderOrder, buildNav, ensureNavSettings, buildCatalogTools, hookDeepSearch, function () { decorateIcons(document); }, function () { decorateThumbs(document); }, function () { decorateCodeBlocks(document); },
      function () { decorateYou(document); }, function () { decorateCatalogCards(document); }, function () { decorateCreamDarkCatalog(document); }, function () { decorateCatalogLastBump(document); }, decorateAcademiaChrome, initInfiniteScroll, initCatalogInfiniteScroll, initProgressiveThread, markNewInThread, markNewInCatalog, markVisitedInCatalog, function () { decorateCatalogWatch(document); }, scanRepliesToYou, enhancePostForm, enhanceQuickReply,
      hookAlerts, hookCaptchaReload, initCaptchaLifecycle, hookFilterStubs, hookHideUndo, hookWatcherThrottle, hookWatcherNotify, hookYouboxScan, updateYouboxBadge, hookFilePrivacy, initDrafts, hookQrDraft, patchShowQr, patchReplyCallback, enableRelativeTimes, recordVisit, initScrollResume, initPresence, initSitePresence, initThreadFlags, initWsHealth, initStickyOp, initMinimap, initBoardLiveness, hookVolumePersistence,
      function () { decorateIdPills(document); }, function () { decorateFileSearch(document); }, function () { decorateFileFilterButtons(document); }, function () { decorateEmbeds(document); }, decorateSideCatalog, updateThreadStat, buildFindButton, buildExpandButton, buildGalleryButton, buildBanner, syncEmptyState, applyBoardAccent,
      function () { decorateConvButtons(document); }, function () { decorateReportButtons(document); },
      function () { decorateGets(document); }, function () { decorateOwnDelete(document); }, buildYourThreads, buildActiveThreads,
      initGallerySwipe, initLongPress, initPullRefresh, initSpeculation, initAutoTheme, applyCustomCss, applyWorkSafe, applyTextSize, initFirstVisitHint, initBackupNudge, pruneOnceStamps, initWebpush, initTitleRefresh
-    ].forEach(function (fn) { try { fn(); } catch (e) { if (window.console) { console.error("[ux] init step failed", e); } } });
-    if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
-    document.addEventListener("visibilitychange", function () {   // catch up on what happened while hidden
-      if (!document.hidden && refreshWhenVisible) { refreshWhenVisible = false; refresh(); }
+    ], function () {
+      if (curThreadId()) { setInterval(function () { try { updateThreadStat(); } catch (e) {} }, 30000); }  // keep "updated X ago" ticking
+      document.addEventListener("visibilitychange", function () {   // catch up on what happened while hidden
+        if (!document.hidden && refreshWhenVisible) { refreshWhenVisible = false; refresh(); }
+      });
+      try { new MutationObserver(onMutations).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
     });
-    try { new MutationObserver(onMutations).observe(document.documentElement, { subtree: true, childList: true }); } catch (e) {}
   }
   // PWA: register the (cache-free) service worker so the site is installable.
   if ("serviceWorker" in navigator) {

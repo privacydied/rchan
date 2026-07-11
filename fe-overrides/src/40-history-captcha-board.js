@@ -226,7 +226,6 @@
       var img = document.createElement("img");
       img.id = "rchan-banner";
       img.alt = "/" + b + "/ banner";
-      img.src = r.url;
       img.addEventListener("click", function () {
         fetch(url + "&r=" + Date.now()).then(function (r2) {
           if (r2.ok && !/defaultBanner/.test(r2.url || "")) { img.src = r2.url; }
@@ -236,9 +235,23 @@
         var w = document.getElementById("rchan-bannerwrap");
         if (w && w.parentNode) { w.parentNode.removeChild(w); }
       });
-      var wrap = document.createElement("div"); wrap.id = "rchan-bannerwrap";
-      wrap.appendChild(img);
-      anchor.parentNode.insertBefore(wrap, anchor);
+      // rchan: insert only once the image is decoded, with explicit width/
+      // height set from its now-known naturalWidth/Height. Inserting first and
+      // letting it paint in at whatever size loaded caused a real layout shift
+      // (Lighthouse CLS) and flagged unsized-images/image-size-responsive since
+      // the element carried no intrinsic-size hint at all. img.decode() gates
+      // insertion on the image actually being ready to paint, so it appears
+      // already at its final size — zero shift. Falls back to inserting right
+      // away on the rare browser without decode().
+      img.src = r.url;
+      var insert = function () {
+        if (document.getElementById("rchan-bannerwrap")) { return; }
+        if (img.naturalWidth) { img.width = img.naturalWidth; img.height = img.naturalHeight; }
+        var wrap = document.createElement("div"); wrap.id = "rchan-bannerwrap";
+        wrap.appendChild(img);
+        anchor.parentNode.insertBefore(wrap, anchor);
+      };
+      if (img.decode) { img.decode().then(insert).catch(insert); } else { insert(); }
     }).catch(function () {});
   }
 

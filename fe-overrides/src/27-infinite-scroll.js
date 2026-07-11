@@ -271,13 +271,21 @@
       all[i].style.setProperty("display", "none", "important");
       all[i].setAttribute("data-inf-hidden", "1");
     }
-    // ~200px lookahead: enough to feel proactive without firing near-instantly on
-    // load — catalog cards run ~360-410px tall, so the index's 1000px (tuned for
-    // that fetch's network latency) put the trigger row within range at first
-    // paint with zero scrolling.
+    // rchan: this was a 200px lookahead margin, intended (per the original
+    // comment) to feel proactive "without firing near-instantly on load" —
+    // but measured against the actual mobile grid (412px viewport, cards
+    // ~360-410px tall), the trigger row DOES land within 200px of the fold
+    // at first paint, so chunk 2 reveals itself within the same task the page
+    // is still settling in. That's a real, self-inflicted layout shift (all
+    // of chunk 2 popping from display:none to laid-out, unprompted) — by far
+    // the single largest Lighthouse CLS contributor on /gen/catalog, and a
+    // real user on that viewport sees the exact same jump with zero scroll
+    // input. 0px margin restores the feature's actual intent: reveal chunk 2
+    // only once the trigger row genuinely enters the viewport (i.e. the user
+    // scrolled there), not preemptively.
     csState.io = new IntersectionObserver(function (entries) {
       for (var k = 0; k < entries.length; k++) { if (entries[k].isIntersecting) { revealNextCatalogChunk(); } }
-    }, { root: null, rootMargin: "0px 0px 200px 0px", threshold: 0 });
+    }, { root: null, rootMargin: "0px", threshold: 0 });
     var t = lastVisibleCatalogCell();
     if (t) { csState.io.observe(t); }
     hookCatPosSave();

@@ -647,7 +647,15 @@ exports.setCatalogCellThumb = function(thread, language) {
 
   if (thread.files && thread.files.length) {
     var img = '<img  loading="lazy" src="';
-    img += common.clean(versionThumb(thread.files[0].thumb)) + '">';
+    img += common.clean(versionThumb(thread.files[0].thumb)) + '"';
+    // rchan: width+height attrs = intrinsic aspect-ratio known before the bytes
+    // arrive, so catalog cards don't reflow as thumbs load (zero CLS). The
+    // display CSS still caps the on-screen box (see ux.css catalog sizing).
+    var f0 = thread.files[0];
+    if (f0.width && f0.height) {
+      img += ' width="' + f0.width + '" height="' + f0.height + '"';
+    }
+    img += '>';
     cell = cell.replace('__linkThumb_inner__', img).replace(
         '__linkThumb_mime__', thread.files[0].mime);
   } else {

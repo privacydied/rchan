@@ -818,15 +818,23 @@ exports.getImgTag = function(file) {
 
   if (file.thumb.length > 71 && file.width) {
 
+    // rchan: emit BOTH dimensions, not just height. The display CSS caps thumbs
+    // with max-width/max-height + width/height:auto, so the attributes don't fix
+    // the on-screen size — but a width/height PAIR gives the browser the
+    // intrinsic aspect-ratio before the bytes arrive, so the layout box is
+    // reserved correctly and nothing reflows when the image loads (zero CLS).
     var fixedHeight;
+    var fixedWidth;
 
     if (file.width < file.height) {
       fixedHeight = thumbSize;
+      fixedWidth = Math.trunc((thumbSize / file.height) * file.width);
     } else {
       fixedHeight = Math.trunc((thumbSize / file.width) * file.height);
+      fixedWidth = thumbSize;
     }
 
-    img += ' height="' + fixedHeight + '"';
+    img += ' width="' + fixedWidth + '" height="' + fixedHeight + '"';
 
   } else {
     img += ' class="variableHeight"';

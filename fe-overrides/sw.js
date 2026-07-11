@@ -14,14 +14,29 @@
 var STATIC_CACHE = "rchan-static-v1";
 var MEDIA_CACHE = "rchan-media-v1";
 var MEDIA_LIMIT = 300;                 // LRU-ish cap so media can't eat the quota
+// Offline navigation fallback. NOTE: the page is (re)fetched at INSTALL time,
+// and the SW only reinstalls when THIS file's bytes change — so bump the
+// version below after any edit to fe-overrides/offline.html.
+var OFFLINE_URL = "/.rchan/offline.html";   // offline.html v1
 
-self.addEventListener("install", function () { self.skipWaiting(); });
+self.addEventListener("install", function (e) {
+  self.skipWaiting();
+  e.waitUntil(caches.open(STATIC_CACHE).then(function (c) {
+    return c.add(new Request(OFFLINE_URL, { cache: "reload" }));
+  }).catch(function () {}));             // install must not fail if we're offline right now
+});
 
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
     return Promise.all(keys.filter(function (k) {
       return k !== STATIC_CACHE && k !== MEDIA_CACHE;
     }).map(function (k) { return caches.delete(k); }));
+  }).then(function () {
+    // navigation preload: we now respondWith() on navigations, which would
+    // otherwise serialize them behind SW startup — let the network race it
+    if (self.registration.navigationPreload) {
+      return self.registration.navigationPreload.enable().catch(function () {});
+    }
   }).then(function () { return self.clients.claim(); }));
 });
 
@@ -68,6 +83,23 @@ self.addEventListener("fetch", function (e) {
   var url;
   try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin) { return; }
+
+  // Navigations: network as always (HTML is live content, never cached), but a
+  // network FAILURE — offline, DNS, origin down — lands on the branded offline
+  // page instead of the browser's error screen. HTTP errors (404/500) are real
+  // responses and pass through untouched.
+  if (req.mode === "navigate") {
+    e.respondWith(
+      Promise.resolve(e.preloadResponse).then(function (pre) {
+        return pre || fetch(req);
+      }).catch(function () {
+        return caches.match(OFFLINE_URL).then(function (hit) {
+          return hit || fetch(req);      // no cached copy: surface the original failure
+        });
+      })
+    );
+    return;
+  }
 
   if (/[?&]v=[A-Za-z0-9]+/.test(url.search)) {         // content-hashed statics
     e.respondWith(cacheFirst(req, STATIC_CACHE, false));

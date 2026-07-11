@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Offline — rchan</title>
+<script>try{if(localStorage.selectedTheme==="dark"){document.documentElement.className="dark"}}catch(e){}</script>
+<style>
+  /* rchan design system, self-contained (no dependency on versioned assets) —
+     served by the service worker when a navigation can't reach the network,
+     so it must carry everything it needs inline. Mirrors 404.html. */
+  html { background: #EEEEE4; }
+  html.dark { background: #16171b; }
+  body {
+    font-family: arial, helvetica, sans-serif; font-size: .833rem;
+    color: #393939; background: #EEEEE4;
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dark body { background: #16171b; color: #c9ccd1; }
+  .box { text-align: center; padding: 24px; max-width: 420px; }
+  h1 {
+    font-family: Tahoma, sans-serif; font-size: 3.4rem; font-weight: 700;
+    letter-spacing: -3px; margin: 0; color: #393939;
+  }
+  .dark h1 { color: #c9ccd1; }
+  h1 span { color: #c8102e; }
+  p { margin: 10px 0 22px; opacity: .85; }
+  a.btn, button.btn {
+    display: inline-block; margin: 0 4px; padding: 6px 18px;
+    border: 1px solid #CFCFC4; background: #E6E6DA; color: #393939;
+    box-shadow: 2px 2px 0 rgba(0,0,0,.1); cursor: pointer;
+    font-weight: 700; text-decoration: none; font-size: inherit; font-family: inherit;
+  }
+  a.btn:hover, button.btn:hover { background: #c8102e; color: #fff; border-color: #c8102e; }
+  .dark a.btn, .dark button.btn { background: #262a31; color: #c9ccd1; border-color: #333; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>off<span>line</span></h1>
+  <p>Couldn't reach rchan — you're offline, or the site is briefly unreachable.
+     Nothing was lost: any reply you were writing is still in your draft.</p>
+  <button class="btn" onclick="location.reload()">Try again</button>
+  <a class="btn" href="/">Home</a>
+</div>
+<script>
+  // auto-retry the moment connectivity returns
+  window.addEventListener("online", function () { location.reload(); });
+</script>
+</body>
+</html>

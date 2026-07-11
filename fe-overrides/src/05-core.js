@@ -209,7 +209,29 @@
       var img = imgs[i];
       if (img.getAttribute("data-skel")) { continue; }
       img.setAttribute("data-skel", "1");
-      if (!img.getAttribute("loading")) { img.setAttribute("loading", "lazy"); img.setAttribute("decoding", "async"); }
+      // rchan: decorative — the cell's own subject/message text right below
+      // carries the meaning (Lighthouse image-alt). The link itself still
+      // needs a name since clicking it is meaningful; give it one if the
+      // engine template didn't already (Lighthouse link-name).
+      if (!img.getAttribute("alt")) { img.alt = ""; }
+      var link = img.closest && img.closest("a.linkThumb");
+      if (link && !link.getAttribute("aria-label") && !link.textContent.trim()) {
+        link.setAttribute("aria-label", "Open thread");
+      }
+      // rchan: the engine's SSR template stamps loading="lazy" on EVERY
+      // thumbnail unconditionally — including the first handful of catalog
+      // cells, which sit above the fold on any device we support. That
+      // delays the LCP candidate's fetch until the browser confirms it's
+      // near-viewport (Lighthouse: lcp-lazy-loaded), costing real seconds of
+      // LCP. Override back to eager + high priority for the first few cells;
+      // leave the engine's lazy-loading alone everywhere else, where it's
+      // correct and saves real bandwidth.
+      if (i < 4) {
+        img.removeAttribute("loading");
+        img.setAttribute("fetchpriority", "high");
+      } else if (!img.getAttribute("loading")) {
+        img.setAttribute("loading", "lazy"); img.setAttribute("decoding", "async");
+      }
       if (img.complete && img.naturalWidth > 0) { continue; }     // already loaded
       var wrap = img.parentNode;
       if (wrap && wrap.classList) { wrap.classList.add("rchan-skel"); }

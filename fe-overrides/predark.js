@@ -25,9 +25,13 @@ try {
   // out of ux.css and only referenced from JS. This script runs synchronously
   // during <head> parsing, so a stylesheet <link> appended HERE is render-
   // blocking — a returning Academia/Brutalist user paints in their theme with
-  // no flash of the base look. RCHAN_TCSS (URL map with ?v= tokens) is
-  // injected by the router immediately before this script's tag.
-  var tc = window.RCHAN_TCSS || {};
+  // no flash of the base look. The URL map (with ?v= tokens) is injected by
+  // the router as data-tcss-* attributes on this script's OWN tag (CSP is
+  // script-src 'self' with no unsafe-inline, so it can't be an inline
+  // <script>; document.currentScript reliably points at this tag because the
+  // script is neither async nor a module).
+  var ds = (document.currentScript && document.currentScript.dataset) || {};
+  var tc = { academia: ds.tcssAcademia, brutalist: ds.tcssBrutalist };
   if (st && tc[st] && !document.getElementById("rchan-tcss-" + st)) {
     var l = document.createElement("link");
     l.id = "rchan-tcss-" + st; l.rel = "stylesheet"; l.href = tc[st];

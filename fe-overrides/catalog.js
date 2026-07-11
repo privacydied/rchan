@@ -1,3 +1,7 @@
+// rchan: patched copy — see docker-compose.yml's mount comment and
+// deploy-fe.sh for why this needs its OWN ?v= cache-bust + lynxchan restart
+// (a stale Cloudflare edge PoP can otherwise pin pre-edit content to a
+// "fresh" hashed URL for up to an hour if the two restart steps ever race).
 var catalog = {};
 
 catalog.init = function() {
@@ -14,9 +18,14 @@ catalog.init = function() {
   catalog.refreshCheckBox = document
       .getElementById('autoCatalogRefreshCheckBox');
   catalog.refreshCheckBox.onchange = catalog.changeCatalogRefresh;
+  // rchan: neither input has a <label>/aria-label in the engine template
+  // (Lighthouse a11y "label" audit). Both are self-explanatory from their
+  // adjacent text in the DOM, but that text isn't programmatically associated.
+  catalog.refreshCheckBox.setAttribute('aria-label', 'Auto-refresh catalog');
   catalog.refreshLabel = document.getElementById('catalogRefreshLabel');
   catalog.originalAutoRefreshText = catalog.refreshLabel.innerHTML;
   catalog.searchField = document.getElementById('catalogSearchField');
+  catalog.searchField.setAttribute('aria-label', 'Search catalog');
 
   var catalogCellTemplate = '<a class="linkThumb"></a>';
   catalogCellTemplate += '<p class="threadStats">R: ';
@@ -130,7 +139,20 @@ catalog.refreshCatalog = function(manual) {
       catalog.startTimer(manual || changed ? 5 : catalog.lastRefresh * 2);
     }
 
-    catalog.search();
+    // rchan: this used to call catalog.search() unconditionally on every
+    // auto-refresh tick (every 5s by default), which wipes and rebuilds every
+    // catalog cell's DOM from scratch — even when `changed` says the fetched
+    // data is byte-identical to what's already on screen. Every one of those
+    // no-op rebuilds also fans out through ux.js's full re-decoration pass
+    // (MutationObserver -> refresh()), so an idle catalog tab was paying the
+    // full render+decorate cost every 5 seconds for literally nothing. Only
+    // redraw when the data actually changed, or the user explicitly asked for
+    // a refresh (manual) — a stale-but-unclicked search filter still applies
+    // correctly since typing in the search field triggers its own search()
+    // call independent of this one.
+    if (manual || changed) {
+      catalog.search();
+    }
 
   });
 
@@ -228,11 +250,18 @@ catalog.checkForFileHiding = function(child) {
 
 catalog.setCellThumb = function(thumbLink, thread) {
   thumbLink.href = '/' + api.boardUri + '/res/' + thread.threadId + '.html';
+  // rchan: accessible name for the card link (Lighthouse image-alt/link-name).
+  // The image is decorative (redundant with the subject/message text right
+  // below it in the same cell), so alt="" is correct — but the anchor itself
+  // still needs a name since it has no other text.
+  thumbLink.setAttribute('aria-label', 'Thread ' + thread.threadId
+      + (thread.subject ? ': ' + thread.subject : ''));
 
   if (thread.thumb) {
     var thumbImage = document.createElement('img');
 
     thumbImage.src = thread.thumb;
+    thumbImage.alt = '';
     thumbLink.appendChild(thumbImage);
     catalog.checkForFileHiding(thumbImage);
   } else {

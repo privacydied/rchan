@@ -97,6 +97,11 @@
   }
   function mkSelect(id, label, modes, names, cur, onChange) {
     var s = document.createElement("select"); s.id = id;
+    // The <label> wrapper below holds nothing but the <select> itself (no
+    // visible text), which gives it NO accessible name per WCAG — axe's
+    // select-name audit flagged all three. aria-label from the same `label`
+    // string already shown as the disabled first option covers it directly.
+    s.setAttribute("aria-label", label);
     var head = document.createElement("option");         // greyed-out label inside the dropdown
     head.textContent = label; head.disabled = true;
     s.appendChild(head);
@@ -118,7 +123,15 @@
     });
     var threads = document.getElementById("divThreads");
     if (!threads || document.getElementById("rchan-cattools")) { return; }
-    var bar = document.createElement("div"); bar.id = "rchan-cattools";
+    // rchan: reuse the router-injected placeholder (nginx sub_filter, right
+    // before #divThreads) instead of creating a fresh node — the placeholder
+    // reserves this bar's real height BEFORE first paint (Lighthouse CLS: was
+    // by far the single largest contributor, since inserting a brand-new
+    // ~124px bar here shoves #divThreads and every catalog cell below it down
+    // after the fact). Falls back to creating fresh if it's ever missing.
+    var bar = document.getElementById("rchan-cattools-slot");
+    if (bar) { bar.removeAttribute("id"); bar.id = "rchan-cattools"; }
+    else { bar = document.createElement("div"); bar.id = "rchan-cattools"; }
     // Adopt the native #divTools (search field, refresh button, auto-refresh)
     // into the bar's left side, so native tools and ours share ONE row instead
     // of stacking. A DOM move keeps every native listener and the catalog.js
@@ -464,11 +477,23 @@
   function initSpeculation() {
     if (!isCatalog() || dataSaver() || !specRulesOn()) { return; }
     if (document.getElementById("rchan-specrules")) { return; }
+    // This is an inline <script type="speculationrules"> with a static,
+    // never-changing textContent body — CSP is script-src 'self' with no
+    // unsafe-inline, so the browser was silently dropping it (Lighthouse
+    // errors-in-console: "Refused to apply inline speculation rules"),
+    // meaning this feature never actually ran for anyone. Tried moving it to
+    // an external file via the `src` form (CSP-clean, same as any other
+    // <script src>) but Chrome doesn't support that form yet ("External
+    // speculation rules are not yet supported" — console warning, feature
+    // silently no-ops). Reverted to inline, which IS universally supported;
+    // the CSP violation instead gets a scoped sha256 allowance for this
+    // EXACT content on the nginx side (see the Content-Security-Policy
+    // header rewrite) — the standard fix for a static inline script under a
+    // no-unsafe-inline CSP. Keep this string byte-for-byte in sync with the
+    // hash in nginx/default.conf, or the browser blocks it again.
     var s = document.createElement("script");
     s.type = "speculationrules"; s.id = "rchan-specrules";
-    s.textContent = JSON.stringify({
-      prerender: [{ where: { href_matches: "/*/res/*" }, eagerness: "moderate" }]
-    });
+    s.textContent = '{"prerender":[{"where":{"href_matches":"/*/res/*"},"eagerness":"moderate"}]}';
     document.head.appendChild(s);
   }
   function dropSpeculation() {                            // Data Saver flipped on mid-session

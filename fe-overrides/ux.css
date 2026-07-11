@@ -655,6 +655,11 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
    keeps it right even if divTools is missing. flex-wrap keeps phones sane:
    the native tools take their own line and the controls wrap under. */
 #rchan-cattools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 8px; margin: 10px 8px 2px; font-size: .833rem; font-weight: 700; }
+/* CLS: router-injected placeholder (see nginx sub_filter) reserving this
+   bar's space before buildCatalogTools() populates it — see that function
+   for how the two IDs hand off. min-height only; margin matches #rchan-
+   cattools itself so the reserved block sits in the same place. */
+#rchan-cattools-slot { display: block; min-height: 124px; margin: 10px 8px 2px; box-sizing: border-box; }
 #rchan-cattools #divTools { margin: 0; text-align: left; font-weight: 400; }
 #rchan-catctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-left: auto; }
 #rchan-cattools label { margin: 0; }
@@ -868,6 +873,12 @@ body.rchan-ws #rchan-zoom { filter: none; }
 .rchan-catwatch {
   position: absolute; top: 2px; right: 2px; z-index: 2;
   border: 0; cursor: pointer; padding: 4px;
+  /* min-width/height (Lighthouse tap-targets wants >=24px; padding+icon alone
+     landed at 22px). 28px instead of exactly 24px — landing precisely on the
+     threshold still failed the audit (sub-pixel/rounding at the boundary),
+     so a few px of margin actually clears it. Icon's own drawn size unchanged. */
+  min-width: 28px; min-height: 28px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,.45); color: #fff; line-height: 0;
   opacity: 0; transition: opacity .12s ease;
 }
@@ -1406,7 +1417,10 @@ html.rchan-noscroll, html.rchan-noscroll body { overflow: hidden; }
 /* "Original Form" link under the toggle button (board/catalog pages) */
 #rchan-origform {
   display: block; width: -moz-fit-content; width: fit-content;
-  margin: 0 auto 6px; font-size: x-small; text-decoration: underline; cursor: pointer;
+  /* padding (not just margin) grows the actual tap target to Lighthouse's
+     24px floor — it was a 14px-tall text-only hit box. Negative top margin
+     offsets the added padding so the visible position/spacing is unchanged. */
+  margin: -6px auto 0; padding: 6px 8px; font-size: x-small; text-decoration: underline; cursor: pointer;
   font-family: "Liberation Sans", "Arial", "sans-serif";
 }
 
@@ -2443,7 +2457,10 @@ html.rchan-warmdark .catalogCell > .divMessage {
   background: var(--surface-2) !important;
 }
 :is(body.theme_cream, html.rchan-warmdark) .rchan-nofile-glyph {
-  color: var(--ink-faint); font-size: 11px; font-weight: 700;
+  /* was var(--ink-faint) (#9b9b94) — 4.33:1 against this badge's background,
+     just under WCAG AA's 4.5:1 (Lighthouse color-contrast). --ink-soft is
+     lighter and clears it with room to spare. */
+  color: var(--ink-soft); font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase;
 }
 

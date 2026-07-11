@@ -1,3 +1,5 @@
+// rchan: patched copy — see docker-compose.yml's mount comment and
+// deploy-fe.sh for the ?v= cache-bust + lynxchan-restart-ordering this needs.
 var themes = {};
 
 themes.init = function() {
@@ -36,6 +38,9 @@ themes.init = function() {
 
   var themeSelector = document.createElement('select');
   themeSelector.id = 'themeSelector';
+  // Lighthouse select-name: bare <select> with no associated <label>/aria-label
+  // has no accessible name.
+  themeSelector.setAttribute('aria-label', 'Theme');
 
   var vanillaOption = document.createElement('option');
   vanillaOption.innerHTML = 'Default';

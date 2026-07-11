@@ -7,13 +7,17 @@
 // _ids -- never a missing-image window), and clears the referencing posts'/threads'
 // rendered-HTML caches. UPDATES/replaces thumbs only -- never touches originals or
 // deletes post data.
-//   DRY=1        -> report only, no writes
+//   (default)    -> DRY RUN: report only, no writes, no deletes
+//   DRY=0        -> LIVE: actually replace thumbs and delete the superseded gridfs docs.
+//                   Per CLAUDE.md, take a fresh mongodump before running this way.
 //   ONLY=<hash>  -> process just the thumb whose filename contains <hash>
 const { MongoClient, GridFSBucket } = require("mongodb-legacy");
 const fs = require("fs");
 const cp = require("child_process");
 const THUMB = 480, PCT = 0.25;   // matches settings/general.json videoThumbPercentage
-const DRY = process.env.DRY === "1";
+// Defaults to DRY (safe/report-only) — see regen-image-thumbs.js's comment;
+// same reasoning, same gridfs-delete-on-live-path shape.
+const DRY = process.env.DRY !== "0";
 const ONLY = process.env.ONLY || "";
 function sh(c) { return cp.execSync(c, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); }
 

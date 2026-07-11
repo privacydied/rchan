@@ -1,8 +1,12 @@
 # tests / maintenance scripts
 
 Ad-hoc integration tests and one-off repair scripts for the rchan stack. They run against
-the **live** containers (mongo / lynxchan) over the Docker network. All are **non-destructive**
-— they never delete DB data (see the no-wipe rule in `../CLAUDE.md`).
+the **live** containers (mongo / lynxchan) over the Docker network. Most are **non-destructive**
+— they never delete DB data (see the no-wipe rule in `../CLAUDE.md`). The exceptions —
+`regen-image-thumbs.js`, `regen-image-thumbs-webp.js`, `regen-video-thumbs-480.js` — replace
+gridfs thumbnail files in place and delete the superseded ones; each **defaults to a dry run**
+(report only, no writes) and requires an explicit `DRY=0` to actually write/delete. Take a
+fresh mongodump first when running any of them with `DRY=0`, per `../CLAUDE.md`.
 
 ## ws-live-update.js — WebSocket live-update integration test
 Verifies that new activity in a thread is pushed to subscribed clients over the WebSocket

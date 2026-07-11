@@ -4,13 +4,19 @@
 // window), and clears the referencing posts'/threads' rendered-HTML caches so they
 // re-render with the new thumb dimensions. UPDATES/replaces thumbs only — never touches
 // originals or deletes post data.
-//   DRY=1        -> report only, no writes
+//   (default)    -> DRY RUN: report only, no writes, no deletes
+//   DRY=0        -> LIVE: actually replace thumbs and delete the superseded gridfs docs.
+//                   Per CLAUDE.md, take a fresh mongodump before running this way.
 //   ONLY=<hash>  -> process just the thumbs whose filename contains <hash>
 const { MongoClient, GridFSBucket } = require("mongodb-legacy");
 const fs = require("fs");
 const cp = require("child_process");
 const THUMB = 480;
-const DRY = process.env.DRY === "1";
+// Defaults to DRY (safe/report-only): this script's own live path deletes
+// gridfs documents, so per CLAUDE.md's DB-safety rule it must default to
+// read-only and require an explicit, deliberate opt-in (DRY=0) to write —
+// not the other way around.
+const DRY = process.env.DRY !== "0";
 const ONLY = process.env.ONLY || "";
 function sh(c) { return cp.execSync(c, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); }
 

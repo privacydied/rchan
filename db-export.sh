@@ -26,9 +26,15 @@ if git diff --cached --quiet; then
   echo "[db-export] no content changes"
 else
   git commit -q -m "db-export: refresh content JSON ($(date '+%Y-%m-%d %H:%M'))"
-  if git push --quiet 2>/dev/null; then
+  # Distinguish "no remote configured" (expected/benign) from an actual push
+  # failure (auth expiry, network, rejection) -- these used to be reported
+  # identically, which silently masked a real, growing local-vs-remote
+  # divergence in a cron job nobody watches interactively.
+  if ! git remote | grep -q .; then
+    echo "[db-export] committed (no remote configured to push to)"
+  elif push_err=$(git push --quiet 2>&1); then
     echo "[db-export] committed + pushed"
   else
-    echo "[db-export] committed (no remote configured to push to)"
+    echo "[db-export] committed but PUSH FAILED: $(echo "$push_err" | tail -1)"
   fi
 fi

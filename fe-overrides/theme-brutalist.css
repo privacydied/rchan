@@ -1,0 +1,336 @@
+/* rchan theme layer: brutalist — split out of ux.css (deploy-fe.sh versions it;
+   loaded pre-paint by predark.js for returning brutalist users, on demand by ux.js
+   when the theme is switched live). Edit like ux.css; every rule here is
+   scoped to .theme_brutalist.
+
+   NEO-BRUTALIST THEME (selectable: "Brutalist"; registered in ux.js)
+   Flat fills, thick borders on CONTAINERS ONLY, hard offset shadows (no blur),
+   loud accents, oversized type. Hierarchy = card vs not-card. One token set,
+   used exclusively. @font-face declarations live in ux.css (selector-less,
+   tiny, lazy-downloaded only when a rendered element uses the family). */
+body.theme_brutalist {
+  --bg: #ffffff; --ink: #0a0a0a; --accent: #2b3aff; --accent-2: #c8102e; --paper: #f4f4f0; --hair: #d9d9d4;
+  --bw: 2px; --bw-heavy: 3px; --shadow: 4px 4px 0 var(--ink); --shadow-lg: 6px 6px 0 var(--ink);
+  --sans: "Helvetica Neue LT Std","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono: "Roboto Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --t1: 34px; --t2: 22px; --t3: 16px; --t4: 14px; --t5: 12px; --t6: 11px;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  background: var(--bg) !important; color: var(--ink) !important;
+  font-family: var(--sans); font-size: var(--t3);
+}
+/* flat: kill radius, blur, gradients, engine shadows (cards re-add the hard offset one) */
+body.theme_brutalist *, body.theme_brutalist *::before, body.theme_brutalist *::after {
+  border-radius: 0 !important; box-shadow: none !important; text-shadow: none !important; background-image: none !important;
+}
+/* defensive: no ancestor transform, so position:fixed nav stays viewport-pinned (bug A) */
+body.theme_brutalist { transform: none !important; }
+
+/* ---- type registers ---- */
+body.theme_brutalist, body.theme_brutalist input, body.theme_brutalist textarea, body.theme_brutalist select,
+body.theme_brutalist button, body.theme_brutalist .divMessage, body.theme_brutalist .labelSubject,
+body.theme_brutalist .linkName, body.theme_brutalist .labelName { font-family: var(--sans) !important; }
+body.theme_brutalist .divMessage { font-size: var(--t3) !important; line-height: 1.5; color: var(--ink) !important; }
+body.theme_brutalist .linkQuote, body.theme_brutalist .labelCreated, body.theme_brutalist .quoteLink,
+body.theme_brutalist .panelBacklinks, body.theme_brutalist .panelBacklinks a, body.theme_brutalist .originalNameLink,
+body.theme_brutalist .uploadDetails, body.theme_brutalist .sizeLabel, body.theme_brutalist .dimensionLabel,
+body.theme_brutalist .labelId, body.theme_brutalist .pagelist, body.theme_brutalist .threadStats,
+body.theme_brutalist .labelReplies, body.theme_brutalist .labelImages, body.theme_brutalist .labelPage,
+body.theme_brutalist #rchan-threadstat, body.theme_brutalist #rchan-mstats, body.theme_brutalist #rchan-sitestat,
+body.theme_brutalist #rchan-sitestat-nav, body.theme_brutalist .rchan-ris, body.theme_brutalist .divBanMessage,
+body.theme_brutalist .rchan-idname, body.theme_brutalist #watcherButton span, body.theme_brutalist .divMessage code,
+body.theme_brutalist #rchan-catcount, body.theme_brutalist .rchan-active-meta {
+  font-family: var(--mono) !important; font-size: var(--t6);
+}
+
+/* ---- links: accent, underline; no soft hover fills ---- */
+body.theme_brutalist a, body.theme_brutalist a:visited, body.theme_brutalist .quoteLink, body.theme_brutalist .linkQuote {
+  color: var(--accent) !important; text-decoration: underline; background: transparent !important;
+}
+body.theme_brutalist a:hover, body.theme_brutalist .quoteLink:hover, body.theme_brutalist .linkQuote:hover {
+  color: var(--ink) !important; background: transparent !important;
+}
+body.theme_brutalist .coloredIcon, body.theme_brutalist .glowOnHover, body.theme_brutalist .unhideButton { color: var(--ink) !important; }
+body.theme_brutalist .coloredIcon:hover { color: var(--accent) !important; }
+body.theme_brutalist .checkedFavouriteButton:before, body.theme_brutalist #favouriteButton { color: var(--accent) !important; }
+body.theme_brutalist .greenText { color: #0a7a2f !important; }
+body.theme_brutalist .redText { color: var(--accent-2) !important; }
+
+/* ---- accessibility: focus rings + hit targets + reduced motion ---- */
+body.theme_brutalist a:focus-visible, body.theme_brutalist button:focus-visible, body.theme_brutalist input:focus-visible,
+body.theme_brutalist select:focus-visible, body.theme_brutalist textarea:focus-visible, body.theme_brutalist [tabindex]:focus-visible,
+body.theme_brutalist .catalogCell:focus-visible, body.theme_brutalist summary:focus-visible {
+  outline: 3px solid var(--accent) !important; outline-offset: 2px !important;
+}
+
+/* ======================= THE CARD ======================= */
+/* container cards: float via the hard shadow (static) */
+body.theme_brutalist #postingForm, body.theme_brutalist #newPostFieldset, body.theme_brutalist #quick-reply,
+body.theme_brutalist #quick-reply table, body.theme_brutalist #rchan-qr, body.theme_brutalist .modalInnerPanel,
+body.theme_brutalist .floatingMenu, body.theme_brutalist #watchedMenu, body.theme_brutalist #settingsMenu,
+body.theme_brutalist #rchan-set, body.theme_brutalist #rchan-hist, body.theme_brutalist #rchan-youbox,
+body.theme_brutalist #rchan-reports, body.theme_brutalist #rchan-find, body.theme_brutalist #rchan-conv,
+body.theme_brutalist .rchan-pal-box, body.theme_brutalist .rchan-keys-box, body.theme_brutalist .rchan-guide-box,
+body.theme_brutalist #rchan-catprev, body.theme_brutalist .rchan-ed-box, body.theme_brutalist .rchan-sheet-box,
+body.theme_brutalist .quoteTooltip, body.theme_brutalist #sideCatalogDiv {
+  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important;
+  box-shadow: var(--shadow) !important; padding: var(--s4);
+}
+/* interactive cards: pop on hover, press on click (transform+shadow only, <=80ms) */
+body.theme_brutalist .catalogCell, body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell {
+  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important;
+  transition: transform 80ms linear, box-shadow 80ms linear;
+}
+body.theme_brutalist .catalogCell:hover, body.theme_brutalist .sideCatalogCell:hover, body.theme_brutalist .sideCatalogMarkedCell:hover {
+  transform: translate(-2px,-2px); box-shadow: var(--shadow-lg) !important;
+}
+body.theme_brutalist .catalogCell:active, body.theme_brutalist .sideCatalogCell:active {
+  transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.theme_brutalist .catalogCell, body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell { transition: none !important; }
+  body.theme_brutalist .catalogCell:hover, body.theme_brutalist .sideCatalogCell:hover, body.theme_brutalist .catalogCell:active { transform: none !important; }
+}
+
+/* ======================= CHROME ======================= */
+/* nav: 48px, white, 3px ink rule, FIXED to top (bug A) */
+body.theme_brutalist nav, body.theme_brutalist #dynamicHeader {
+  position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9500 !important;
+  min-height: 48px !important; display: flex !important; align-items: center; gap: var(--s3);
+  background: var(--bg) !important; border-bottom: var(--bw-heavy) solid var(--ink) !important; padding: 0 var(--s4) !important;
+}
+body.theme_brutalist nav a, body.theme_brutalist #dynamicHeader a { color: var(--accent) !important; }
+body.theme_brutalist nav a:hover, body.theme_brutalist #dynamicHeader a:hover { color: var(--ink) !important; background: transparent !important; }
+body.theme_brutalist nav .coloredIcon, body.theme_brutalist #dynamicHeader .coloredIcon { font-size: 18px !important; }
+body.theme_brutalist #themeSelector { border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; background: var(--bg) !important; font-family: var(--mono) !important; font-size: var(--t5) !important; padding: 2px 4px; }
+/* content clears the fixed 48px nav (bug B): body offset beats base `html body{margin-top:36px}` */
+body.theme_brutalist { margin-top: 48px !important; }
+body.theme_brutalist #catalogId, body.theme_brutalist .boardHeader { margin-top: var(--s5) !important; }
+body.theme_brutalist #sideCatalogDiv { top: 48px !important; height: calc(100vh - 48px) !important; }
+
+/* sticky footer bar: one segmented card (shared borders, single group shadow), 40px squares */
+body.theme_brutalist #rchan-nav {
+  left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
+  gap: 0 !important; box-shadow: var(--shadow) !important; justify-content: center;
+}
+body.theme_brutalist #rchan-nav button {
+  width: 40px !important; height: 40px !important; padding: 0 !important; line-height: 1 !important;
+  background: var(--bg) !important; color: var(--ink) !important;
+  border: var(--bw) solid var(--ink) !important; border-right: 0 !important; box-shadow: none !important;
+}
+body.theme_brutalist #rchan-nav button:last-child { border-right: var(--bw) solid var(--ink) !important; }
+body.theme_brutalist #rchan-nav button:hover, body.theme_brutalist #rchan-nav button.rchan-on { background: var(--ink) !important; color: var(--bg) !important; }
+body.theme_brutalist #rchan-nav button#rchan-penbtn { background: var(--bg) !important; color: var(--ink) !important; }
+body.theme_brutalist #rchan-nav button svg { width: 18px; height: 18px; }
+
+/* buttons: card-lite (border + shadow), bold caps, >=40px target, instant press */
+body.theme_brutalist button, body.theme_brutalist input[type=submit], body.theme_brutalist input[type=button],
+body.theme_brutalist #qrbutton, body.theme_brutalist #formButton, body.theme_brutalist #rchan-formtoggle, body.theme_brutalist .reloadCaptchaButton {
+  background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important;
+  box-shadow: 3px 3px 0 var(--ink) !important; padding: 8px 16px !important; min-height: 40px;
+  font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
+  cursor: pointer; transition: transform 80ms linear, box-shadow 80ms linear;
+}
+body.theme_brutalist button:hover, body.theme_brutalist input[type=submit]:hover, body.theme_brutalist input[type=button]:hover,
+body.theme_brutalist #qrbutton:hover, body.theme_brutalist #formButton:hover, body.theme_brutalist #rchan-formtoggle:hover, body.theme_brutalist .reloadCaptchaButton:hover {
+  background: var(--ink) !important; color: var(--bg) !important; transform: translate(-2px,-2px); box-shadow: var(--shadow-lg) !important;
+}
+body.theme_brutalist button:active, body.theme_brutalist #qrbutton:active, body.theme_brutalist #formButton:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink) !important; }
+@media (prefers-reduced-motion: reduce) { body.theme_brutalist button:hover, body.theme_brutalist button:active { transform: none !important; }
+}
+/* inputs: flat, 2px, no shadow */
+body.theme_brutalist input[type=text], body.theme_brutalist input[type=password], body.theme_brutalist input[type=email],
+body.theme_brutalist input[type=number], body.theme_brutalist textarea, body.theme_brutalist select,
+body.theme_brutalist #qrbody, body.theme_brutalist #fieldMessage {
+  background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: none !important;
+}
+body.theme_brutalist input[type=checkbox] {
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; cursor: pointer;
+  border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; vertical-align: -3px;
+}
+body.theme_brutalist input[type=checkbox]:checked { background: var(--ink) !important; }
+
+/* page title: 34 black caps, tight, breathing room; star 18 on baseline */
+body.theme_brutalist .boardHeader p#labelName, body.theme_brutalist #labelName, body.theme_brutalist #catalogId, body.theme_brutalist #catalogId .title {
+  font-family: var(--sans) !important; font-size: var(--t1) !important; font-weight: 700; text-transform: uppercase;
+  letter-spacing: -1.5px; line-height: 1.02; color: var(--ink) !important; margin-bottom: var(--s6) !important; text-shadow: none !important;
+}
+body.theme_brutalist #labelDescription, body.theme_brutalist .boardHeader p#labelDescription { color: var(--ink) !important; font-weight: 400; text-transform: none; letter-spacing: 0; }
+body.theme_brutalist #favouriteButton, body.theme_brutalist .checkedFavouriteButton { font-size: 18px !important; vertical-align: baseline; }
+
+/* ======================= CATALOG ======================= */
+body.theme_brutalist.rchan-cat-s #divThreads, body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads {
+  display: grid !important; gap: var(--s5) !important; padding: var(--s5) !important; justify-content: start; align-items: start;
+}
+body.theme_brutalist.rchan-cat-s #divThreads { grid-template-columns: repeat(auto-fill, 180px); grid-auto-rows: 300px; }
+body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads { grid-template-columns: repeat(auto-fill, 240px); grid-auto-rows: 360px; }
+body.theme_brutalist .catalogCell {
+  width: auto !important; max-width: none !important; height: 100% !important; max-height: none !important; margin: 0 !important;
+  padding: 0 !important; display: flex !important; flex-direction: column; align-items: stretch; overflow: hidden !important; outline: 0 !important;
+}
+/* reorder DOM (thumb, stats, title, teaser) into thumb / title / teaser / stats-bottom */
+body.theme_brutalist .catalogCell > a.linkThumb { order: 1; display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-bottom: var(--bw) solid var(--ink); flex: none; }
+body.theme_brutalist .catalogCell > a.linkThumb img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: cover; display: block; }
+body.theme_brutalist .catalogCell > p:not(.threadStats) { order: 2; margin: 0; padding: var(--s3) var(--s3) 0; flex: none; }
+body.theme_brutalist .catalogCell .labelSubject { font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; color: var(--ink) !important; display: block; line-height: 1.15; }
+body.theme_brutalist .catalogCell > .divMessage {
+  order: 3; margin: var(--s2) 0 0; padding: 0 var(--s3); font-size: var(--t4) !important; color: var(--ink) !important; text-align: left;
+  flex: 1 1 auto; min-height: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
+}
+body.theme_brutalist .catalogCell > .divMessage .greenText { font-size: var(--t4) !important; }
+/* stats: inverted strip pinned to card bottom, WHITE mono 11 (fixes illegible grey) */
+body.theme_brutalist .catalogCell > p.threadStats {
+  order: 4; margin: var(--s3) 0 0 !important; padding: 6px var(--s3) !important; flex: none;
+  background: var(--ink) !important; color: #fff !important; border-top: var(--bw) solid var(--ink);
+  font-family: var(--mono) !important; font-size: var(--t6) !important; letter-spacing: .04em; text-align: left;
+}
+body.theme_brutalist .catalogCell > p.threadStats span { color: #fff !important; }
+body.theme_brutalist .catalogCell .rchan-newbadge { background: var(--accent-2) !important; color: #fff !important; border: 0 !important; }
+
+/* control bar: count left, selects as mini-cards right, 3px rule under */
+body.theme_brutalist #rchan-cattools {
+  display: flex !important; align-items: center; gap: var(--s4); padding: var(--s3) var(--s5) !important; margin: 0 !important;
+  border-bottom: var(--bw-heavy) solid var(--ink) !important;
+}
+body.theme_brutalist #rchan-catcount { margin-right: auto; font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+body.theme_brutalist #rchan-cattools select { border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; background: var(--bg) !important; font-family: var(--mono) !important; font-size: var(--t5) !important; padding: 4px 6px; min-height: 40px; }
+
+/* ======================= BOARD INDEX / THREAD ======================= */
+/* bug C: no content-visibility reservation, contain floats, tight uniform spacing */
+body.theme_brutalist #divThreads .postCell { content-visibility: visible !important; contain-intrinsic-size: auto !important; }
+body.theme_brutalist .opCell { display: flow-root !important; margin: 0 0 var(--s6) 0 !important; min-height: 0 !important; }
+body.theme_brutalist .opCell > hr, body.theme_brutalist .divPosts > hr { display: none !important; }
+/* OP = card */
+body.theme_brutalist .innerOP {
+  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important; border-left: var(--bw-heavy) solid var(--ink) !important;
+  box-shadow: var(--shadow) !important; padding: var(--s4) !important; display: block;
+}
+/* replies = flat, hairline-separated, indented under the OP */
+body.theme_brutalist .divPosts { margin-left: var(--s5) !important; }
+body.theme_brutalist .postCell { margin: 0 !important; }
+body.theme_brutalist .innerPost {
+  background: transparent !important; border: 0 !important; border-top: 1px solid var(--hair) !important;
+  box-shadow: none !important; padding: var(--s4) 0 !important; margin: 0 !important;
+}
+/* (You) / highlighted: accent left rule + paper fill */
+body.theme_brutalist .rchan-you, body.theme_brutalist .markedPost {
+  background: var(--paper) !important; border: 0 !important; border-left: var(--bw-heavy) solid var(--accent) !important; padding-left: var(--s4) !important;
+}
+/* post header: one tight baseline */
+body.theme_brutalist .postInfo, body.theme_brutalist .opHead { border-bottom: 0 !important; font-size: var(--t4) !important; line-height: 1.4; }
+body.theme_brutalist .opHead .labelSubject, body.theme_brutalist .postInfo .labelSubject { font-size: var(--t2) !important; font-weight: 700; color: var(--ink) !important; }
+body.theme_brutalist .linkName, body.theme_brutalist .labelName { font-size: var(--t4) !important; font-weight: 700; color: var(--ink) !important; }
+body.theme_brutalist .labelRole { color: var(--accent-2) !important; font-weight: 700; }
+body.theme_brutalist .imgFlag { border: 1px solid var(--ink); vertical-align: -1px; }
+/* file info line: quiet mono @ #6b6b66, RIS plain-accent until hover */
+body.theme_brutalist .uploadDetails, body.theme_brutalist .originalNameLink, body.theme_brutalist .sizeLabel, body.theme_brutalist .dimensionLabel { color: #6b6b66 !important; }
+body.theme_brutalist .rchan-ris a { text-decoration: none; color: var(--accent) !important; }
+body.theme_brutalist .rchan-ris a:hover { text-decoration: underline; background: transparent !important; color: var(--accent) !important; }
+body.theme_brutalist .uploadCell, body.theme_brutalist .opUploadPanel { border: 0 !important; padding: 0 !important; }
+
+/* ======================= PANELS / MODALS INTERNALS ======================= */
+body.theme_brutalist .modalHeader, body.theme_brutalist .rchan-set-head, body.theme_brutalist .rchan-hist-head,
+body.theme_brutalist .rchan-set-group summary, body.theme_brutalist .header, body.theme_brutalist #quick-reply .handle, body.theme_brutalist #rchan-qr-header {
+  background: var(--ink) !important; color: #fff !important; border: 0 !important; border-bottom: var(--bw) solid var(--ink) !important;
+}
+body.theme_brutalist .rchan-set-head *, body.theme_brutalist .rchan-hist-head *, body.theme_brutalist .rchan-set-group summary *,
+body.theme_brutalist #rchan-qr-header *, body.theme_brutalist .rchan-set-x, body.theme_brutalist .rchan-hist-clear { color: #fff !important; }
+body.theme_brutalist .rchan-set-row, body.theme_brutalist .rchan-hist-row, body.theme_brutalist .rchan-pal-row,
+body.theme_brutalist .rchan-filter-row, body.theme_brutalist .rchan-guide-row { border-bottom: 1px solid var(--hair) !important; }
+body.theme_brutalist .rchan-pal-row.rchan-pal-sel, body.theme_brutalist .rchan-hist-row:hover, body.theme_brutalist .rchan-pal-row:hover { background: var(--ink) !important; color: #fff !important; }
+body.theme_brutalist .rchan-pal-box input, body.theme_brutalist .rchan-css-input { border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; color: var(--ink) !important; }
+body.theme_brutalist .rchan-pal-kind, body.theme_brutalist .rchan-set-grpcount { background: var(--ink) !important; color: #fff !important; }
+/* labels/chips: no borders (hierarchy is card vs not-card) */
+body.theme_brutalist .labelId { border: 0 !important; background: transparent !important; color: var(--ink) !important; padding: 0 3px; }
+body.theme_brutalist .rchan-ts-chip, body.theme_brutalist .rchan-flagchip { border: 0 !important; background: transparent !important; color: #6b6b66 !important; padding: 0 4px 0 0; }
+body.theme_brutalist .rchan-ts-warn, body.theme_brutalist .rchan-flagchip.rchan-ts-warn, body.theme_brutalist .divBanMessage { background: transparent !important; color: var(--accent-2) !important; border: 0 !important; font-weight: 700; }
+body.theme_brutalist .imgLink img, body.theme_brutalist .linkThumb img { border: 0 !important; }
+
+/* SIDE CATALOG internals (panel is a card above) */
+body.theme_brutalist #sideCatalogHeader { border-bottom: var(--bw-heavy) solid var(--ink) !important; }
+body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell { padding: var(--s3) !important; margin-bottom: var(--s4) !important; overflow: hidden; }
+body.theme_brutalist .sideCatalogMarkedCell { border-color: var(--accent) !important; }
+body.theme_brutalist .sideCatalogCell:hover a, body.theme_brutalist .sideCatalogCell:hover span { color: var(--ink) !important; }
+body.theme_brutalist #sideCatalogBody img { border: var(--bw) solid var(--ink) !important; }
+body.theme_brutalist .sideCatalogCellText span { font-family: var(--mono) !important; }
+body.theme_brutalist .sideCatalogCellText span:first-child { font-family: var(--sans) !important; font-weight: 700; }
+body.theme_brutalist #closeSideCatalogButton, body.theme_brutalist #sideCatalogRefreshButton { color: var(--ink) !important; }
+
+/* homepage strips / pills */
+body.theme_brutalist #rchan-newpill, body.theme_brutalist #rchan-boardpill, body.theme_brutalist #rchan-wspill, body.theme_brutalist #rchan-resume {
+  background: var(--ink) !important; color: #fff !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important;
+}
+body.theme_brutalist #rchan-youbtn { background: var(--accent-2) !important; color: #fff !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important; }
+body.theme_brutalist .rchan-yours-chip, body.theme_brutalist .rchan-active-cell { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
+body.theme_brutalist .rchan-yours-chip:hover, body.theme_brutalist .rchan-active-cell:hover { background: var(--ink) !important; color: #fff !important; }
+body.theme_brutalist .rchan-yours-chip.rchan-yours-unread { border-left: var(--bw-heavy) solid var(--accent-2) !important; }
+body.theme_brutalist .rchan-sitedot, body.theme_brutalist .rchan-wsdot.rchan-ws-live { background: var(--accent-2) !important; }
+body.theme_brutalist #rchan-toast { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important; }
+
+/* spoilers / code */
+body.theme_brutalist .spoiler { background: var(--ink) !important; color: var(--ink) !important; }
+body.theme_brutalist .spoiler:hover, body.theme_brutalist .spoiler:active { color: #fff !important; }
+body.theme_brutalist .divMessage code { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; }
+
+/* pagination as mini-cards */
+body.theme_brutalist .pagelist { background: transparent !important; }
+body.theme_brutalist .pagelist a, body.theme_brutalist .pagelist span { border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; color: var(--accent) !important; padding: 2px 8px; margin: 0 2px; box-shadow: 2px 2px 0 var(--ink); }
+body.theme_brutalist .pagelist a:hover, body.theme_brutalist .pagelist .selectedPage { background: var(--ink) !important; color: #fff !important; box-shadow: none; }
+
+/* gallery: keep media legible, chrome flat */
+body.theme_brutalist #rchan-gallery { background: var(--bg) !important; }
+body.theme_brutalist .rchan-gal-main img, body.theme_brutalist .rchan-gal-main video { border: var(--bw-heavy) solid var(--ink); }
+body.theme_brutalist .rchan-gal-strip { background: var(--ink) !important; }
+body.theme_brutalist .rchan-gal-thumb.rchan-gal-cur { border-color: var(--accent) !important; }
+body.theme_brutalist #rchan-gallery .rchan-gal-x, body.theme_brutalist .rchan-gal-prev, body.theme_brutalist .rchan-gal-next { background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; }
+
+/* catalog last-replies hover preview internals (box is a card above) */
+body.theme_brutalist .rchan-catprev-post { background: var(--bg) !important; color: var(--ink) !important; border: 0 !important; border-bottom: 1px solid var(--hair) !important; }
+body.theme_brutalist .rchan-catprev-name { color: var(--ink) !important; font-family: var(--sans) !important; }
+body.theme_brutalist .rchan-catprev-id { color: #6b6b66 !important; font-family: var(--mono) !important; }
+body.theme_brutalist .rchan-catprev-msg, body.theme_brutalist .rchan-catprev-empty { color: var(--ink) !important; }
+
+/* ============ CATALOG CARD PROTOTYPE — the instrument card ============
+   Motifs: (1) index-label meta-strip, (2) corner registration ticks,
+   (3) inverted zero-padded readout strip. States: default / hover / visited
+   (grayscale thumb only) / no-file (striped band). Catalog grid only. */
+body.theme_brutalist .catalogCell { position: relative; }
+/* (2) corner registration ticks — top-left + bottom-right L-brackets */
+body.theme_brutalist .catalogCell::before, body.theme_brutalist .catalogCell::after {
+  content: ""; position: absolute; width: 8px; height: 8px; z-index: 3; pointer-events: none;
+}
+body.theme_brutalist .catalogCell::before { top: 4px; left: 4px; border-top: 2px solid var(--ink); border-left: 2px solid var(--ink); }
+body.theme_brutalist .catalogCell::after { bottom: 4px; right: 4px; border-bottom: 2px solid var(--ink); border-right: 2px solid var(--ink); }
+/* (1) meta-strip: THR//0044 .......... /GEN/ — part-number stamp */
+body.theme_brutalist .rchan-cardmeta {
+  order: 0; flex: none; display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono) !important; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); padding: 7px 12px 6px; border-bottom: 1px solid var(--hair);
+}
+/* teaser: clamp 4 this round */
+body.theme_brutalist .catalogCell > .divMessage { -webkit-line-clamp: 4; }
+/* (3) readout strip: already inverted + zero-padded (JS). Instrument tracking. */
+body.theme_brutalist .catalogCell > p.threadStats { letter-spacing: .09em; }
+/* state: visited = grayscale THUMB only, nothing else dims */
+body.theme_brutalist .catalogCell.rchan-visited { opacity: 1 !important; }
+body.theme_brutalist .catalogCell.rchan-visited > a.linkThumb img { filter: grayscale(100%) !important; }
+body.theme_brutalist .catalogCell.rchan-visited:hover > a.linkThumb img { filter: grayscale(0%) !important; }
+/* state: no-file = diagonal-stripe band + large mono NO FILE (overrides the *{bg-image:none} reset) */
+body.theme_brutalist .rchan-nofile-band {
+  order: 1; flex: none; width: 100%; aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  background-image: repeating-linear-gradient(45deg, var(--ink) 0 2px, transparent 2px 11px) !important;
+}
+body.theme_brutalist .rchan-nofile-band span {
+  font-family: var(--mono) !important; font-size: 15px; font-weight: 700; letter-spacing: .14em; color: var(--ink);
+  background: var(--paper); padding: 5px 9px; border: 2px solid var(--ink);
+}
+body.theme_brutalist .catalogCell.rchan-nofile > a.linkThumb { display: none !important; }   /* band replaces the empty thumb */
+/* +N new badge on a card: ink-inverted, no third color (accent discipline) */
+body.theme_brutalist .catalogCell .rchan-newbadge { background: var(--ink) !important; color: #fff !important; border: 0 !important; font-family: var(--mono) !important; font-size: 10px; letter-spacing: .08em; }
+/* top rhythm: kill the catalog dead zone — title anchors 32px under the fixed nav */
+body.theme_brutalist #catalogId { margin: var(--s6) 0 var(--s5) !important; }
+body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
+body.theme_brutalist .rchan-tok-kw { color: var(--accent) !important; font-weight: 700; }
+body.theme_brutalist .rchan-tok-str { color: var(--accent-2) !important; }
+body.theme_brutalist .rchan-tok-num { color: var(--ink) !important; font-weight: 700; }
+body.theme_brutalist .rchan-tok-cmt { color: var(--ink) !important; opacity: .5; font-style: italic; }

@@ -50,6 +50,11 @@ bump() { # $1 = URL path in the conf, $2 = source file
 echo "cache-bust tokens:"
 bump "/.rchan/ux.css"           fe-overrides/ux.css
 bump "/.rchan/ux.js"            fe-overrides/ux.js
+# Per-theme CSS layers (split out of ux.css). Their URLs live in the
+# RCHAN_TCSS <head> map (theme-*.css?v=…), so the same bump() rewrite versions
+# them there exactly like a <link>/<script> tag.
+bump "/.rchan/theme-academia.css"  fe-overrides/theme-academia.css
+bump "/.rchan/theme-brutalist.css" fe-overrides/theme-brutalist.css
 bump "/.rchan/favicon.js"       fe-overrides/favicon.js
 bump "/.rchan/mod.js"           fe-overrides/mod.js
 bump "/.rchan/predark.js"       fe-overrides/predark.js
@@ -62,7 +67,7 @@ sleep 3
 
 echo "smoke check:"
 fail=0
-for p in $(grep -o '/\.rchan/[a-z.]*?v=[A-Za-z0-9]*' "$CONF" | sort -u); do
+for p in $(grep -o '/\.rchan/[a-z.-]*?v=[A-Za-z0-9]*' "$CONF" | sort -u); do
   code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: boards.rchan.xyz' "http://127.0.0.1:8081$p")
   echo "  $p -> $code"
   [ "$code" = "200" ] || fail=1

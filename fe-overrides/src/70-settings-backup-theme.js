@@ -46,6 +46,8 @@
       get: function () { try { return localStorage.getItem(DATASAVER_KEY) || "auto"; } catch (e) { return "auto"; } },
       set: function (v) {
         try { v === "auto" ? localStorage.removeItem(DATASAVER_KEY) : localStorage.setItem(DATASAVER_KEY, v); } catch (e) {}
+        // prerendering is the most byte-hungry speculation — apply the choice live
+        try { if (dataSaver()) { dropSpeculation(); } else { initSpeculation(); } } catch (e2) {}
       } },
     { g: "Advanced", k: "vidpopsound", def: false, t: "Sound on video hover", d: "Unmute the floating hover preview — volume follows your saved level" },
     { g: "Posting", k: "autowatch", t: "Watch threads you post in", d: "Posting adds the thread to your watcher, so replies notify you automatically" },
@@ -252,6 +254,22 @@
      (and the pre-paint predark hint), so every page renders consistently. */
   var THEME_AUTO_KEY = "rchan_theme_auto";
   function autoThemeOn() { try { return localStorage.getItem(THEME_AUTO_KEY) === "1"; } catch (e) { return false; } }
+  /* ---------- Per-theme CSS layer loader (live switch) ----------
+     Academia/Brutalist rules are split out of ux.css into their own files
+     (theme-{name}.css) so their ~30KB only loads for visitors on that theme.
+     predark.js loads the ACTIVE one pre-paint from the RCHAN_TCSS URL map the
+     router injects; this loads one on demand when the user switches theme
+     mid-session. Idempotent (id-guarded), and a no-op if the map/URL is
+     absent (older cached HTML) — then the base look applies, no breakage. */
+  function ensureThemeCss(name) {
+    try {
+      var tc = window.RCHAN_TCSS || {};
+      if (!name || !tc[name] || document.getElementById("rchan-tcss-" + name)) { return; }
+      var l = document.createElement("link");
+      l.id = "rchan-tcss-" + name; l.rel = "stylesheet"; l.href = tc[name];
+      document.head.appendChild(l);
+    } catch (e) {}
+  }
   function applyAutoTheme() {
     if (!autoThemeOn()) { return; }
     var dark = !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -318,8 +336,10 @@
         }
         try { localStorage.removeItem(THEME_AUTO_KEY); } catch (e2) {}
         if (cur && cur.getAttribute("data-rchan-theme")) {   // Brutalist / Academia / Cream (Dark)
+          var tname = cur.getAttribute("data-rchan-theme");
+          ensureThemeCss(tname);                             // pull the split CSS layer before switching
           setWarmDark(cur.getAttribute("data-rchan-warm") === "1");
-          try { delete localStorage.manualDefault; localStorage.selectedTheme = cur.getAttribute("data-rchan-theme"); } catch (e3) {}
+          try { delete localStorage.manualDefault; localStorage.selectedTheme = tname; } catch (e3) {}
           try { document.documentElement.classList.remove("predark"); } catch (e4) {}
           if (window.themeLoader && themeLoader.load) { themeLoader.load(); }
           applyWarmDark();

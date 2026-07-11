@@ -21,4 +21,16 @@ try {
   if (st === "dark") {
     document.documentElement.className += warm ? " predark rchan-warmdark" : " predark";
   }
+  // Per-theme CSS layers (theme-academia.css / theme-brutalist.css) are split
+  // out of ux.css and only referenced from JS. This script runs synchronously
+  // during <head> parsing, so a stylesheet <link> appended HERE is render-
+  // blocking — a returning Academia/Brutalist user paints in their theme with
+  // no flash of the base look. RCHAN_TCSS (URL map with ?v= tokens) is
+  // injected by the router immediately before this script's tag.
+  var tc = window.RCHAN_TCSS || {};
+  if (st && tc[st] && !document.getElementById("rchan-tcss-" + st)) {
+    var l = document.createElement("link");
+    l.id = "rchan-tcss-" + st; l.rel = "stylesheet"; l.href = tc[st];
+    (document.head || document.documentElement).appendChild(l);
+  }
 } catch (e) {}

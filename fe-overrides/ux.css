@@ -499,7 +499,8 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
   animation: rchan-pulse 2.2s ease-in-out infinite;
 }
 @keyframes rchan-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-@media (max-width: 640px) { #rchan-sitestat-nav { display: none; } }
+@media (max-width: 640px) { #rchan-sitestat-nav { display: none; }
+}
 
 /* ---------- Back office: login / account / management pages ----------
    Every reader surface got the design system; these were still raw engine
@@ -713,9 +714,9 @@ body .catalogCell .labelSubject, body .catalogCell .divMessage {
 }
 body .catalogCell .labelSubject { font-weight: 700; padding: 0; }
 /* Size dropdown (4chan's small/large modes; large = default) */
-.rchan-cat-s  .catalogCell   { width: 165px; max-height: 250px; }
+.rchan-cat-s  .catalogCell { width: 165px; max-height: 250px; }
 .rchan-cat-s  .linkThumb img { max-width: 150px; max-height: 150px; }
-.rchan-cat-l  .catalogCell   { width: 270px; max-height: 410px; }
+.rchan-cat-l  .catalogCell { width: 270px; max-height: 410px; }
 .rchan-cat-l  .linkThumb img { max-width: 250px; max-height: 250px; }
 
 /* keep big cards from blowing up narrow screens */
@@ -747,11 +748,13 @@ body .catalogCell .labelSubject { font-weight: 700; padding: 0; }
   text-align: center; padding: 24px 0; text-transform: uppercase;
   letter-spacing: .18em; font-size: .6875rem; color: #6b6b66; font-weight: 700;
 }
-@media (prefers-reduced-motion: reduce) { .rchan-scroll-loader .rchan-ellipsis span { animation: none; opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .rchan-scroll-loader .rchan-ellipsis span { animation: none; opacity: .6; }
+}
 /* new threads/cards fade+rise in as they're appended or revealed */
 .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both; }
 @keyframes rchan-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .opCell.rchan-appeared, .catalogCell.rchan-appeared { animation: none; }
+}
 /* Click-to-embed external video: one inline ▶ affordance + the player it opens */
 .rchan-embed-btn {
   display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
@@ -882,7 +885,8 @@ body.rchan-ws #rchan-zoom { filter: none; }
 .rchan-catwatch:hover { background: #c8102e; }
 .rchan-catwatch.rchan-on { color: #2ea043; }
 .rchan-catwatch svg { display: block; }
-@media (hover: none) { .rchan-catwatch { opacity: .85; } }   /* no hover to reveal it on touch */
+@media (hover: none) { .rchan-catwatch { opacity: .85; }
+}   /* no hover to reveal it on touch */
 
 /* ---------- Empty board state: an invitation, not a void ---------- */
 #rchan-empty { text-align: center; margin: 70px auto 40px; max-width: 480px; }
@@ -1003,345 +1007,21 @@ html.rchan-warmdark .sideCatalogMarkedCell {
 }
 
 /* ==========================================================================
-   NEO-BRUTALIST THEME  (selectable: "Brutalist"; registered in ux.js)
-   Flat fills, thick borders on CONTAINERS ONLY, hard offset shadows (no blur),
-   loud accents, oversized type. Hierarchy = card vs not-card. One token set,
-   used exclusively. Scoped to .theme_brutalist so other themes are untouched.
+   NEO-BRUTALIST THEME — rules live in theme-brutalist.css (split out of this
+   file so the ~29KB only ships to visitors actually on the theme; loaded
+   pre-paint by predark.js, on demand by ensureThemeCss on a live switch).
+   Only the @font-face declarations stay here: they carry no selector to
+   scope by, cost a few hundred bytes, and browsers download fonts lazily —
+   only when a rendered element actually uses the family.
    ========================================================================== */
 @font-face { font-family: "Helvetica Neue LT Std"; font-weight: 400; font-style: normal; font-display: swap; src: url("/.rchan/hn-roman.woff2") format("woff2"); }
 @font-face { font-family: "Helvetica Neue LT Std"; font-weight: 700; font-style: normal; font-display: swap; src: url("/.rchan/hn-bold.woff2") format("woff2"); }
 @font-face { font-family: "Helvetica Neue LT Std"; font-weight: 400; font-style: italic;  font-display: swap; src: url("/.rchan/hn-italic.woff2") format("woff2"); }
 
-body.theme_brutalist {
-  --bg: #ffffff; --ink: #0a0a0a; --accent: #2b3aff; --accent-2: #c8102e; --paper: #f4f4f0; --hair: #d9d9d4;
-  --bw: 2px; --bw-heavy: 3px; --shadow: 4px 4px 0 var(--ink); --shadow-lg: 6px 6px 0 var(--ink);
-  --sans: "Helvetica Neue LT Std","Helvetica Neue",Helvetica,Arial,sans-serif;
-  --mono: "Roboto Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --t1: 34px; --t2: 22px; --t3: 16px; --t4: 14px; --t5: 12px; --t6: 11px;
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
-  background: var(--bg) !important; color: var(--ink) !important;
-  font-family: var(--sans); font-size: var(--t3);
-}
-/* flat: kill radius, blur, gradients, engine shadows (cards re-add the hard offset one) */
-body.theme_brutalist *, body.theme_brutalist *::before, body.theme_brutalist *::after {
-  border-radius: 0 !important; box-shadow: none !important; text-shadow: none !important; background-image: none !important;
-}
-/* defensive: no ancestor transform, so position:fixed nav stays viewport-pinned (bug A) */
-body.theme_brutalist { transform: none !important; }
-
-/* ---- type registers ---- */
-body.theme_brutalist, body.theme_brutalist input, body.theme_brutalist textarea, body.theme_brutalist select,
-body.theme_brutalist button, body.theme_brutalist .divMessage, body.theme_brutalist .labelSubject,
-body.theme_brutalist .linkName, body.theme_brutalist .labelName { font-family: var(--sans) !important; }
-body.theme_brutalist .divMessage { font-size: var(--t3) !important; line-height: 1.5; color: var(--ink) !important; }
-body.theme_brutalist .linkQuote, body.theme_brutalist .labelCreated, body.theme_brutalist .quoteLink,
-body.theme_brutalist .panelBacklinks, body.theme_brutalist .panelBacklinks a, body.theme_brutalist .originalNameLink,
-body.theme_brutalist .uploadDetails, body.theme_brutalist .sizeLabel, body.theme_brutalist .dimensionLabel,
-body.theme_brutalist .labelId, body.theme_brutalist .pagelist, body.theme_brutalist .threadStats,
-body.theme_brutalist .labelReplies, body.theme_brutalist .labelImages, body.theme_brutalist .labelPage,
-body.theme_brutalist #rchan-threadstat, body.theme_brutalist #rchan-mstats, body.theme_brutalist #rchan-sitestat,
-body.theme_brutalist #rchan-sitestat-nav, body.theme_brutalist .rchan-ris, body.theme_brutalist .divBanMessage,
-body.theme_brutalist .rchan-idname, body.theme_brutalist #watcherButton span, body.theme_brutalist .divMessage code,
-body.theme_brutalist #rchan-catcount, body.theme_brutalist .rchan-active-meta {
-  font-family: var(--mono) !important; font-size: var(--t6);
-}
-
-/* ---- links: accent, underline; no soft hover fills ---- */
-body.theme_brutalist a, body.theme_brutalist a:visited, body.theme_brutalist .quoteLink, body.theme_brutalist .linkQuote {
-  color: var(--accent) !important; text-decoration: underline; background: transparent !important;
-}
-body.theme_brutalist a:hover, body.theme_brutalist .quoteLink:hover, body.theme_brutalist .linkQuote:hover {
-  color: var(--ink) !important; background: transparent !important;
-}
-body.theme_brutalist .coloredIcon, body.theme_brutalist .glowOnHover, body.theme_brutalist .unhideButton { color: var(--ink) !important; }
-body.theme_brutalist .coloredIcon:hover { color: var(--accent) !important; }
-body.theme_brutalist .checkedFavouriteButton:before, body.theme_brutalist #favouriteButton { color: var(--accent) !important; }
-body.theme_brutalist .greenText { color: #0a7a2f !important; }
-body.theme_brutalist .redText { color: var(--accent-2) !important; }
-
-/* ---- accessibility: focus rings + hit targets + reduced motion ---- */
-body.theme_brutalist a:focus-visible, body.theme_brutalist button:focus-visible, body.theme_brutalist input:focus-visible,
-body.theme_brutalist select:focus-visible, body.theme_brutalist textarea:focus-visible, body.theme_brutalist [tabindex]:focus-visible,
-body.theme_brutalist .catalogCell:focus-visible, body.theme_brutalist summary:focus-visible {
-  outline: 3px solid var(--accent) !important; outline-offset: 2px !important;
-}
-
-/* ======================= THE CARD ======================= */
-/* container cards: float via the hard shadow (static) */
-body.theme_brutalist #postingForm, body.theme_brutalist #newPostFieldset, body.theme_brutalist #quick-reply,
-body.theme_brutalist #quick-reply table, body.theme_brutalist #rchan-qr, body.theme_brutalist .modalInnerPanel,
-body.theme_brutalist .floatingMenu, body.theme_brutalist #watchedMenu, body.theme_brutalist #settingsMenu,
-body.theme_brutalist #rchan-set, body.theme_brutalist #rchan-hist, body.theme_brutalist #rchan-youbox,
-body.theme_brutalist #rchan-reports, body.theme_brutalist #rchan-find, body.theme_brutalist #rchan-conv,
-body.theme_brutalist .rchan-pal-box, body.theme_brutalist .rchan-keys-box, body.theme_brutalist .rchan-guide-box,
-body.theme_brutalist #rchan-catprev, body.theme_brutalist .rchan-ed-box, body.theme_brutalist .rchan-sheet-box,
-body.theme_brutalist .quoteTooltip, body.theme_brutalist #sideCatalogDiv {
-  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important;
-  box-shadow: var(--shadow) !important; padding: var(--s4);
-}
-/* interactive cards: pop on hover, press on click (transform+shadow only, <=80ms) */
-body.theme_brutalist .catalogCell, body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell {
-  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important;
-  transition: transform 80ms linear, box-shadow 80ms linear;
-}
-body.theme_brutalist .catalogCell:hover, body.theme_brutalist .sideCatalogCell:hover, body.theme_brutalist .sideCatalogMarkedCell:hover {
-  transform: translate(-2px,-2px); box-shadow: var(--shadow-lg) !important;
-}
-body.theme_brutalist .catalogCell:active, body.theme_brutalist .sideCatalogCell:active {
-  transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink) !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  body.theme_brutalist .catalogCell, body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell { transition: none !important; }
-  body.theme_brutalist .catalogCell:hover, body.theme_brutalist .sideCatalogCell:hover, body.theme_brutalist .catalogCell:active { transform: none !important; }
-}
-
-/* ======================= CHROME ======================= */
-/* nav: 48px, white, 3px ink rule, FIXED to top (bug A) */
-body.theme_brutalist nav, body.theme_brutalist #dynamicHeader {
-  position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9500 !important;
-  min-height: 48px !important; display: flex !important; align-items: center; gap: var(--s3);
-  background: var(--bg) !important; border-bottom: var(--bw-heavy) solid var(--ink) !important; padding: 0 var(--s4) !important;
-}
-body.theme_brutalist nav a, body.theme_brutalist #dynamicHeader a { color: var(--accent) !important; }
-body.theme_brutalist nav a:hover, body.theme_brutalist #dynamicHeader a:hover { color: var(--ink) !important; background: transparent !important; }
-body.theme_brutalist nav .coloredIcon, body.theme_brutalist #dynamicHeader .coloredIcon { font-size: 18px !important; }
-body.theme_brutalist #themeSelector { border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; background: var(--bg) !important; font-family: var(--mono) !important; font-size: var(--t5) !important; padding: 2px 4px; }
-/* content clears the fixed 48px nav (bug B): body offset beats base `html body{margin-top:36px}` */
-body.theme_brutalist { margin-top: 48px !important; }
-body.theme_brutalist #catalogId, body.theme_brutalist .boardHeader { margin-top: var(--s5) !important; }
-body.theme_brutalist #sideCatalogDiv { top: 48px !important; height: calc(100vh - 48px) !important; }
-
-/* sticky footer bar: one segmented card (shared borders, single group shadow), 40px squares */
-body.theme_brutalist #rchan-nav {
-  left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
-  gap: 0 !important; box-shadow: var(--shadow) !important; justify-content: center;
-}
-body.theme_brutalist #rchan-nav button {
-  width: 40px !important; height: 40px !important; padding: 0 !important; line-height: 1 !important;
-  background: var(--bg) !important; color: var(--ink) !important;
-  border: var(--bw) solid var(--ink) !important; border-right: 0 !important; box-shadow: none !important;
-}
-body.theme_brutalist #rchan-nav button:last-child { border-right: var(--bw) solid var(--ink) !important; }
-body.theme_brutalist #rchan-nav button:hover, body.theme_brutalist #rchan-nav button.rchan-on { background: var(--ink) !important; color: var(--bg) !important; }
-body.theme_brutalist #rchan-nav button#rchan-penbtn { background: var(--bg) !important; color: var(--ink) !important; }
-body.theme_brutalist #rchan-nav button svg { width: 18px; height: 18px; }
-
-/* buttons: card-lite (border + shadow), bold caps, >=40px target, instant press */
-body.theme_brutalist button, body.theme_brutalist input[type=submit], body.theme_brutalist input[type=button],
-body.theme_brutalist #qrbutton, body.theme_brutalist #formButton, body.theme_brutalist #rchan-formtoggle, body.theme_brutalist .reloadCaptchaButton {
-  background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important;
-  box-shadow: 3px 3px 0 var(--ink) !important; padding: 8px 16px !important; min-height: 40px;
-  font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
-  cursor: pointer; transition: transform 80ms linear, box-shadow 80ms linear;
-}
-body.theme_brutalist button:hover, body.theme_brutalist input[type=submit]:hover, body.theme_brutalist input[type=button]:hover,
-body.theme_brutalist #qrbutton:hover, body.theme_brutalist #formButton:hover, body.theme_brutalist #rchan-formtoggle:hover, body.theme_brutalist .reloadCaptchaButton:hover {
-  background: var(--ink) !important; color: var(--bg) !important; transform: translate(-2px,-2px); box-shadow: var(--shadow-lg) !important;
-}
-body.theme_brutalist button:active, body.theme_brutalist #qrbutton:active, body.theme_brutalist #formButton:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink) !important; }
-@media (prefers-reduced-motion: reduce) { body.theme_brutalist button:hover, body.theme_brutalist button:active { transform: none !important; } }
-/* inputs: flat, 2px, no shadow */
-body.theme_brutalist input[type=text], body.theme_brutalist input[type=password], body.theme_brutalist input[type=email],
-body.theme_brutalist input[type=number], body.theme_brutalist textarea, body.theme_brutalist select,
-body.theme_brutalist #qrbody, body.theme_brutalist #fieldMessage {
-  background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: none !important;
-}
-body.theme_brutalist input[type=checkbox] {
-  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; cursor: pointer;
-  border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; vertical-align: -3px;
-}
-body.theme_brutalist input[type=checkbox]:checked { background: var(--ink) !important; }
-
-/* page title: 34 black caps, tight, breathing room; star 18 on baseline */
-body.theme_brutalist .boardHeader p#labelName, body.theme_brutalist #labelName, body.theme_brutalist #catalogId, body.theme_brutalist #catalogId .title {
-  font-family: var(--sans) !important; font-size: var(--t1) !important; font-weight: 700; text-transform: uppercase;
-  letter-spacing: -1.5px; line-height: 1.02; color: var(--ink) !important; margin-bottom: var(--s6) !important; text-shadow: none !important;
-}
-body.theme_brutalist #labelDescription, body.theme_brutalist .boardHeader p#labelDescription { color: var(--ink) !important; font-weight: 400; text-transform: none; letter-spacing: 0; }
-body.theme_brutalist #favouriteButton, body.theme_brutalist .checkedFavouriteButton { font-size: 18px !important; vertical-align: baseline; }
-
-/* ======================= CATALOG ======================= */
-body.theme_brutalist.rchan-cat-s #divThreads, body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads {
-  display: grid !important; gap: var(--s5) !important; padding: var(--s5) !important; justify-content: start; align-items: start;
-}
-body.theme_brutalist.rchan-cat-s #divThreads { grid-template-columns: repeat(auto-fill, 180px); grid-auto-rows: 300px; }
-body.theme_brutalist.rchan-cat-l #divThreads, body.theme_brutalist.rchan-cat-xl #divThreads { grid-template-columns: repeat(auto-fill, 240px); grid-auto-rows: 360px; }
-body.theme_brutalist .catalogCell {
-  width: auto !important; max-width: none !important; height: 100% !important; max-height: none !important; margin: 0 !important;
-  padding: 0 !important; display: flex !important; flex-direction: column; align-items: stretch; overflow: hidden !important; outline: 0 !important;
-}
-/* reorder DOM (thumb, stats, title, teaser) into thumb / title / teaser / stats-bottom */
-body.theme_brutalist .catalogCell > a.linkThumb { order: 1; display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-bottom: var(--bw) solid var(--ink); flex: none; }
-body.theme_brutalist .catalogCell > a.linkThumb img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: cover; display: block; }
-body.theme_brutalist .catalogCell > p:not(.threadStats) { order: 2; margin: 0; padding: var(--s3) var(--s3) 0; flex: none; }
-body.theme_brutalist .catalogCell .labelSubject { font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; color: var(--ink) !important; display: block; line-height: 1.15; }
-body.theme_brutalist .catalogCell > .divMessage {
-  order: 3; margin: var(--s2) 0 0; padding: 0 var(--s3); font-size: var(--t4) !important; color: var(--ink) !important; text-align: left;
-  flex: 1 1 auto; min-height: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
-}
-body.theme_brutalist .catalogCell > .divMessage .greenText { font-size: var(--t4) !important; }
-/* stats: inverted strip pinned to card bottom, WHITE mono 11 (fixes illegible grey) */
-body.theme_brutalist .catalogCell > p.threadStats {
-  order: 4; margin: var(--s3) 0 0 !important; padding: 6px var(--s3) !important; flex: none;
-  background: var(--ink) !important; color: #fff !important; border-top: var(--bw) solid var(--ink);
-  font-family: var(--mono) !important; font-size: var(--t6) !important; letter-spacing: .04em; text-align: left;
-}
-body.theme_brutalist .catalogCell > p.threadStats span { color: #fff !important; }
-body.theme_brutalist .catalogCell .rchan-newbadge { background: var(--accent-2) !important; color: #fff !important; border: 0 !important; }
-
-/* control bar: count left, selects as mini-cards right, 3px rule under */
-body.theme_brutalist #rchan-cattools {
-  display: flex !important; align-items: center; gap: var(--s4); padding: var(--s3) var(--s5) !important; margin: 0 !important;
-  border-bottom: var(--bw-heavy) solid var(--ink) !important;
-}
-body.theme_brutalist #rchan-catcount { margin-right: auto; font-family: var(--sans) !important; font-size: var(--t4) !important; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-body.theme_brutalist #rchan-cattools select { border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; background: var(--bg) !important; font-family: var(--mono) !important; font-size: var(--t5) !important; padding: 4px 6px; min-height: 40px; }
-
-/* ======================= BOARD INDEX / THREAD ======================= */
-/* bug C: no content-visibility reservation, contain floats, tight uniform spacing */
-body.theme_brutalist #divThreads .postCell { content-visibility: visible !important; contain-intrinsic-size: auto !important; }
-body.theme_brutalist .opCell { display: flow-root !important; margin: 0 0 var(--s6) 0 !important; min-height: 0 !important; }
-body.theme_brutalist .opCell > hr, body.theme_brutalist .divPosts > hr { display: none !important; }
-/* OP = card */
-body.theme_brutalist .innerOP {
-  background: var(--paper) !important; border: var(--bw) solid var(--ink) !important; border-left: var(--bw-heavy) solid var(--ink) !important;
-  box-shadow: var(--shadow) !important; padding: var(--s4) !important; display: block;
-}
-/* replies = flat, hairline-separated, indented under the OP */
-body.theme_brutalist .divPosts { margin-left: var(--s5) !important; }
-body.theme_brutalist .postCell { margin: 0 !important; }
-body.theme_brutalist .innerPost {
-  background: transparent !important; border: 0 !important; border-top: 1px solid var(--hair) !important;
-  box-shadow: none !important; padding: var(--s4) 0 !important; margin: 0 !important;
-}
-/* (You) / highlighted: accent left rule + paper fill */
-body.theme_brutalist .rchan-you, body.theme_brutalist .markedPost {
-  background: var(--paper) !important; border: 0 !important; border-left: var(--bw-heavy) solid var(--accent) !important; padding-left: var(--s4) !important;
-}
-/* post header: one tight baseline */
-body.theme_brutalist .postInfo, body.theme_brutalist .opHead { border-bottom: 0 !important; font-size: var(--t4) !important; line-height: 1.4; }
-body.theme_brutalist .opHead .labelSubject, body.theme_brutalist .postInfo .labelSubject { font-size: var(--t2) !important; font-weight: 700; color: var(--ink) !important; }
-body.theme_brutalist .linkName, body.theme_brutalist .labelName { font-size: var(--t4) !important; font-weight: 700; color: var(--ink) !important; }
-body.theme_brutalist .labelRole { color: var(--accent-2) !important; font-weight: 700; }
-body.theme_brutalist .imgFlag { border: 1px solid var(--ink); vertical-align: -1px; }
-/* file info line: quiet mono @ #6b6b66, RIS plain-accent until hover */
-body.theme_brutalist .uploadDetails, body.theme_brutalist .originalNameLink, body.theme_brutalist .sizeLabel, body.theme_brutalist .dimensionLabel { color: #6b6b66 !important; }
-body.theme_brutalist .rchan-ris a { text-decoration: none; color: var(--accent) !important; }
-body.theme_brutalist .rchan-ris a:hover { text-decoration: underline; background: transparent !important; color: var(--accent) !important; }
-body.theme_brutalist .uploadCell, body.theme_brutalist .opUploadPanel { border: 0 !important; padding: 0 !important; }
-
-/* ======================= PANELS / MODALS INTERNALS ======================= */
-body.theme_brutalist .modalHeader, body.theme_brutalist .rchan-set-head, body.theme_brutalist .rchan-hist-head,
-body.theme_brutalist .rchan-set-group summary, body.theme_brutalist .header, body.theme_brutalist #quick-reply .handle, body.theme_brutalist #rchan-qr-header {
-  background: var(--ink) !important; color: #fff !important; border: 0 !important; border-bottom: var(--bw) solid var(--ink) !important;
-}
-body.theme_brutalist .rchan-set-head *, body.theme_brutalist .rchan-hist-head *, body.theme_brutalist .rchan-set-group summary *,
-body.theme_brutalist #rchan-qr-header *, body.theme_brutalist .rchan-set-x, body.theme_brutalist .rchan-hist-clear { color: #fff !important; }
-body.theme_brutalist .rchan-set-row, body.theme_brutalist .rchan-hist-row, body.theme_brutalist .rchan-pal-row,
-body.theme_brutalist .rchan-filter-row, body.theme_brutalist .rchan-guide-row { border-bottom: 1px solid var(--hair) !important; }
-body.theme_brutalist .rchan-pal-row.rchan-pal-sel, body.theme_brutalist .rchan-hist-row:hover, body.theme_brutalist .rchan-pal-row:hover { background: var(--ink) !important; color: #fff !important; }
-body.theme_brutalist .rchan-pal-box input, body.theme_brutalist .rchan-css-input { border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; color: var(--ink) !important; }
-body.theme_brutalist .rchan-pal-kind, body.theme_brutalist .rchan-set-grpcount { background: var(--ink) !important; color: #fff !important; }
-/* labels/chips: no borders (hierarchy is card vs not-card) */
-body.theme_brutalist .labelId { border: 0 !important; background: transparent !important; color: var(--ink) !important; padding: 0 3px; }
-body.theme_brutalist .rchan-ts-chip, body.theme_brutalist .rchan-flagchip { border: 0 !important; background: transparent !important; color: #6b6b66 !important; padding: 0 4px 0 0; }
-body.theme_brutalist .rchan-ts-warn, body.theme_brutalist .rchan-flagchip.rchan-ts-warn, body.theme_brutalist .divBanMessage { background: transparent !important; color: var(--accent-2) !important; border: 0 !important; font-weight: 700; }
-body.theme_brutalist .imgLink img, body.theme_brutalist .linkThumb img { border: 0 !important; }
-
-/* SIDE CATALOG internals (panel is a card above) */
-body.theme_brutalist #sideCatalogHeader { border-bottom: var(--bw-heavy) solid var(--ink) !important; }
-body.theme_brutalist .sideCatalogCell, body.theme_brutalist .sideCatalogMarkedCell { padding: var(--s3) !important; margin-bottom: var(--s4) !important; overflow: hidden; }
-body.theme_brutalist .sideCatalogMarkedCell { border-color: var(--accent) !important; }
-body.theme_brutalist .sideCatalogCell:hover a, body.theme_brutalist .sideCatalogCell:hover span { color: var(--ink) !important; }
-body.theme_brutalist #sideCatalogBody img { border: var(--bw) solid var(--ink) !important; }
-body.theme_brutalist .sideCatalogCellText span { font-family: var(--mono) !important; }
-body.theme_brutalist .sideCatalogCellText span:first-child { font-family: var(--sans) !important; font-weight: 700; }
-body.theme_brutalist #closeSideCatalogButton, body.theme_brutalist #sideCatalogRefreshButton { color: var(--ink) !important; }
-
-/* homepage strips / pills */
-body.theme_brutalist #rchan-newpill, body.theme_brutalist #rchan-boardpill, body.theme_brutalist #rchan-wspill, body.theme_brutalist #rchan-resume {
-  background: var(--ink) !important; color: #fff !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important;
-}
-body.theme_brutalist #rchan-youbtn { background: var(--accent-2) !important; color: #fff !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important; }
-body.theme_brutalist .rchan-yours-chip, body.theme_brutalist .rchan-active-cell { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
-body.theme_brutalist .rchan-yours-chip:hover, body.theme_brutalist .rchan-active-cell:hover { background: var(--ink) !important; color: #fff !important; }
-body.theme_brutalist .rchan-yours-chip.rchan-yours-unread { border-left: var(--bw-heavy) solid var(--accent-2) !important; }
-body.theme_brutalist .rchan-sitedot, body.theme_brutalist .rchan-wsdot.rchan-ws-live { background: var(--accent-2) !important; }
-body.theme_brutalist #rchan-toast { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; box-shadow: var(--shadow) !important; }
-
-/* spoilers / code */
-body.theme_brutalist .spoiler { background: var(--ink) !important; color: var(--ink) !important; }
-body.theme_brutalist .spoiler:hover, body.theme_brutalist .spoiler:active { color: #fff !important; }
-body.theme_brutalist .divMessage code { background: var(--paper) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; }
-
-/* pagination as mini-cards */
-body.theme_brutalist .pagelist { background: transparent !important; }
-body.theme_brutalist .pagelist a, body.theme_brutalist .pagelist span { border: var(--bw) solid var(--ink) !important; background: var(--bg) !important; color: var(--accent) !important; padding: 2px 8px; margin: 0 2px; box-shadow: 2px 2px 0 var(--ink); }
-body.theme_brutalist .pagelist a:hover, body.theme_brutalist .pagelist .selectedPage { background: var(--ink) !important; color: #fff !important; box-shadow: none; }
-
-/* gallery: keep media legible, chrome flat */
-body.theme_brutalist #rchan-gallery { background: var(--bg) !important; }
-body.theme_brutalist .rchan-gal-main img, body.theme_brutalist .rchan-gal-main video { border: var(--bw-heavy) solid var(--ink); }
-body.theme_brutalist .rchan-gal-strip { background: var(--ink) !important; }
-body.theme_brutalist .rchan-gal-thumb.rchan-gal-cur { border-color: var(--accent) !important; }
-body.theme_brutalist #rchan-gallery .rchan-gal-x, body.theme_brutalist .rchan-gal-prev, body.theme_brutalist .rchan-gal-next { background: var(--bg) !important; color: var(--ink) !important; border: var(--bw) solid var(--ink) !important; }
-
-/* catalog last-replies hover preview internals (box is a card above) */
-body.theme_brutalist .rchan-catprev-post { background: var(--bg) !important; color: var(--ink) !important; border: 0 !important; border-bottom: 1px solid var(--hair) !important; }
-body.theme_brutalist .rchan-catprev-name { color: var(--ink) !important; font-family: var(--sans) !important; }
-body.theme_brutalist .rchan-catprev-id { color: #6b6b66 !important; font-family: var(--mono) !important; }
-body.theme_brutalist .rchan-catprev-msg, body.theme_brutalist .rchan-catprev-empty { color: var(--ink) !important; }
-
-/* ============ CATALOG CARD PROTOTYPE — the instrument card ============
-   Motifs: (1) index-label meta-strip, (2) corner registration ticks,
-   (3) inverted zero-padded readout strip. States: default / hover / visited
-   (grayscale thumb only) / no-file (striped band). Catalog grid only. */
-body.theme_brutalist .catalogCell { position: relative; }
-/* (2) corner registration ticks — top-left + bottom-right L-brackets */
-body.theme_brutalist .catalogCell::before, body.theme_brutalist .catalogCell::after {
-  content: ""; position: absolute; width: 8px; height: 8px; z-index: 3; pointer-events: none;
-}
-body.theme_brutalist .catalogCell::before { top: 4px; left: 4px; border-top: 2px solid var(--ink); border-left: 2px solid var(--ink); }
-body.theme_brutalist .catalogCell::after { bottom: 4px; right: 4px; border-bottom: 2px solid var(--ink); border-right: 2px solid var(--ink); }
-/* (1) meta-strip: THR//0044 .......... /GEN/ — part-number stamp */
-body.theme_brutalist .rchan-cardmeta {
-  order: 0; flex: none; display: flex; align-items: center; justify-content: space-between;
-  font-family: var(--mono) !important; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--ink); padding: 7px 12px 6px; border-bottom: 1px solid var(--hair);
-}
-/* teaser: clamp 4 this round */
-body.theme_brutalist .catalogCell > .divMessage { -webkit-line-clamp: 4; }
-/* (3) readout strip: already inverted + zero-padded (JS). Instrument tracking. */
-body.theme_brutalist .catalogCell > p.threadStats { letter-spacing: .09em; }
-/* state: visited = grayscale THUMB only, nothing else dims */
-body.theme_brutalist .catalogCell.rchan-visited { opacity: 1 !important; }
-body.theme_brutalist .catalogCell.rchan-visited > a.linkThumb img { filter: grayscale(100%) !important; }
-body.theme_brutalist .catalogCell.rchan-visited:hover > a.linkThumb img { filter: grayscale(0%) !important; }
-/* state: no-file = diagonal-stripe band + large mono NO FILE (overrides the *{bg-image:none} reset) */
-body.theme_brutalist .rchan-nofile-band {
-  order: 1; flex: none; width: 100%; aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink);
-  display: flex; align-items: center; justify-content: center;
-  background-image: repeating-linear-gradient(45deg, var(--ink) 0 2px, transparent 2px 11px) !important;
-}
-body.theme_brutalist .rchan-nofile-band span {
-  font-family: var(--mono) !important; font-size: 15px; font-weight: 700; letter-spacing: .14em; color: var(--ink);
-  background: var(--paper); padding: 5px 9px; border: 2px solid var(--ink);
-}
-body.theme_brutalist .catalogCell.rchan-nofile > a.linkThumb { display: none !important; }   /* band replaces the empty thumb */
-/* +N new badge on a card: ink-inverted, no third color (accent discipline) */
-body.theme_brutalist .catalogCell .rchan-newbadge { background: var(--ink) !important; color: #fff !important; border: 0 !important; font-family: var(--mono) !important; font-size: 10px; letter-spacing: .08em; }
-/* top rhythm: kill the catalog dead zone — title anchors 32px under the fixed nav */
-body.theme_brutalist #catalogId { margin: var(--s6) 0 var(--s5) !important; }
-body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
-
 /* ==========================================================================
-   ACADEMIA THEME  (selectable: "Academia"; registered in ux.js)
-   A fork of Cream's warm-paper sensibility, art-directed into a humanist
-   "university-press / literary-journal" register: unbleached ivory grounds,
-   letterpress serif display (Linux Libertine, self-hosted, OFL), quiet
-   grotesque sans metadata eyebrows, one clay accent, soft paper-on-paper
-   shadows. Elevation = hairline + soft warm shadow + gentle radius (NOT the
-   brutalist hard offset). Scoped entirely to .theme_academia.
+   ACADEMIA THEME — rules live in theme-academia.css (split out of this file,
+   ~34KB, same loading scheme as Brutalist above). @font-face stays here for
+   the same reason: selector-less, tiny, and fonts lazy-load on actual use.
    ========================================================================== */
 /* Linux Libertine 5.3.0 (SIL OFL 1.1) — humanist old-style serif w/ true
    italics, real bold, and small-caps. Subset to latin+punctuation, TTF->woff2. */
@@ -1358,457 +1038,6 @@ body.theme_brutalist #rchan-bannerwrap { margin-top: var(--s5) !important; }
 @font-face { font-family: "Linux Libertine"; font-weight: 400; font-style: italic;  font-display: swap; src: url("/.rchan/ll-italic.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 700; font-style: normal; font-display: swap; src: url("/.rchan/ll-bold.woff2") format("woff2"); }
 @font-face { font-family: "Linux Libertine"; font-weight: 700; font-style: italic;  font-display: swap; src: url("/.rchan/ll-bolditalic.woff2") format("woff2"); }
-
-body.theme_academia {
-  --paper: #F0EEE6; --paper-2: #E8E4D8; --paper-3: #DDD8C8; --card: #FBFAF6;
-  --ink: #2A2620; --ink-soft: #5C564A; --ink-faint: #8A8272;
-  --clay: #C15F3C; --clay-soft: #D97757; --sage: #6B7A5E; --wine: #7A3B3B;
-  --hair: #C9C3B2; --highlight: #F7F2E8;
-  --radius: 6px;
-  --shadow-card: 0 1px 2px rgba(42,38,32,.08), 0 2px 8px rgba(42,38,32,.06);
-  --shadow-lift: 0 2px 4px rgba(42,38,32,.10), 0 6px 18px rgba(42,38,32,.10);
-  --shadow-float: 0 4px 12px rgba(42,38,32,.14), 0 12px 32px rgba(42,38,32,.12);
-  --depth: 0 1px 0 rgba(255,255,255,.55), 0 2px 3px rgba(42,38,32,.14);
-  --serif: "Linux Libertine", Georgia, "Times New Roman", serif;
-  --sans: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --t1: 30px; --t2: 21px; --t3: 17px; --t4: 15px; --t5: 13px; --t6: 11px;
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
-  background: var(--paper) !important; color: var(--ink) !important;
-  font-family: var(--serif); font-size: var(--t4); line-height: 1.65;
-}
-/* neutralise base cream's square hard shadows + engine radius chaos, but KEEP
-   soft depth: cards re-add --shadow-card below. (No blanket box-shadow reset —
-   that would flatten the whole theme.) */
-body.theme_academia *, body.theme_academia *::before, body.theme_academia *::after { text-shadow: none; }
-body.theme_academia .linkThumb img, body.theme_academia .imgLink img { box-shadow: none !important; }
-body.theme_academia { transform: none !important; }   /* keep fixed nav viewport-pinned */
-
-/* ---- type: the serif is the voice ---- */
-body.theme_academia, body.theme_academia .divMessage, body.theme_academia .labelSubject,
-body.theme_academia p, body.theme_academia blockquote, body.theme_academia li {
-  font-family: var(--serif) !important;
-}
-/* Linux Libertine has a small x-height, so prose needs ~17px to read like a
-   15px grotesque — bump body copy above the nominal scale. */
-body.theme_academia .divMessage {
-  font-size: 17px !important; line-height: 1.62 !important; color: var(--ink) !important;
-  -webkit-font-smoothing: antialiased;
-}
-body.theme_academia .divMessage em, body.theme_academia em, body.theme_academia i { font-style: italic; }
-body.theme_academia .divMessage code, body.theme_academia code, body.theme_academia pre {
-  font-family: var(--mono) !important; font-size: 13px !important;
-  background: var(--paper-2) !important; color: var(--ink) !important;
-  border: 1px solid var(--hair) !important; border-radius: 4px; padding: 1px 5px;
-}
-
-/* ---- the SANS EYEBROW register: all metadata becomes tiny caps ---- */
-body.theme_academia .postInfo, body.theme_academia .opHead, body.theme_academia .labelCreated,
-body.theme_academia .linkName, body.theme_academia .labelName, body.theme_academia .labelRole,
-body.theme_academia .uploadDetails, body.theme_academia .originalNameLink, body.theme_academia .sizeLabel,
-body.theme_academia .dimensionLabel, body.theme_academia .threadStats, body.theme_academia .labelReplies,
-body.theme_academia .labelImages, body.theme_academia .labelPage, body.theme_academia .pagelist,
-body.theme_academia .contentOmissionIndicator, body.theme_academia .labelOmission,
-body.theme_academia .panelUploads, body.theme_academia .opUploadPanel,
-body.theme_academia #rchan-threadstat, body.theme_academia #rchan-mstats, body.theme_academia #rchan-sitestat,
-body.theme_academia #rchan-sitestat-nav, body.theme_academia .rchan-ris, body.theme_academia .rchan-active-meta,
-body.theme_academia #rchan-catcount, body.theme_academia #postingForm label, body.theme_academia .rchan-set-sub,
-body.theme_academia .rchan-cardmeta {
-  font-family: var(--sans) !important; text-transform: uppercase; letter-spacing: .08em;
-  font-size: var(--t6) !important; font-weight: 600; color: var(--ink-faint) !important;
-  -webkit-font-smoothing: antialiased;
-}
-/* post numbers, ids, timestamps, quote-links stay quiet mono */
-body.theme_academia .labelId, body.theme_academia .linkQuote, body.theme_academia .quoteLink,
-body.theme_academia .panelBacklinks, body.theme_academia .panelBacklinks a, body.theme_academia .labelCreated,
-body.theme_academia .rchan-idname, body.theme_academia .divInMenu {
-  font-family: var(--mono) !important; font-size: 10.5px !important; letter-spacing: .02em; text-transform: none;
-}
-body.theme_academia .labelName { color: var(--ink-soft) !important; letter-spacing: .06em; font-weight: 700; }
-body.theme_academia .labelRole { color: var(--wine) !important; font-weight: 700; }
-
-/* ---- the DEPTH effect: display sizes only (>=17px). ink pressed into paper ---- */
-body.theme_academia #catalogId, body.theme_academia #catalogId .title, body.theme_academia #labelBoard,
-body.theme_academia .boardHeader p#labelName, body.theme_academia .rchan-empty-title,
-body.theme_academia .opHead .labelSubject, body.theme_academia .postInfo .labelSubject,
-body.theme_academia .catalogCell .labelSubject, body.theme_academia .rchan-pagedivider span,
-body.theme_academia .modalHeader, body.theme_academia .rchan-set-head, body.theme_academia .rchan-hist-head {
-  font-family: var(--serif) !important; color: var(--ink) !important; text-shadow: var(--depth);
-  -webkit-font-smoothing: auto;
-}
-
-/* ---- links: clay, underline on hover ---- */
-body.theme_academia a, body.theme_academia a:visited { color: var(--clay) !important; text-decoration: none; background: transparent !important; }
-body.theme_academia a:hover { color: var(--clay-soft) !important; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-body.theme_academia .linkQuote, body.theme_academia .quoteLink { color: var(--clay) !important; }
-body.theme_academia .greenText, body.theme_academia .quote {
-  color: var(--sage) !important; font-family: var(--serif) !important; font-style: italic;
-}
-body.theme_academia .redText { color: var(--wine) !important; }
-body.theme_academia .coloredIcon, body.theme_academia .glowOnHover, body.theme_academia .unhideButton { color: var(--ink-soft) !important; }
-body.theme_academia .coloredIcon:hover { color: var(--clay) !important; }
-/* gold star -> clay */
-body.theme_academia #favouriteButton, body.theme_academia .checkedFavouriteButton:before,
-body.theme_academia .catalogCell .rchan-catwatch.rchan-on { color: var(--clay) !important; }
-
-/* ---- global motion: gentle + few ---- */
-body.theme_academia a, body.theme_academia button, body.theme_academia input, body.theme_academia select,
-body.theme_academia textarea, body.theme_academia .catalogCell, body.theme_academia .rchan-yours-chip,
-body.theme_academia .rchan-active-cell, body.theme_academia .coloredIcon, body.theme_academia #rchan-nav button {
-  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
-    box-shadow 200ms ease, transform 200ms cubic-bezier(.2,.8,.2,1);
-}
-body.theme_academia a:focus-visible, body.theme_academia button:focus-visible, body.theme_academia input:focus-visible,
-body.theme_academia select:focus-visible, body.theme_academia textarea:focus-visible, body.theme_academia [tabindex]:focus-visible,
-body.theme_academia .catalogCell:focus-visible, body.theme_academia summary:focus-visible {
-  outline: 2px solid var(--clay) !important; outline-offset: 2px !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  body.theme_academia *, body.theme_academia *::before, body.theme_academia *::after {
-    transition-property: color, background-color, border-color !important; transition-duration: 100ms !important;
-  }
-  body.theme_academia .catalogCell:hover, body.theme_academia button:hover { transform: none !important; }
-}
-
-/* ======================= NAVBAR ======================= */
-body.theme_academia nav, body.theme_academia #dynamicHeader {
-  position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9500 !important;
-  min-height: 52px !important; display: flex !important; align-items: center; gap: var(--s3);
-  background: var(--paper) !important; border-bottom: 1px solid var(--hair) !important; padding: 0 var(--s4) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,.5);
-}
-body.theme_academia nav a, body.theme_academia #dynamicHeader a { color: var(--clay) !important; font-family: var(--serif) !important; font-style: italic; font-size: var(--t4) !important; }
-body.theme_academia nav .coloredIcon, body.theme_academia #dynamicHeader .coloredIcon { color: var(--ink-soft) !important; font-style: normal; }
-body.theme_academia #themeSelector {
-  border: 1px solid var(--hair) !important; border-radius: var(--radius) !important; background: var(--card) !important;
-  color: var(--ink-soft) !important; font-family: var(--sans) !important; font-size: var(--t6) !important;
-  text-transform: uppercase; letter-spacing: .06em; padding: 4px 8px;
-}
-body.theme_academia { margin-top: 52px !important; }
-body.theme_academia #sideCatalogDiv { top: 52px !important; height: calc(100vh - 52px) !important; }
-
-/* ======================= PAGE TITLE BLOCK ======================= */
-body.theme_academia .boardHeader, body.theme_academia #catalogId { text-align: center; }
-body.theme_academia #catalogId, body.theme_academia .boardHeader p#labelName {
-  font-size: var(--t1) !important; font-weight: 700 !important; letter-spacing: -.2px !important;
-  line-height: 1.1 !important; margin: var(--s6) 0 var(--s2) !important;
-}
-/* the eyebrow over the title ("IMAGEBOARD · RCHAN") is injected by JS as .rchan-title-eyebrow */
-body.theme_academia .rchan-title-eyebrow {
-  display: block; text-align: center; font-family: var(--sans) !important;
-  text-transform: uppercase; letter-spacing: .18em; font-size: var(--t6); font-weight: 600;
-  color: var(--ink-faint) !important; margin: var(--s7) 0 var(--s1); text-shadow: none;
-}
-body.theme_academia #rchan-bannerwrap + #catalogId, body.theme_academia #rchan-bannerwrap + .boardHeader { margin-top: var(--s4) !important; }
-body.theme_academia #labelDescription, body.theme_academia .boardHeader p#labelDescription {
-  color: var(--ink-soft) !important; font-family: var(--serif) !important; font-style: italic;
-  font-size: var(--t4) !important; text-transform: none; letter-spacing: 0; margin-bottom: var(--s7) !important;
-}
-body.theme_academia #labelBoard { color: var(--clay) !important; }
-body.theme_academia #rchan-bannerwrap { margin-top: var(--s7) !important; }
-body.theme_academia #rchan-banner { border: 1px solid var(--hair); border-radius: var(--radius); box-shadow: var(--shadow-card); background: var(--card); }
-
-/* ======================= CATALOG: disciplined grid ======================= */
-body.theme_academia #divThreads:has(.catalogCell) {
-  display: grid !important; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--s5) !important; padding: var(--s5) 0 !important; text-align: left !important; align-items: stretch;
-}
-body.theme_academia.rchan-cat-s #divThreads:has(.catalogCell) { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-@media (max-width: 640px) {
-  body.theme_academia.rchan-cat-l #divThreads:has(.catalogCell),
-  body.theme_academia.rchan-cat-xl #divThreads:has(.catalogCell) { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s4) !important; }
-}
-body.theme_academia .catalogCell {
-  width: auto !important; max-width: none !important; height: 100% !important; max-height: none !important; margin: 0 !important;
-  padding: var(--s4) !important; display: flex !important; flex-direction: column; gap: var(--s3); align-items: stretch;
-  background: var(--card) !important; border: 1px solid var(--hair) !important; border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-card) !important; overflow: hidden !important; position: relative;
-}
-body.theme_academia .catalogCell:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift) !important; }
-/* (0) eyebrow: "Nº 0044 · /GEN/"  ....  "R·I·P" */
-body.theme_academia .rchan-cardmeta {
-  order: 0; flex: none; display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); flex-wrap: wrap;
-  padding: 0 0 var(--s2); border-bottom: 1px solid var(--hair); color: var(--ink-faint) !important;
-  font-size: 10px !important; letter-spacing: .05em !important;
-}
-body.theme_academia .rchan-cardmeta span { white-space: nowrap; }
-body.theme_academia .rchan-cardmeta .rchan-cardmeta-r { color: var(--clay) !important; letter-spacing: .04em; }
-/* (1) thumb: full content width, 4:3 cover, soft corners */
-body.theme_academia .catalogCell > a.linkThumb {
-  order: 1; display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 4px; flex: none;
-}
-body.theme_academia .catalogCell > a.linkThumb img {
-  width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important;
-  object-fit: cover; display: block; margin: 0; min-width: 0; min-height: 0;
-}
-/* (2) serif subject with depth */
-body.theme_academia .catalogCell > p:not(.threadStats) { order: 2; margin: 0; padding: 0; flex: none; }
-body.theme_academia .catalogCell .labelSubject {
-  font-family: var(--serif) !important; font-size: var(--t3) !important; font-weight: 700 !important;
-  line-height: 1.2; color: var(--ink) !important; display: block; text-transform: none; letter-spacing: 0;
-}
-/* (3) serif teaser, clamp 4 */
-body.theme_academia .catalogCell > .divMessage {
-  order: 3; margin: 0; padding: 0; font-family: var(--serif) !important; font-size: 15px !important;
-  line-height: 1.5; color: var(--ink-soft) !important; text-align: left; flex: 1 1 auto; min-height: 0;
-  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
-}
-body.theme_academia .catalogCell > .divMessage .greenText { font-size: 15px !important; }
-/* the bottom stat strip is retired — readout lives in the eyebrow */
-body.theme_academia .catalogCell > p.threadStats { display: none !important; }
-/* no-file: oat band with a centered sans eyebrow "TEXT ONLY" */
-body.theme_academia .catalogCell.rchan-nofile > a.linkThumb { display: none !important; }
-body.theme_academia .rchan-nofile-band {
-  order: 1; flex: none; width: 100%; aspect-ratio: 4 / 3; border-radius: 4px; background: var(--paper-2) !important;
-  display: flex; align-items: center; justify-content: center; border: 1px solid var(--hair);
-}
-body.theme_academia .rchan-nofile-band span {
-  font-family: var(--sans) !important; text-transform: uppercase; letter-spacing: .16em; font-size: var(--t6);
-  font-weight: 600; color: var(--ink-faint);
-}
-/* +N new badge: clay pill */
-body.theme_academia .catalogCell .rchan-newbadge {
-  background: var(--clay) !important; color: #fff !important; border: 0 !important; border-radius: 999px !important;
-  font-family: var(--sans) !important; font-size: 10px; letter-spacing: .04em; padding: 1px 7px;
-}
-/* visited: quiet grayscale thumb, restored on hover (no whole-card dimming) */
-body.theme_academia .catalogCell.rchan-visited { opacity: 1 !important; }
-body.theme_academia .catalogCell.rchan-visited > a.linkThumb img { filter: grayscale(100%); opacity: .82; }
-body.theme_academia .catalogCell.rchan-visited:hover > a.linkThumb img { filter: grayscale(0); opacity: 1; }
-
-/* catalog control bar */
-body.theme_academia #rchan-cattools {
-  display: flex !important; align-items: center; gap: var(--s4); padding: var(--s3) 0 !important; margin: 0 !important;
-  border-bottom: 1px solid var(--hair) !important;
-}
-body.theme_academia #rchan-catcount { margin-right: auto; }
-body.theme_academia #rchan-cattools select {
-  border: 1px solid var(--hair) !important; border-radius: var(--radius) !important; background: var(--card) !important;
-  color: var(--ink-soft) !important; font-family: var(--sans) !important; font-size: var(--t6) !important; padding: 5px 8px;
-  text-transform: uppercase; letter-spacing: .06em;
-}
-
-/* ======================= BOARD INDEX / THREAD ======================= */
-/* bug (b): no content-visibility reservation -> no phantom voids */
-body.theme_academia #divThreads .postCell { content-visibility: visible !important; contain-intrinsic-size: auto !important; }
-body.theme_academia #divThreads:not(:has(.catalogCell)) { padding: 0 !important; text-align: left !important; }
-/* threads separated by 40px + a hairline; no floats, no reserved gaps */
-body.theme_academia .opCell {
-  display: flow-root !important; margin: 0 0 40px 0 !important; padding: 0 0 40px 0 !important;
-  min-height: 0 !important; border-bottom: 1px solid var(--hair) !important; position: relative;
-}
-body.theme_academia .opCell:last-child { border-bottom: 0 !important; }
-body.theme_academia .opCell > hr, body.theme_academia .divPosts > hr { display: none !important; }
-/* OP = raised white card (thumb floats left) */
-body.theme_academia .innerOP {
-  background: var(--card) !important; border: 1px solid var(--hair) !important; border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-card) !important; padding: var(--s4) var(--s5) !important; display: block;
-}
-body.theme_academia .innerOP .opUploadPanel .linkThumb img, body.theme_academia .innerOP .uploadCell .linkThumb img { border-radius: 4px; }
-/* replies: flat on ivory, hairline-separated, indented under the OP */
-body.theme_academia .divPosts { margin-left: var(--s5) !important; margin-top: var(--s4) !important; }
-body.theme_academia .postCell { margin: 0 !important; }
-body.theme_academia .innerPost {
-  background: transparent !important; border: 0 !important; border-top: 1px solid var(--hair) !important;
-  box-shadow: none !important; padding: var(--s4) 0 !important; margin: 0 !important; border-radius: 0 !important;
-}
-body.theme_academia .postCell:first-child .innerPost { border-top: 0 !important; }
-body.theme_academia .innerPost .linkThumb img, body.theme_academia .innerPost .imgLink img { border-radius: 4px; border: 1px solid var(--hair); }
-/* (You)/highlight: clay left rule + warm wash */
-body.theme_academia .rchan-you, body.theme_academia .markedPost {
-  background: var(--highlight) !important; border: 0 !important; border-left: 3px solid var(--clay) !important;
-  padding-left: var(--s4) !important; border-radius: 0 var(--radius) var(--radius) 0;
-}
-/* bug (c): post header = one baseline-aligned flex row that wraps gracefully */
-body.theme_academia .postInfo, body.theme_academia .opHead {
-  display: flex !important; flex-wrap: wrap; align-items: baseline; gap: var(--s2); border-bottom: 0 !important;
-  line-height: 1.5; padding-bottom: 4px;
-}
-body.theme_academia .opHead .labelSubject, body.theme_academia .postInfo .labelSubject {
-  flex-basis: 100%; font-family: var(--serif) !important; font-size: var(--t2) !important; font-weight: 700 !important;
-  color: var(--ink) !important; text-transform: none; letter-spacing: 0; line-height: 1.2; margin-bottom: 2px;
-}
-body.theme_academia .imgFlag { border: 1px solid var(--hair); border-radius: 2px; vertical-align: -1px; }
-body.theme_academia .labelId { border: 0 !important; background: var(--paper-2) !important; color: var(--ink-soft) !important; border-radius: 4px; padding: 0 5px; }
-/* file-info line (bug c): one baseline-aligned flex row that wraps gracefully,
-   instead of the filename detaching onto its own line. Drop the ( ) parens —
-   the eyebrow spacing separates the fields cleanly. */
-body.theme_academia .uploadDetails {
-  display: flex !important; flex-wrap: wrap; align-items: baseline; gap: 3px 8px; line-height: 1.5; margin-bottom: 4px;
-}
-body.theme_academia .uploadDetails .hideMobile { display: none !important; }
-body.theme_academia .uploadDetails, body.theme_academia .originalNameLink, body.theme_academia .sizeLabel, body.theme_academia .dimensionLabel { color: var(--ink-faint) !important; }
-body.theme_academia .originalNameLink { color: var(--ink-soft) !important; max-width: 22em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-body.theme_academia .rchan-ris a { text-decoration: none; color: var(--clay) !important; }
-body.theme_academia .rchan-ris a:hover { text-decoration: underline; color: var(--clay-soft) !important; background: transparent !important; }
-body.theme_academia .uploadCell, body.theme_academia .opUploadPanel { border: 0 !important; padding: 0 !important; }
-body.theme_academia .panelBacklinks, body.theme_academia .panelBacklinks a { color: var(--ink-faint) !important; }
-
-/* ======================= POST FORM / QUICK REPLY ======================= */
-body.theme_academia #postingForm, body.theme_academia #newPostFieldset, body.theme_academia #quick-reply,
-body.theme_academia #quick-reply table, body.theme_academia #rchan-qr {
-  background: var(--card) !important; border: 1px solid var(--hair) !important; border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-card) !important;
-}
-body.theme_academia #postingForm { padding: var(--s4) !important; }
-body.theme_academia input[type=text], body.theme_academia input[type=password], body.theme_academia input[type=email],
-body.theme_academia input[type=number], body.theme_academia textarea, body.theme_academia select,
-body.theme_academia #qrbody, body.theme_academia #fieldMessage {
-  background: var(--card) !important; color: var(--ink) !important; border: 1px solid var(--hair) !important;
-  border-radius: 4px !important; box-shadow: none !important; font-family: var(--serif) !important; font-size: var(--t4) !important;
-}
-body.theme_academia input:focus, body.theme_academia textarea:focus, body.theme_academia select:focus,
-body.theme_academia #qrbody:focus, body.theme_academia #fieldMessage:focus {
-  border-color: var(--clay) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(193,95,60,.15) !important;
-}
-body.theme_academia #postingForm label, body.theme_academia .rchan-set-sub { color: var(--ink-faint) !important; }
-body.theme_academia input[type=checkbox] {
-  -webkit-appearance: none; appearance: none; width: 15px; height: 15px; cursor: pointer; border-radius: 3px;
-  border: 1px solid var(--hair) !important; background: var(--card) !important; vertical-align: -2px;
-}
-body.theme_academia input[type=checkbox]:checked { background: var(--clay) !important; border-color: var(--clay) !important; }
-
-/* ======================= BUTTONS ======================= */
-/* default: inline controls (post-header menus, RIS, hide, quickmod, …) stay QUIET
-   icons — transparent, ink-soft, hover clay — so they never read as heavy pills. */
-body.theme_academia button, body.theme_academia input[type=button] {
-  background: transparent !important; color: var(--ink-soft) !important; border: 0 !important;
-  box-shadow: none !important; min-height: 0 !important; padding: 3px 6px !important; border-radius: 4px !important;
-  font-family: var(--sans) !important; font-size: var(--t5) !important; letter-spacing: .02em; cursor: pointer; text-transform: none;
-}
-body.theme_academia button:hover, body.theme_academia input[type=button]:hover { color: var(--clay) !important; background: var(--paper-2) !important; }
-body.theme_academia button svg { width: 16px; height: 16px; }
-/* primary actions: the ink pill (submit / create thread / reply toggle / refresh / save) */
-body.theme_academia input[type=submit], body.theme_academia #qrbutton, body.theme_academia #formButton,
-body.theme_academia #rchan-formtoggle, body.theme_academia #refreshButton, body.theme_academia .rchan-css-save,
-body.theme_academia .rchan-empty-cta {
-  background: var(--ink) !important; color: var(--paper) !important; border: 1px solid var(--ink) !important;
-  border-radius: var(--radius) !important; box-shadow: var(--shadow-card) !important; padding: 8px 18px !important; min-height: 40px !important;
-  font-family: var(--sans) !important; font-size: var(--t5) !important; font-weight: 600; letter-spacing: .04em;
-}
-body.theme_academia input[type=submit]:hover, body.theme_academia #qrbutton:hover, body.theme_academia #formButton:hover,
-body.theme_academia #rchan-formtoggle:hover, body.theme_academia #refreshButton:hover, body.theme_academia .rchan-css-save:hover,
-body.theme_academia .rchan-empty-cta:hover {
-  background: var(--clay) !important; border-color: var(--clay) !important; color: #fff !important; transform: translateY(-1px); box-shadow: var(--shadow-lift) !important;
-}
-/* catalog watch button keeps its own dark chip over the thumb (beat the quiet default) */
-body.theme_academia .rchan-catwatch { background: rgba(42,38,32,.42) !important; color: #fff !important; border-radius: 999px !important; top: 34px !important; right: 22px !important; padding: 4px !important; }
-body.theme_academia .rchan-catwatch:hover { background: var(--clay) !important; }
-body.theme_academia .rchan-catwatch.rchan-on { color: var(--clay) !important; }
-
-/* sticky footer bar: one soft white pill card, edge-to-edge */
-body.theme_academia #rchan-nav {
-  left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important;
-  gap: 0 !important; background: var(--card) !important; justify-content: center;
-  border: 1px solid var(--hair) !important; border-radius: 0 !important; box-shadow: var(--shadow-card) !important; overflow: hidden;
-}
-body.theme_academia #rchan-nav button {
-  width: 40px !important; height: 40px !important; padding: 0 !important; line-height: 1 !important;
-  background: transparent !important; color: var(--ink-soft) !important; border: 0 !important;
-  border-right: 1px solid var(--hair) !important; box-shadow: none !important; border-radius: 0 !important;
-}
-body.theme_academia #rchan-nav button:last-child { border-right: 0 !important; }
-body.theme_academia #rchan-nav button:hover, body.theme_academia #rchan-nav button.rchan-on { background: var(--paper-2) !important; color: var(--clay) !important; transform: none; }
-body.theme_academia #rchan-nav button svg { width: 18px; height: 18px; }
-
-/* ======================= PANELS / MODALS ======================= */
-body.theme_academia .modalInnerPanel, body.theme_academia .floatingMenu, body.theme_academia #watchedMenu,
-body.theme_academia #settingsMenu, body.theme_academia #rchan-set, body.theme_academia #rchan-hist,
-body.theme_academia #rchan-youbox, body.theme_academia #rchan-reports, body.theme_academia #rchan-find,
-body.theme_academia #rchan-conv, body.theme_academia .rchan-pal-box, body.theme_academia .rchan-keys-box,
-body.theme_academia .rchan-guide-box, body.theme_academia #rchan-catprev, body.theme_academia .rchan-ed-box,
-body.theme_academia .rchan-sheet-box, body.theme_academia .quoteTooltip, body.theme_academia #sideCatalogDiv {
-  background: var(--card) !important; border: 1px solid var(--hair) !important; border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-float) !important; color: var(--ink) !important;
-}
-body.theme_academia .modalHeader, body.theme_academia .rchan-set-head, body.theme_academia .rchan-hist-head,
-body.theme_academia .rchan-set-group summary, body.theme_academia .header, body.theme_academia #quick-reply .handle, body.theme_academia #rchan-qr-header {
-  background: var(--paper-2) !important; color: var(--ink) !important; border: 0 !important; border-bottom: 1px solid var(--hair) !important;
-  font-family: var(--serif) !important; font-weight: 700;
-}
-body.theme_academia .rchan-set-x, body.theme_academia .rchan-hist-clear { color: var(--ink-soft) !important; }
-body.theme_academia .rchan-set-row, body.theme_academia .rchan-hist-row, body.theme_academia .rchan-pal-row,
-body.theme_academia .rchan-filter-row, body.theme_academia .rchan-guide-row { border-bottom: 1px solid var(--hair) !important; }
-body.theme_academia .rchan-pal-row.rchan-pal-sel, body.theme_academia .rchan-hist-row:hover, body.theme_academia .rchan-pal-row:hover { background: var(--highlight) !important; }
-body.theme_academia .rchan-pal-kind, body.theme_academia .rchan-set-grpcount { background: var(--clay) !important; color: #fff !important; border-radius: 4px; }
-body.theme_academia .rchan-set-title { font-family: var(--serif) !important; color: var(--ink) !important; }
-body.theme_academia .rchan-set-desc { color: var(--ink-faint) !important; }
-body.theme_academia .rchan-css-input { border: 1px solid var(--hair) !important; background: var(--card) !important; color: var(--ink) !important; font-family: var(--mono) !important; }
-
-/* ======================= PAGINATION ======================= */
-body.theme_academia .pagelist { background: transparent !important; }
-body.theme_academia .pagelist a, body.theme_academia .pagelist span {
-  border: 1px solid var(--hair) !important; border-radius: 4px !important; background: var(--card) !important;
-  color: var(--clay) !important; padding: 3px 10px; margin: 0 2px; box-shadow: none !important;
-}
-body.theme_academia .pagelist a:hover, body.theme_academia .pagelist .selectedPage { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
-
-/* ======================= HOMEPAGE STRIPS / PILLS ======================= */
-body.theme_academia #rchan-newpill, body.theme_academia #rchan-boardpill, body.theme_academia #rchan-wspill, body.theme_academia #rchan-resume,
-body.theme_academia .rchan-yours-chip, body.theme_academia .rchan-active-cell {
-  background: var(--card) !important; color: var(--ink) !important; border: 1px solid var(--hair) !important;
-  border-radius: var(--radius) !important; box-shadow: var(--shadow-card) !important;
-}
-body.theme_academia .rchan-yours-chip:hover, body.theme_academia .rchan-active-cell:hover { background: var(--highlight) !important; transform: translateY(-1px); box-shadow: var(--shadow-lift) !important; }
-body.theme_academia #rchan-youbtn { background: var(--clay) !important; color: #fff !important; border: 0 !important; border-radius: var(--radius) !important; box-shadow: var(--shadow-card) !important; }
-body.theme_academia .rchan-yours-chip.rchan-yours-unread { border-left: 3px solid var(--clay) !important; }
-body.theme_academia .rchan-sitedot, body.theme_academia .rchan-wsdot.rchan-ws-live { background: var(--sage) !important; }
-body.theme_academia #rchan-toast { background: var(--ink) !important; color: var(--paper) !important; border: 0 !important; border-radius: var(--radius) !important; box-shadow: var(--shadow-float) !important; }
-
-/* spoilers */
-body.theme_academia .spoiler { background: var(--ink) !important; color: var(--ink) !important; border-radius: 2px; }
-body.theme_academia .spoiler:hover, body.theme_academia .spoiler:active { color: var(--paper) !important; }
-
-/* side catalog */
-body.theme_academia #sideCatalogHeader { border-bottom: 1px solid var(--hair) !important; background: var(--paper-2) !important; }
-body.theme_academia .sideCatalogCell, body.theme_academia .sideCatalogMarkedCell { padding: var(--s3) !important; margin-bottom: var(--s3) !important; border-radius: 4px; overflow: hidden; border: 1px solid var(--hair) !important; }
-body.theme_academia .sideCatalogMarkedCell { border-color: var(--clay) !important; }
-body.theme_academia #sideCatalogBody img { border-radius: 4px; border: 1px solid var(--hair) !important; }
-
-/* gallery */
-body.theme_academia #rchan-gallery { background: var(--paper) !important; }
-body.theme_academia .rchan-gal-main img, body.theme_academia .rchan-gal-main video { border-radius: var(--radius); box-shadow: var(--shadow-float); }
-body.theme_academia .rchan-gal-thumb.rchan-gal-cur { border-color: var(--clay) !important; }
-
-/* catalog last-replies hover preview internals */
-body.theme_academia .rchan-catprev-post { background: transparent !important; color: var(--ink) !important; border: 0 !important; border-bottom: 1px solid var(--hair) !important; }
-body.theme_academia .rchan-catprev-name { color: var(--ink-soft) !important; font-family: var(--sans) !important; }
-body.theme_academia .rchan-catprev-id { color: var(--ink-faint) !important; font-family: var(--mono) !important; }
-body.theme_academia .rchan-catprev-msg { color: var(--ink) !important; font-family: var(--serif) !important; }
-
-/* ======================= INFINITE SCROLL ornaments =======================
-   Academia-specific refinement over the generic base layer (keyframes
-   rchan-dot/rchan-rise are declared once, in the base layer). ============ */
-body.theme_academia .rchan-pagedivider {
-  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: var(--s3);
-  margin: var(--s6) 0; color: var(--ink-faint);
-}
-body.theme_academia .rchan-pagedivider::before, body.theme_academia .rchan-pagedivider::after {
-  content: ""; flex: 1; max-width: 120px; height: 1px; background: var(--hair);
-}
-body.theme_academia .rchan-pagedivider span {
-  font-family: var(--serif) !important; font-style: italic; font-size: var(--t3); color: var(--ink-soft) !important;
-  letter-spacing: .02em;
-}
-body.theme_academia .rchan-scroll-loader { text-align: center; padding: var(--s6) 0; }
-body.theme_academia .rchan-scroll-loader .rchan-ellipsis {
-  font-family: var(--serif) !important; font-size: 28px; color: var(--ink-faint); letter-spacing: .18em; line-height: 1;
-}
-body.theme_academia .rchan-scroll-loader .rchan-ellipsis span { animation: rchan-dot 1.2s infinite; }
-body.theme_academia .rchan-scroll-loader .rchan-ellipsis span:nth-child(2) { animation-delay: .2s; }
-body.theme_academia .rchan-scroll-loader .rchan-ellipsis span:nth-child(3) { animation-delay: .4s; }
-body.theme_academia .rchan-scroll-end {
-  text-align: center; padding: var(--s8) 0; font-family: var(--sans) !important; text-transform: uppercase;
-  letter-spacing: .22em; font-size: var(--t6); color: var(--ink-faint) !important;
-}
-@media (prefers-reduced-motion: reduce) { body.theme_academia .rchan-scroll-loader .rchan-ellipsis span { animation: none; opacity: .6; } }
-/* new threads fade+rise in as they're appended */
-body.theme_academia .opCell.rchan-appeared, body.theme_academia .catalogCell.rchan-appeared {
-  animation: rchan-rise 240ms cubic-bezier(.2,.8,.2,1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  body.theme_academia .opCell.rchan-appeared, body.theme_academia .catalogCell.rchan-appeared { animation: none; }
-}
 
 /* ---------- File row controls: words -> SVG icons ----------
    posting.css paints these via ::after text ('Open file' / '(Hide file)' /
@@ -2534,6 +1763,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 }
 .rchan-pal-watched { background: #2ea043; color: #fff; }
 .rchan-pal-action { background: #274a6b; color: #fff; }
+.rchan-pal-setting { background: #5a5f6b; color: #fff; }
 .rchan-pal-search { background: #c8102e; color: #fff; }
 .rchan-pal-hit { background: #d29a2b; color: #fff; }
 .rchan-pal-title { flex: none; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
@@ -2546,6 +1776,7 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .theme_dark .rchan-pal-kind { background: #2c2f36; color: #c9ccd1; }
 .theme_dark .rchan-pal-watched { background: #2ea043; color: #fff; }
 .theme_dark .rchan-pal-action { background: #274a6b; color: #fff; }
+.theme_dark .rchan-pal-setting { background: #454a55; color: #c9ccd1; }
 @media (max-width: 640px) {
   #rchan-palette { padding-top: 4vh; }
   .rchan-pal-title { max-width: 48%; }
@@ -2567,7 +1798,8 @@ body.rchan-staff label[for="qrcheckboxNoFlag"] { display: revert; }
 .rchan-guide-desc { flex: 1; min-width: 0; opacity: .9; }
 .theme_dark .rchan-guide-h { border-color: #2c2f36; }
 .rchan-keys-more { display: block; text-align: center; padding: 8px 0 2px; font-size: x-small; font-weight: 700; text-decoration: underline; }
-@media (max-width: 640px) { .rchan-guide-term { width: 96px; } }
+@media (max-width: 640px) { .rchan-guide-term { width: 96px; }
+}
 
 /* ---------- "?" keyboard cheat-sheet overlay ---------- */
 #rchan-keys {
@@ -2726,14 +1958,6 @@ span.spoiler:hover, span.spoiler:active { color: #2e2e2e; }
 .theme_dark .rchan-tok-str { color: #ce9178; }
 .theme_dark .rchan-tok-num { color: #79c0ff; }
 .theme_dark .rchan-tok-cmt { color: #8b929e; font-style: italic; }
-body.theme_brutalist .rchan-tok-kw { color: var(--accent) !important; font-weight: 700; }
-body.theme_brutalist .rchan-tok-str { color: var(--accent-2) !important; }
-body.theme_brutalist .rchan-tok-num { color: var(--ink) !important; font-weight: 700; }
-body.theme_brutalist .rchan-tok-cmt { color: var(--ink) !important; opacity: .5; font-style: italic; }
-body.theme_academia .rchan-tok-kw { color: var(--wine) !important; font-weight: 600; }
-body.theme_academia .rchan-tok-str { color: var(--clay) !important; }
-body.theme_academia .rchan-tok-num { color: var(--sage) !important; }
-body.theme_academia .rchan-tok-cmt { color: var(--ink-faint) !important; font-style: italic; }
 html.rchan-warmdark .rchan-tok-kw { color: #CE9BD9; font-weight: 700; }
 html.rchan-warmdark .rchan-tok-str { color: #E3A67A; }
 html.rchan-warmdark .rchan-tok-num { color: #8FBFDE; }
@@ -2799,7 +2023,8 @@ html.rchan-warmdark .rchan-tok-cmt { color: #9b9b94; font-style: italic; }
 }
 #rchan-hint .rchan-set-x { flex: none; }
 .theme_dark #rchan-hint { background: #262a31; color: #c9ccd1; border-color: #333; }
-@media (max-width: 640px) { #rchan-hint { white-space: normal; text-align: center; } }
+@media (max-width: 640px) { #rchan-hint { white-space: normal; text-align: center; }
+}
 .rchan-set-news {
   padding: 5px 8px; font-size: x-small; opacity: .75; font-style: italic;
   border-bottom: 1px solid #CFCFC466;
@@ -2860,7 +2085,8 @@ html.rchan-warmdark .rchan-tok-cmt { color: #9b9b94; font-style: italic; }
 }
 #rchan-minimap:hover { opacity: 1; }
 #rchan-minimap canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
-@media (max-width: 999px) { #rchan-minimap { display: none !important; } }
+@media (max-width: 999px) { #rchan-minimap { display: none !important; }
+}
 
 /* ---------- Long-press action sheet (touch) ---------- */
 #rchan-sheet {
@@ -3352,4 +2578,37 @@ html.rchan-warmdark #rchan-cattools { margin-top: 0 !important; margin-bottom: 1
   .rchan-yb-unread { box-shadow: none; border-left: 4px solid Highlight; }
   .rchan-pal-row.rchan-pal-sel { background: Highlight !important; color: HighlightText !important; box-shadow: none; }
   body.rchan-ws .imgLink img, body.rchan-ws .linkThumb img { filter: blur(12px); } /* WS blur still applies */
+
+}
+
+/* ==========================================================================
+   OPTIMISTIC PENDING POST (15-media-hover.js patchReplyCallback)
+   Your just-submitted reply, rendered client-side while the confirmed render
+   is fetched. Dimmed + gently pulsing = "in flight"; swaps for the real post
+   without moving (same position, same size), so the flash-scroll that follows
+   lands exactly where the eye already is.
+   ========================================================================== */
+.rchan-pending { opacity: .62; animation: rchan-pendingpulse 1.6s ease-in-out infinite; }
+@keyframes rchan-pendingpulse { 50% { opacity: .82; } }
+@media (prefers-reduced-motion: reduce) { .rchan-pending { animation: none; }
+}
+.rchan-pending-files {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 8px;
+  opacity: .7; vertical-align: middle;
+}
+.rchan-pending-files span { font-size: x-small; }
+
+/* ==========================================================================
+   CROSS-DOCUMENT VIEW TRANSITIONS (progressive enhancement, Chromium 126+)
+   Same-origin navigations (catalog <-> thread, index -> thread, pagination)
+   crossfade instead of flashing white/dark between documents. Browsers
+   without support ignore the at-rule entirely; reduced-motion users get an
+   instant swap (animation disabled below, matching every other motion rule).
+   Kept deliberately fast (140ms) so it reads as "solid", not "animated".
+   ========================================================================== */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 140ms; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-image-pair(*),
+  ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

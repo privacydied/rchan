@@ -100,8 +100,17 @@
       fetch("/" + b + "/catalog.json").then(function (r) { return r.json(); })
         .then(function (list) { if (!base) { base = snapshot(list); } }).catch(function () {});
     }
-    setInterval(check, 60000);
-    document.addEventListener("visibilitychange", function () { if (!document.hidden) { check(); } });
+    // Visible tabs poll every 60s. Hidden tabs keep polling (the "(N)" title +
+    // favicon badge is the point of a background tab) but at 1/5 cadence —
+    // a wall of parked board tabs shouldn't hammer catalog.json all day.
+    var lastLiveCheck = 0;
+    function pacedCheck() {
+      if (document.hidden && Date.now() - lastLiveCheck < 290000) { return; }
+      lastLiveCheck = Date.now();
+      check();
+    }
+    setInterval(pacedCheck, 60000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { lastLiveCheck = Date.now(); check(); } });
   }
 
   /* ---------- Presence: "N anons here" (rides the thread status line) ----------

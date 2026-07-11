@@ -57,6 +57,18 @@ catalog.startTimer = function(time) {
   catalog.refreshLabel.innerHTML = catalog.originalAutoRefreshText + ' '
       + catalog.currentRefresh;
   catalog.refreshTimer = setInterval(function checkTimer() {
+
+    // rchan: hidden tabs run the countdown at 1/5 speed, so a parked catalog
+    // tab hits catalog.json ~5x less often; normal cadence resumes the moment
+    // the tab is visible again. (The liveness badge in ux.js diffs off
+    // whatever refreshes DO happen, so background title badges still work.)
+    if (document.hidden) {
+      catalog.hiddenTicks = (catalog.hiddenTicks || 0) + 1;
+      if (catalog.hiddenTicks % 5) {
+        return;
+      }
+    }
+
     catalog.currentRefresh--;
 
     if (!catalog.currentRefresh) {

@@ -11,8 +11,24 @@
      post's subject/name/message/filenames. Results render in the palette
      itself, deep-linking to the matching post. */
   var xbCache = {};                                      // "board/threadId" -> parsed thread JSON
+  // p.message from the JSON API is server-RENDERED HTML (jsonBuilder passes
+  // it straight through, already markup-escaped), not plain text -- matching
+  // and snippet-extracting against it raw meant searching "span"/"quote"/
+  // "class" produced false-positive hits purely from markup, and result
+  // snippets showed literal "<span class=..." / "&gt;&gt;123" as visible
+  // text (via textContent, so at least not an XSS sink -- just unreadable).
+  // Strip tags + decode entities through a detached, never-appended element
+  // (browser's own parser does both correctly in one pass; textContent read
+  // off a disconnected node doesn't execute anything either way).
+  var xbScratch = null;
+  function htmlToText(html) {
+    if (!html) { return ""; }
+    if (!xbScratch) { xbScratch = document.createElement("div"); }
+    xbScratch.innerHTML = String(html);
+    return xbScratch.textContent || "";
+  }
   function xbText(p) {
-    return ((p.subject || "") + " " + (p.name || "") + " " + (p.message || "") + " " +
+    return ((p.subject || "") + " " + (p.name || "") + " " + htmlToText(p.message) + " " +
             (p.files || []).map(function (f) { return f.originalName || ""; }).join(" ")).toLowerCase();
   }
   function xbMatch(d, term) {                            // -> {p, s} of the first matching post, or null
@@ -22,13 +38,14 @@
       return (start ? "…" : "") + s.slice(start, start + 90);
     }
     if (xbText(d).indexOf(term) > -1) {
-      return { p: d.threadId, s: snip(d.message || d.subject, 0) };
+      return { p: d.threadId, s: snip(htmlToText(d.message) || d.subject, 0) };
     }
     var posts = d.posts || [];
     for (var i = 0; i < posts.length; i++) {
       if (xbText(posts[i]).indexOf(term) > -1) {
-        var idx = String(posts[i].message || "").toLowerCase().indexOf(term);
-        return { p: posts[i].postId, s: snip(posts[i].message, idx > -1 ? idx : 0) };
+        var plain = htmlToText(posts[i].message);
+        var idx = plain.toLowerCase().indexOf(term);
+        return { p: posts[i].postId, s: snip(plain, idx > -1 ? idx : 0) };
       }
     }
     return null;

@@ -4,11 +4,18 @@
     var b = getBoard(); if (!b || b.charAt(0) === ".") { return null; }
     return DRAFT_NS + b + "/" + (curThreadId() || "index");
   }
-  var draftT = null;
   function saveDraftFrom(el) {
     if (!setOn("drafts")) { return; }
-    clearTimeout(draftT);
-    draftT = setTimeout(function () {
+    // Timer lives on the element itself, not a single shared module var:
+    // #fieldMessage and the floating #qrbody quick-reply textarea both call
+    // this. A single shared timer meant scheduling a save for ONE cancelled
+    // the other's still-pending save -- e.g. typing in #fieldMessage, then
+    // quoting a post (which programmatically fires "input" on #qrbody)
+    // within that 400ms window silently dropped the just-typed
+    // #fieldMessage text from the draft. Independent per-element timers
+    // mean each textarea's save survives the other one's activity.
+    clearTimeout(el.__rchanDraftT);
+    el.__rchanDraftT = setTimeout(function () {
       var key = draftKey(); if (!key) { return; }
       try {
         var v = el.value || "";

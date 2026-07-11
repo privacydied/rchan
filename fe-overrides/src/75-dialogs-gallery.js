@@ -84,6 +84,13 @@
     }
     galSlideT = setInterval(function () {
       if (!galOpen) { toggleSlideshow(); return; }
+      // With exactly one item there's nothing to advance TO -- galIdx is
+      // always 0 and 0 >= length-1 is always true, so this used to call
+      // galShow(0) every tick regardless. galShow() unconditionally tears
+      // down and rebuilds the media element (no "already showing this
+      // index" guard), so a single-image thread's slideshow flickered and a
+      // single video restarted from 0:00 every 3.5s, forever.
+      if (galItems.length <= 1) { return; }
       galShow(galIdx >= galItems.length - 1 ? 0 : galIdx + 1);     // wrap around
     }, 3500);
     if (link) { link.textContent = "⏸ stop"; }

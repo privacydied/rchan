@@ -329,7 +329,18 @@
   var cdTimer = null;
   function startCooldown(secs) {
     var btns = [document.getElementById("qrbutton"), document.getElementById("formButton")]
-      .filter(Boolean).map(function (b) { return { el: b, txt: b.textContent }; });
+      .filter(Boolean).map(function (b) {
+        // Remember the TRUE original label once, on the element itself. A
+        // second overlapping call (e.g. two flood-wait alerts back to back)
+        // must not re-capture whatever "(Ns)" text THIS tick() below already
+        // wrote -- re-reading live textContent on every call meant the
+        // button got permanently stuck showing a stale countdown string
+        // once the second cooldown ended, until a full page reload.
+        if (b.getAttribute("data-rchan-origtxt") == null) {
+          b.setAttribute("data-rchan-origtxt", b.textContent);
+        }
+        return { el: b, txt: b.getAttribute("data-rchan-origtxt") };
+      });
     if (!btns.length) { return; }
     clearInterval(cdTimer);
     var left = secs;

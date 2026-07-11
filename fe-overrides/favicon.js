@@ -16,14 +16,15 @@
 var l=document.querySelector('link[rel~="icon"]');/* whole-word: matches rel="icon"/"shortcut icon", NOT apple-touch-icon */
 if(!l){l=document.createElement("link");l.rel="icon";document.head.appendChild(l);}
 var i=0;
-var reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+var reduceMql=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)");
+var reduced=!!(reduceMql&&reduceMql.matches);
 
 /* Unread badge: red disc + count composited onto the frames (canvas, cached
    per badge/frame — data: URLs, so no canvas taint). ux.js drives it via
    window.rchanSetFaviconBadge(n) alongside the "(N)" tab-title counter. */
 var badge=0,cache={};
 function badged(idx){
-  var key=badge+":"+idx;
+  var key=(badge>9?10:badge)+":"+idx;   /* clamp to the same bucket the "9+" display collapses to */
   if(cache[key]){return cache[key];}
   if(cache[key]===false){return null;}          /* still building */
   cache[key]=false;
@@ -52,10 +53,23 @@ window.rchanSetFaviconBadge=function(n){
   if(reduced){if(!n){l.href=F[0];}else{badged(0);}} /* animated mode picks it up next tick */
 };
 
-if(reduced){l.href=F[0];}
-else{setInterval(function(){
+function applyStatic(){ if(!badge){l.href=F[0];}else{var u=badged(0);if(u){l.href=u;}} }
+
+if(reduced){applyStatic();}
+/* Interval always runs (cheap no-op while reduced) so a live OS-level
+   reduced-motion toggle mid-session takes effect immediately in both
+   directions, instead of only being read once at script load. */
+setInterval(function(){
+  if(reduced){return;}
   var u=badge?badged(i):null;                    /* falls back to the plain frame while building */
   l.href=u||F[i];
   i=(i+1)%F.length;
-},90);}
+},90);
+
+if(reduceMql&&reduceMql.addEventListener){
+  reduceMql.addEventListener("change",function(e){
+    reduced=e.matches;
+    if(reduced){applyStatic();}
+  });
+}
 })();

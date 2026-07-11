@@ -68,7 +68,12 @@
       get: autoThemeOn,
       set: function (on) {
         try { on ? localStorage.setItem(THEME_AUTO_KEY, "1") : localStorage.removeItem(THEME_AUTO_KEY); } catch (e) {}
-        if (on) { applyAutoTheme(); }
+        // Match the theme-dropdown's "Auto (OS)" handler: clear the warm
+        // tint here too. Without this, a fresh visitor (warm-dark applied
+        // by default) who enables Auto theme via this checkbox keeps the
+        // warm brown tint while the UI shows Auto selected -- applied theme
+        // and displayed preference disagree until the next reload.
+        if (on) { setWarmDark(false); applyAutoTheme(); }
         syncAutoThemeOption();
       } },
     { g: "Advanced", t: "Loop videos", d: "Restart videos when they end (native players)",
@@ -167,12 +172,19 @@
       var a = JSON.parse(oldRaw), b = JSON.parse(newRaw);
       if (Array.isArray(a) && Array.isArray(b)) {
         if (k === "rchan_hist") {                      // newest-first, dedup by board/thread
-          var seen = {};
-          var all = b.concat(a).filter(function (e) {
+          // Keep-newest-by-ts on collision, not "whichever side of the merge
+          // happened to sort first" -- the old b.concat(a) + first-occurrence
+          // dedup always preferred the IMPORTED entry regardless of which
+          // one was actually more recent, so restoring an older backup from
+          // another device could silently overwrite newer local history.
+          var byKey = {};
+          a.concat(b).forEach(function (e) {
             var kk = e && (e.b + "/" + e.t);
-            if (!kk || seen[kk]) { return false; }
-            seen[kk] = 1; return true;
-          }).sort(function (x, y) { return (y.ts || 0) - (x.ts || 0); });
+            if (!kk) { return; }
+            if (!byKey[kk] || (e.ts || 0) > (byKey[kk].ts || 0)) { byKey[kk] = e; }
+          });
+          var all = Object.keys(byKey).map(function (kk) { return byKey[kk]; })
+            .sort(function (x, y) { return (y.ts || 0) - (x.ts || 0); });
           return JSON.stringify(all.slice(0, HIST_MAX));
         }
         if (k === "filterData") {                      // dedup by (type, pattern, regex)

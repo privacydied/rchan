@@ -51,6 +51,7 @@ tooltips.cacheExistingHTML = function(className) {
     }
 
     var quoteLink = temp.getElementsByClassName('linkSelf')[0];
+    if (!quoteLink) { continue; }   // malformed post shouldn't kill init() for the whole page
     tooltips.loadedContent[quoteLink.href] = temp.outerHTML;
   }
 
@@ -73,6 +74,7 @@ tooltips.addToKnownPostsForBackLinks = function(posting) {
 tooltips.addBackLink = function(quoteUrl, quote) {
 
   var matches = quoteUrl.match(/\/(\w+)\/res\/(\d+)(?:\.html)?\#(\d+)/);
+  if (!matches) { return; }   // quote href didn't match the expected shape
 
   var board = matches[1];
   var thread = matches[2];
@@ -240,6 +242,7 @@ tooltips.cacheData = function(threadData) {
 tooltips.loadQuote = function(tooltip, quoteUrl) {
 
   var matches = quoteUrl.match(/\/(\w+)\/res\/(\d+)(?:\.html)?\#(\d+)/);
+  if (!matches) { return; }   // quote href didn't match the expected shape
 
   var board = matches[1];
   var thread = +matches[2];
@@ -266,7 +269,18 @@ tooltips.loadQuote = function(tooltip, quoteUrl) {
       return;
     }
 
-    tooltips.cacheData(JSON.parse(data));
+    var parsed;
+    try {
+      parsed = JSON.parse(data);
+    } catch (e) {
+      // A 200 with a non-JSON body (proxy/error page, truncated response)
+      // would otherwise throw here uncaught, leaving the tooltip stuck on
+      // "Loading" forever with an unhandled exception in the console.
+      tooltip.innerHTML = '<span class="rchan-deadquote">post deleted or pruned</span>';
+      return;
+    }
+
+    tooltips.cacheData(parsed);
 
     tooltips.generateHTMLFromData(tooltips.knownData[board + '/' + post],
         tooltip, quoteUrl);

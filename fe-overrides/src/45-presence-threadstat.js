@@ -124,6 +124,7 @@
   // several tabs no longer inflates the "N browsing" count into several people.
   // On the apex the id is seeded from the board origin via the bridge (see
   // initSitePresence) so the same person isn't double-counted across hosts.
+  var sidFallback = null;   // memoized so a localStorage failure still yields ONE stable id per page load
   function presenceSid() {
     try {
       var s = localStorage.getItem("rchan_sid");
@@ -132,7 +133,15 @@
         localStorage.setItem("rchan_sid", s);
       }
       return s;
-    } catch (e) { return "sidfallback" + (Date.now() % 1e8); }
+    } catch (e) {
+      // Without this memo, every call (each ~45s ping) minted a brand-new
+      // id, defeating the whole "one stable id per browser" point of this
+      // function for exactly the browsers that need the fallback most
+      // (blocked storage / privacy extensions) -- multi-tab visitor-count
+      // inflation, just delayed by one ping instead of prevented.
+      if (!sidFallback) { sidFallback = "sidfallback" + (Date.now() % 1e8); }
+      return sidFallback;
+    }
   }
   function pingPresence() {
     var b = getBoard(), t = curThreadId();
@@ -542,7 +551,14 @@
     }
     size();
     mmapCollect();
-    if (!mmapPosts) { return; }                                    // under 30 posts: stays hidden until WS grows it
+    // NOTE: deliberately NOT bailing out here when under 30 posts (mmapCollect
+    // already hid the element via display:none in that case). Returning early
+    // used to skip binding the listeners below entirely -- if the thread later
+    // grew past 30 posts via a WS update, mmapCollect() would un-hide the
+    // minimap (display:"") but it would stay permanently non-interactive for
+    // the rest of the page's life, since nothing ever re-runs this function
+    // (the id-exists guard above makes initMinimap a no-op on later calls).
+    // mmapDraw() already no-ops safely when mmapPosts is still null.
     mmapDraw();
     var drag = false;
     mmapCv.addEventListener("pointerdown", function (e) {

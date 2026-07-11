@@ -165,8 +165,12 @@ catalog.initCatalog = function() {
   // rchan: our clean-URL router serves this page at /<board>/catalog (no
   // .html) — same "trailing .html stripped" issue already fixed in
   // tooltips.js's quote-href regexes. Make it optional so this doesn't throw
-  // on a null match and silently break the rest of initCatalog().
-  api.boardUri = window.location.toString().match(/\/(\w+)\/catalog(?:\.html)?/)[1];
+  // on a null match and silently break the rest of initCatalog(). The
+  // optional group only covers the known ".html"-vs-not shape; still guard
+  // against match() returning null outright for any other unexpected URL.
+  var boardMatch = window.location.toString().match(/\/(\w+)\/catalog(?:\.html)?/);
+  if (!boardMatch) { return; }
+  api.boardUri = boardMatch[1];
 
   document.getElementById('divTools').style.display = 'inline-block';
 
@@ -210,6 +214,7 @@ catalog.initCatalog = function() {
     var child = link.childNodes[0];
 
     var matches = link.href.match(/(\w+)\/res\/(\d+)/);
+    if (!matches) { continue; }   // unexpected href shape shouldn't abort the whole loop
 
     var board = matches[1];
     var thread = matches[2];

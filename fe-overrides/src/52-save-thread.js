@@ -86,7 +86,14 @@
     // Rewrite same-thread quote links to in-doc anchors; absolutise everything else.
     function fixMsg(html) {
       var s = String(html || "");
-      s = s.replace(/href="(\/[^"]*\/res\/\d+(?:\.html)?#(\d+))"/g, 'href="#p$2"');
+      // Only rewrite quotes INTO the thread actually being archived to an
+      // in-doc anchor -- a cross-thread quote (>>>/board/other-thread-id)
+      // matched the same href shape but has no matching post in this saved
+      // single-page document, so it must fall through to the absolutize
+      // pass below (a live URL) instead of becoming a dead #pN anchor.
+      s = s.replace(/href="(\/[^"]*\/res\/(\d+)(?:\.html)?#(\d+))"/g, function (m, whole, tid, pid) {
+        return (String(tid) === String(t)) ? ('href="#p' + pid + '"') : m;
+      });
       s = s.replace(/(href|src)="(\/[^"]*)"/g, function (m, a, path) {
         if (path.indexOf("//") === 0) { return m; }
         return a + '="' + origin + path + '"';

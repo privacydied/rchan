@@ -544,13 +544,19 @@
     for (var j = 0; j < posts.length; j++) {
       var p = posts[j], pid = String(p.postId);
       if (set[pid]) { continue; }                                // your own post
-      var quotes = (p.message || "").match(/>>(\d+)/g) || [];
-      for (var q = 0; q < quotes.length; q++) {
-        if (set[quotes[q].slice(2)]) {
-          if (youboxAdd(b, t, pid, p.message, Date.parse(p.creation) || Date.now(),
-                        b === getBoard() && String(t) === curThreadId() && !document.hidden)) { added++; }
-          break;
-        }
+      // p.message here is the server-RENDERED HTML from the watcher poll's
+      // JSON (jsonBuilder passes post.message straight through, already
+      // markup-escaped), so a quote reads as "&gt;&gt;123", not a literal
+      // ">>123" -- matching only the literal form meant this scan never
+      // matched anything and the persisted inbox silently never fired from
+      // this background-poll path. Match both so it's robust either way.
+      var quoteRe = /(?:&gt;&gt;|>>)(\d+)/g, qm, quoted = false;
+      while ((qm = quoteRe.exec(p.message || "")) !== null) {
+        if (set[qm[1]]) { quoted = true; break; }
+      }
+      if (quoted) {
+        if (youboxAdd(b, t, pid, p.message, Date.parse(p.creation) || Date.now(),
+                      b === getBoard() && String(t) === curThreadId() && !document.hidden)) { added++; }
       }
     }
     if (added) { updateYouboxBadge(); }

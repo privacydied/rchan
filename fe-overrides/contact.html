@@ -57,7 +57,12 @@
     document.getElementById('capReload').addEventListener('click', function (e) {
       e.preventDefault(); reload();
     });
-    document.getElementById('revealBtn').addEventListener('click', function (e) {
+    // Bound to the form's submit event (not the button's click) so pressing
+    // Enter while focused in #capAns triggers the same reveal flow — a plain
+    // click listener misses that path entirely since Enter fires `submit`
+    // on the form, not `click` on the button, and the form's own
+    // onsubmit="return false" only cancelled navigation with no fallback.
+    document.getElementById('capForm').addEventListener('submit', function (e) {
       e.preventDefault();
       var msg = document.getElementById('capMsg');
       var ans = document.getElementById('capAns').value.trim();

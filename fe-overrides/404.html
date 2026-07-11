@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>404 — rchan</title>
-<script>try{if(localStorage.selectedTheme==="dark"){document.documentElement.className="dark"}}catch(e){}</script>
+<script>try{if(localStorage.selectedTheme==="dark"){document.documentElement.className="dark"+(localStorage.rchan_warmdark==="1"?" warm":"")}}catch(e){}</script>
 <style>
   /* rchan design system, self-contained (no dependency on versioned assets) */
   html { background: #EEEEE4; }
   html.dark { background: #16171b; }
+  /* Warm dark (Cream Dark) is predark.js's actual first-visit default — match
+     it here too, or a fresh visitor lands on plain cool dark for one page. */
+  html.dark.warm { background: #1F1F1E; }
   body {
     font-family: arial, helvetica, sans-serif; font-size: .833rem;
     color: #393939; background: #EEEEE4;
@@ -17,6 +20,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .dark body { background: #16171b; color: #c9ccd1; }
+  .dark.warm body { background: #1F1F1E !important; color: #E8E6DF; }
   .box { text-align: center; padding: 24px; max-width: 420px; }
   h1 {
     font-family: Tahoma, sans-serif; font-size: 4.5rem; font-weight: 700;

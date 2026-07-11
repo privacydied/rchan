@@ -21,6 +21,7 @@
     return sz;
   }
   var catalogOrig = null, catMeta = null, catDetails = {};
+  var sortWanted = null;   // most-recently-requested sort mode; guards the async re-entry below
   function catCells() { var t = document.getElementById("divThreads"); return t ? Array.prototype.slice.call(t.getElementsByClassName("catalogCell")) : []; }
   function catNum(cell, cls) { var e = cell.getElementsByClassName(cls)[0]; return e ? (parseInt((e.textContent || "").replace(/\D/g, ""), 10) || 0) : 0; }
   function catThreadId(cell) { var a = cell.getElementsByClassName("linkThumb")[0]; var m = a && (a.getAttribute("href") || "").match(/\/res\/(\d+)/); return m ? parseInt(m[1], 10) : 0; }
@@ -53,13 +54,21 @@
     var t = document.getElementById("divThreads"); if (!t) { return; }
     var cells = catCells(); if (!cells.length) { return; }
     if (!catalogOrig) { catalogOrig = cells.slice(); }         // capture bump (server) order once
+    sortWanted = mode;
     var needsDetail = mode === "lastreply" || mode === "longreply" || mode === "ppm";
     if (needsDetail) {
       var b = getBoard();
       var missing = cells.map(catThreadId).filter(function (id) { return id && !catDetails[id]; });
       if (missing.length) {                                    // fetch once, then re-enter
         Promise.all(missing.map(function (id) { return loadCatDetail(b, id); }))
-          .then(function () { sortCatalog(mode); });
+          .then(function () {
+            // The user may have picked a DIFFERENT sort mode while this
+            // fetch was in flight (e.g. lastreply -> ppm before lastreply's
+            // detail fetch resolved) -- without this guard, the stale
+            // callback would still reorder the DOM to the OLD mode after
+            // the new one already rendered, clobbering it.
+            if (sortWanted === mode) { sortCatalog(mode); }
+          });
         return;
       }
     }
@@ -212,6 +221,18 @@
         var om = cell.querySelector(".rchan-cardmeta"); if (om) { om.parentNode.removeChild(om); }
         var ob = cell.querySelector(".rchan-nofile-band"); if (ob) { ob.parentNode.removeChild(ob); }
         cell.classList.remove("rchan-nofile");
+        // Undo brutalist's zero-padded .threadStats rewrite (below) so a
+        // live switch to academia doesn't leave stale "R 003 · I 002"
+        // markup sitting next to the new eyebrow readout -- academia never
+        // touches .threadStats itself, so whatever was left here stays
+        // visible verbatim until restored.
+        var oldStats = cell.getElementsByClassName("threadStats")[0];
+        if (oldStats && oldStats.getAttribute("data-fmt")) {
+          var orig = oldStats.getAttribute("data-orig");
+          if (orig != null) { oldStats.innerHTML = orig; }
+          oldStats.removeAttribute("data-fmt");
+          oldStats.removeAttribute("data-orig");
+        }
       }
       cell.setAttribute("data-card", reg);
       var tid = catThreadId(cell);
@@ -234,6 +255,7 @@
         cell.insertBefore(meta, cell.firstChild);
         if (stats && !stats.getAttribute("data-fmt")) {
           stats.setAttribute("data-fmt", "1");
+          stats.setAttribute("data-orig", stats.innerHTML);   // pristine markup, restored if the theme switches away
           var badge = stats.getElementsByClassName("rchan-newbadge")[0];
           stats.innerHTML = 'R <span class="labelReplies">' + pad3(reps) +
             '</span> · I <span class="labelImages">' + pad3(imgs) +
@@ -390,6 +412,13 @@
       return false;
     }
     ensureDeepData(cells.map(catThreadId), function () {
+      // The field may have been edited again while this fetch batch was in
+      // flight (e.g. "cats" -> "dogs" before "cats"'s fetch resolved) --
+      // without this guard, whichever term's callback resolves LAST wins
+      // and overwrites the current, more recent search's highlighting/note,
+      // same class of bug as showCatPreviewFor's catPrevFor check elsewhere
+      // in this file.
+      if (field.value.trim().toLowerCase() !== term) { return; }
       var shown = 0;
       cells.forEach(function (cell) {
         var hit = (deepCache[catThreadId(cell)] || "").indexOf(term) > -1;

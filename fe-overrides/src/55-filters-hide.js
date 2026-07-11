@@ -63,7 +63,14 @@
     var cells = document.querySelectorAll(".postCell, .opCell");
     var all = loadedFilters();
     var fileFilters = all.filter(function (f) { return f.type === 5; });
-    var hashFilters = all.filter(function (f) { return f.type === 6; });
+    // mediaHashOf() always lowercases the extracted hash (hashes are
+    // case-insensitive hex), but a user-entered plain-value filter pattern
+    // was stored verbatim -- pasting an uppercase hash silently never
+    // matched anything, with no error shown anywhere. Normalize non-regex
+    // patterns here (regex patterns are left as-authored: case-sensitivity
+    // there is the user's own explicit choice, not this bug).
+    var hashFilters = all.filter(function (f) { return f.type === 6; })
+      .map(function (f) { return f.regex ? f : { type: f.type, filter: String(f.filter || "").toLowerCase(), regex: f.regex }; });
     var i, cell, k;
     for (i = 0; i < cells.length; i++) {              // filename rules
       cell = cells[i];

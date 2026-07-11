@@ -409,7 +409,21 @@
     }
   }
   // Replies to your (You) posts: a floating indicator that cycles through them.
-  var youHits = [], youIdx = -1, youBtn = null, youDismissedSig = null;
+  // youDismissedSig used to be an in-memory-only variable, so dismissing the
+  // pill and reloading the page (nothing else changed) brought it right back
+  // — the reload re-ran scanRepliesToYou() with youDismissedSig reset to
+  // null, which no longer matched the (unchanged) hit signature, so the
+  // "dismissed" check failed and the pill reappeared. sessionStorage, keyed
+  // per thread, survives the reload; a genuinely NEW reply still changes the
+  // signature and un-dismisses it, same as before.
+  function youDismissKey() {
+    var b = getBoard(), t = curThreadId();
+    return b && t ? "rchan_you_dismissed_" + b + "/" + t : null;
+  }
+  var youHits = [], youIdx = -1, youBtn = null;
+  var youDismissedSig = (function () {
+    try { var k = youDismissKey(); return k ? sessionStorage.getItem(k) : null; } catch (e) { return null; }
+  })();
   function scanRepliesToYou() {
     var mine = load(YOU_KEY); if (!mine.length) { if (youBtn) { youBtn.style.display = "none"; } return; }
     var set = {}; for (var k = 0; k < mine.length; k++) { set[mine[k]] = 1; }
@@ -459,6 +473,7 @@
         ev.stopPropagation(); ev.preventDefault();
         youDismissedSig = youBtn.getAttribute("data-sig");
         youBtn.style.display = "none";
+        try { var k = youDismissKey(); if (k) { sessionStorage.setItem(k, youDismissedSig); } } catch (e) {}
       }
       x.addEventListener("click", dismiss);
       x.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { dismiss(ev); } });

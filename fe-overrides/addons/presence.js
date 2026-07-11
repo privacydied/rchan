@@ -42,10 +42,29 @@ var countCache = new Map();     // key -> { count, typingTotal, at }
 
 function freshEntry(e) { return e && (Date.now() - e.at) < COUNT_TTL_MS; }
 
+var CACHE_SOFT_CAP = 1000;
+var CACHE_HARD_CAP = 5000;   // absolute ceiling regardless of freshness
+
 function pruneCache() {
-  if (countCache.size <= 1000) { return; }
+  if (countCache.size <= CACHE_SOFT_CAP) { return; }
   var cut = Date.now() - 5 * 60 * 1000;
   countCache.forEach(function(v, k) { if (v.at < cut) { countCache['delete'](k); } });
+
+  // Age-based pruning above only removes entries idle >5min. A flood of
+  // requests using many distinct fabricated board/thread pairs, each
+  // re-pinged inside every 5-min window, keeps every one of those cache
+  // keys "fresh" forever -- the age check alone never reclaims them, so the
+  // Map grows without bound for as long as the traffic continues. Back it
+  // with a hard size cap: evict the globally oldest entries (by `at`,
+  // irrespective of freshness) until back under the cap.
+  if (countCache.size <= CACHE_HARD_CAP) { return; }
+  var entries = Array.from(countCache.entries()).sort(function(a, b) {
+    return a[1].at - b[1].at;
+  });
+  var toRemove = countCache.size - CACHE_SOFT_CAP;
+  for (var i = 0; i < toRemove && i < entries.length; i++) {
+    countCache['delete'](entries[i][0]);
+  }
 }
 
 function collection() {

@@ -106,13 +106,14 @@ function scanTick() {
   // crashed holder's lock self-expires after this window.
   var lease = new Date(Date.now() + Math.floor(SCAN_MS * 0.8));
 
-  // Atomically claim the lock IF it's free/expired, advancing the shared cursor
-  // to "now" in the same write and returning the PREVIOUS doc so we learn the
-  // window to scan. A worker that doesn't win (lock held fresh) gets value:null
-  // and does nothing this tick.
+  // Atomically claim the lock IF it's free/expired, returning the PREVIOUS
+  // doc so we learn the window to scan. A worker that doesn't win (lock held
+  // fresh) gets value:null and does nothing this tick. NOTE: lastScan is
+  // deliberately NOT advanced here — see doScan()'s comment on why jumping
+  // the cursor to wall-clock "now" up front can permanently drop posts.
   c.findOneAndUpdate(
     { _id: LOCK_ID, until: { $lt: now } },
-    { $set: { until: lease, lastScan: now } },
+    { $set: { until: lease } },
     { returnDocument: 'before', includeResultMetadata: true }
   ).then(function (res) {
     var prev = res && res.value;
@@ -123,20 +124,33 @@ function scanTick() {
       // to now, so the very first tick establishes a baseline and scans nothing.
       return c.insertOne({ _id: LOCK_ID, until: lease, lastScan: now }).catch(function () {});
     }
-    return doScan(prev.lastScan || now);
+    var since = prev.lastScan || now;
+    return doScan(since, now).then(function (newCursor) {
+      return c.updateOne({ _id: LOCK_ID }, { $set: { lastScan: newCursor } });
+    });
   }).catch(function (e) { console.log('[webpush] lock/scan error: ' + e); });
 }
 
-function doScan(since) {
+function doScan(since, now) {
   return postsCol().find({ creation: { $gt: since } },
-      { projection: { boardUri: 1, threadId: 1, postId: 1, message: 1 } })
+      { projection: { boardUri: 1, threadId: 1, postId: 1, message: 1, creation: 1 } })
     .sort({ creation: 1 }).limit(SCAN_LIMIT).toArray().then(function (posts) {
 
-    if (!posts || !posts.length) { return; }
+    // Advance the cursor to the newest post actually processed this tick,
+    // NOT to wall-clock "now": if a traffic spike produces more than
+    // SCAN_LIMIT posts in one window, jumping straight to "now" would put
+    // every post past the cap behind the new cursor forever — no future
+    // tick's `creation > since` would ever see them again, silently and
+    // permanently dropping their notifications. Only fall back to "now"
+    // when the batch was smaller than the cap, i.e. we're genuinely caught
+    // up (a batch smaller than SCAN_LIMIT means no post is waiting behind
+    // the cursor right now).
+    if (!posts || !posts.length) { return now; }
+    var newCursor = (posts.length === SCAN_LIMIT) ? posts[posts.length - 1].creation : now;
 
     // Exclude the lock doc; real subscriptions have sha256-hex ids.
     return subsCol().find({ _id: { $ne: LOCK_ID } }).toArray().then(function (subs) {
-      if (!subs || !subs.length) { return; }
+      if (!subs || !subs.length) { return newCursor; }
 
       var jobs = {};   // subId -> { sub, hits:[{board,threadId,postId,you}] }
       posts.forEach(function (p) {
@@ -152,10 +166,11 @@ function doScan(since) {
         });
       });
 
-      return Promise.all(Object.keys(jobs).map(function (id) { return sendFor(jobs[id]); }));
+      return Promise.all(Object.keys(jobs).map(function (id) { return sendFor(jobs[id]); }))
+        .then(function () { return newCursor; });
     });
 
-  }).catch(function (e) { console.log('[webpush] scan error: ' + e); });
+  }).catch(function (e) { console.log('[webpush] scan error: ' + e); return since; });
 }
 
 function sendFor(job) {

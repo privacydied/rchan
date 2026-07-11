@@ -61,9 +61,12 @@ function pingTick() {
   var c = seoCol();
   var now = new Date();
   var lease = new Date(Date.now() + Math.floor(PING_MS * 0.8));
+  // lastPing is deliberately NOT advanced in this same write — see doPing()'s
+  // comment on why jumping the cursor to wall-clock "now" up front can
+  // permanently skip threads bumped during a spike that exceeds PING_MAX.
   c.findOneAndUpdate(
     { _id : LOCK_ID, until : { $lt : now } },
-    { $set : { until : lease, lastPing : now } },
+    { $set : { until : lease } },
     { returnDocument : 'before', includeResultMetadata : true }
   ).then(function (res) {
     var prev = res && res.value;
@@ -73,19 +76,29 @@ function pingTick() {
       return c.insertOne({ _id : LOCK_ID, until : lease, lastPing : now })
         .catch(function () {});
     }
-    return doPing(prev.lastPing || now);
+    var since = prev.lastPing || now;
+    return doPing(since, now).then(function (newCursor) {
+      return c.updateOne({ _id : LOCK_ID }, { $set : { lastPing : newCursor } });
+    });
   }).catch(function (e) { console.log('[sitemap] ping lock error: ' + e); });
 }
 
-function doPing(since) {
+function doPing(since, now) {
   return db.conn().collection('threads')
     .find({ lastBump : { $gt : since }, trash : { $ne : true } },
-      { projection : { boardUri : 1, threadId : 1 } })
-    .limit(PING_MAX).toArray().then(function (ts) {
+      { projection : { boardUri : 1, threadId : 1, lastBump : 1 } })
+    .sort({ lastBump : 1 }).limit(PING_MAX).toArray().then(function (ts) {
+
+    // Same "don't jump to wall-clock now" reasoning as webpush.js's doScan:
+    // only fall back to "now" when the batch wasn't capped by PING_MAX (i.e.
+    // genuinely caught up) -- otherwise a thread whose bump missed the cap
+    // in a busy tick would never be IndexNow-pinged again (real sitemap.xml
+    // is unaffected either way, since buildXml() sorts+caps independently).
+    var newCursor = (ts && ts.length === PING_MAX) ? ts[ts.length - 1].lastBump : now;
 
     var urls = (ts || []).filter(function (t) { return t.boardUri && t.threadId; })
       .map(function (t) { return SITE + '/' + t.boardUri + '/res/' + t.threadId; });
-    if (!urls.length) { return; }
+    if (!urls.length) { return newCursor; }
 
     var body = JSON.stringify({
       host : IN_HOST,
@@ -104,17 +117,17 @@ function doPing(since) {
         res.resume();   // drain
         console.log('[sitemap] IndexNow ping: ' + res.statusCode + ' for '
           + urls.length + ' url' + (urls.length === 1 ? '' : 's'));
-        resolve();
+        resolve(newCursor);
       });
       req.on('error', function (e) {
         console.log('[sitemap] IndexNow ping failed: ' + e.message);
-        resolve();
+        resolve(newCursor);
       });
       req.on('timeout', function () { req.destroy(new Error('timeout')); });
       req.end(body);
     });
 
-  }).catch(function (e) { console.log('[sitemap] ping error: ' + e); });
+  }).catch(function (e) { console.log('[sitemap] ping error: ' + e); return since; });
 }
 
 function esc(s) {

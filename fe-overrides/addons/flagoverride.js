@@ -47,11 +47,19 @@ function countryName(code) {
 // The whitelist comes from the actual flag files shipped with the front-end,
 // so a validated code can never point at a missing image.
 function loadValidCodes() {
-  var dir = path.join(__dirname, '../../fe/static/flags');
-  fs.readdirSync(dir).forEach(function (f) {
-    var m = f.match(/^([a-z]{2})\.png$/);
-    if (m) { validCodes[m[1].toUpperCase()] = true; }
-  });
+  try {
+    var dir = path.join(__dirname, '../../fe/static/flags');
+    fs.readdirSync(dir).forEach(function (f) {
+      var m = f.match(/^([a-z]{2})\.png$/);
+      if (m) { validCodes[m[1].toUpperCase()] = true; }
+    });
+  } catch (e) {
+    // Same graceful-degrade contract as geoflags.js: a missing/renamed flags
+    // dir must not crash addon init (which would silently wrap NOTHING and
+    // vanish the entire feature) -- it just means validCodes stays empty, so
+    // applyOverride()'s validCodes[code] check always falls back to auto.
+    console.log('[flagoverride] could not load flag whitelist: ' + e.message);
+  }
 }
 
 function loadMinRole() {

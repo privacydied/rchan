@@ -382,7 +382,7 @@ html.rchan-warmdark #rchan-galbtn svg, html.rchan-warmdark #rchan-expandbtn svg,
 /* theme <select>: match the box height, set slightly apart from the icons */
 body.theme_cream #themeSelector, html.rchan-warmdark #themeSelector {
   height: 28px; padding: 0 8px; margin-left: 12px; box-sizing: border-box;
-  align-self: center; border-radius: 4px; font-size: 12px; line-height: 1;
+  align-self: center; font-size: 12px; line-height: 1;
 }
 /* light cream: give the select the theme's surface + border (dark gets its
    colours from the warmdark `select` rule); style the option list on both. */
@@ -617,7 +617,7 @@ body.theme_dark, .theme_dark { background: #16171b !important; color: #c9ccd1 !i
 #rchan-catprev {
   position: fixed; z-index: 10003; width: 360px; pointer-events: auto;
   display: none; text-align: left; font-size: .833rem; box-sizing: border-box;
-  background: #EEEEE4; border: 1px solid #CFCFC4; border-radius: 6px;
+  background: #EEEEE4; border: 1px solid #CFCFC4;
   box-shadow: 0 8px 24px rgba(0,0,0,.45);
   padding: 4px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain;
   opacity: 0; transition: opacity .15s ease;
@@ -708,7 +708,7 @@ body .catalogCell .linkThumb img {
 body .catalogCell .threadStats {
   cursor: help;
   font-size: .6875rem;
-  line-height: 8px;
+  line-height: 0;
   margin: 2px 0 1px;
 }
 body .catalogCell .labelSubject, body .catalogCell .divMessage {
@@ -813,7 +813,7 @@ html.rchan-warmdark .rchan-pagedivider::before, html.rchan-warmdark .rchan-paged
   display: flex !important; flex-direction: column; width: auto !important;
   height: 100%; max-height: none !important; min-height: 0;
   margin: 0 !important; padding: 0 !important; overflow: hidden;
-  border-radius: 6px; position: relative; text-align: left; cursor: pointer;
+  position: relative; text-align: left; cursor: pointer;
 }
 /* thumb band: fixed height, cover-cropped for uniform cards */
 :is(body.theme_cream, html.rchan-warmdark body) .catalogCell > a.linkThumb {
@@ -843,7 +843,7 @@ html.rchan-warmdark .catalogCell > .divMessage { scrollbar-color: #454542 transp
 html.rchan-warmdark .catalogCell > .divMessage::-webkit-scrollbar-thumb { background: #454542; border-radius: 3px; }
 /* stat line pinned at the bottom (teaser's flex:1 pushes it down) */
 :is(body.theme_cream, html.rchan-warmdark body) .catalogCell > p.threadStats {
-  order: 3; flex: none; margin: 0 !important; padding: 5px 10px; line-height: 1.1;
+  order: 3; flex: none; margin: 0 !important; padding: 5px 10px; line-height: 0;
   border-top: 1px solid rgba(128,128,120,.28); font-size: .6875rem;
 }
 
@@ -2392,7 +2392,6 @@ html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-
 :is(body.theme_cream, html.rchan-warmdark) .catalogCell {
   background: var(--surface) !important;
   border: 1px solid var(--line) !important;
-  border-radius: 8px !important;
   box-shadow: var(--shadow-rest);
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
@@ -2408,7 +2407,7 @@ html.rchan-warmdark .boardHeader p#labelDescription, html.rchan-warmdark .rchan-
    top corners, fixed-height band, cover-cropped. The image edge IS the divider —
    no hairline between thumb and body. */
 :is(body.theme_cream, html.rchan-warmdark) .catalogCell > a.linkThumb {
-  height: 160px; border-radius: 8px 8px 0 0; overflow: hidden;
+  height: 160px; overflow: hidden;
 }
 :is(body.theme_cream, html.rchan-warmdark).rchan-cat-s .catalogCell > a.linkThumb,
 html.rchan-warmdark.rchan-cat-s .catalogCell > a.linkThumb { height: 120px; }
@@ -2542,7 +2541,7 @@ html.rchan-warmdark #rchan-nav {
   left: auto !important; right: 16px !important; bottom: 16px !important;
   width: auto !important; gap: 4px !important; padding: 4px !important;
   background: var(--surface) !important; border: 1px solid rgba(255,255,255,.06);
-  border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
 }
 html.rchan-warmdark #rchan-nav button {
   width: 32px !important; height: 32px !important;

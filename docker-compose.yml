@@ -8,6 +8,10 @@ services:
     container_name: rchan-mongo
     restart: unless-stopped
     command: ["--wiredTigerCacheSizeGB", "1"]
+    # Ceiling only — a runaway backstop, not a working set. Normal use sits far
+    # below this (1 GB WiredTiger cache + connection/index overhead). Sized for
+    # a 6–8 GB NAS; raise before lowering if you ever see OOM-kills in dmesg.
+    mem_limit: 2g
     volumes:
       - ./mongo-data:/data/db
     networks:
@@ -20,6 +24,9 @@ services:
     image: rchan-lynxchan:local
     container_name: rchan-lynxchan
     restart: unless-stopped
+    # Ceiling for the Node engine — well above steady state, but leaves room for
+    # thumbnail generation spikes (sharp/ffmpeg) on multi-file uploads.
+    mem_limit: 1500m
     depends_on:
       - mongo
     env_file: .env
@@ -89,6 +96,8 @@ services:
     image: nginx:alpine
     container_name: rchan-landing
     restart: unless-stopped
+    # nginx is tiny; this is pure headroom for sub_filter response buffering.
+    mem_limit: 512m
     depends_on:
       - lynxchan
     volumes:
@@ -98,6 +107,9 @@ services:
       - ./fe-overrides/favicon.js:/etc/nginx/rchan/favicon.js:ro
       - ./fe-overrides/predark.js:/etc/nginx/rchan/predark.js:ro
       - ./fe-overrides/ux.css:/etc/nginx/rchan/ux.css:ro
+      # per-theme CSS layers (split out of ux.css; loaded only on their theme)
+      - ./fe-overrides/theme-academia.css:/etc/nginx/rchan/theme-academia.css:ro
+      - ./fe-overrides/theme-brutalist.css:/etc/nginx/rchan/theme-brutalist.css:ro
       - ./fe-overrides/Roboto.woff2:/etc/nginx/rchan/roboto.woff2:ro
       - ./fe-overrides/RobotoMono.woff2:/etc/nginx/rchan/robotomono.woff2:ro
       # Helvetica Neue LT Std (licensed, converted OTF->woff2) — the Brutalist theme
@@ -122,6 +134,8 @@ services:
       - ./fe-overrides/sw.js:/etc/nginx/rchan/sw.js:ro
       # branded 404 page (router-served for every dead URL) + custom spoiler art
       - ./fe-overrides/404.html:/etc/nginx/rchan/404.html:ro
+      # offline fallback page (precached + served by the service worker)
+      - ./fe-overrides/offline.html:/etc/nginx/rchan/offline.html:ro
       - ./fe-overrides/spoiler.png:/etc/nginx/rchan/spoiler.png:ro
       - ./branding/icon-192.png:/etc/nginx/rchan/icon-192.png:ro
       - ./branding/icon-512.png:/etc/nginx/rchan/icon-512.png:ro
@@ -142,6 +156,9 @@ services:
     image: mongo:4.4
     container_name: rchan-backup
     restart: unless-stopped
+    # mongodump streams; it doesn't buffer the whole DB. This ceiling only
+    # bounds the nightly spike so it can't starve mongo/lynxchan of host RAM.
+    mem_limit: 512m
     depends_on:
       - mongo
     environment:

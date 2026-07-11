@@ -448,10 +448,39 @@
     try { sessionStorage.setItem(DEEP_PENDING, term); } catch (e3) {}
     location.href = "/" + getBoard() + "/catalog";
   }
-  // prefetch a thread page when hovering its catalog cell (snappier open)
+  /* ---------- Speculation Rules: full prerender on hover intent ----------
+     link-prefetch (below) only warms the HTTP cache — the click still pays
+     parse + render. Where the Speculation Rules API exists (Chromium), hand
+     the browser a document rule for the catalog's thread links instead:
+     "moderate" eagerness prerenders on ~200ms hover / pointerdown, capped at
+     2 concurrent prerenders (oldest evicted), so opening a thread paints
+     instantly. Gated on Data Saver exactly like the prefetch path. The
+     prerendered page loads with visibilityState "hidden", so our pollers
+     (liveness, presence, watcher) stay quiet until it's actually shown. */
+  function specRulesOn() {
+    return !!(window.HTMLScriptElement && HTMLScriptElement.supports &&
+              HTMLScriptElement.supports("speculationrules"));
+  }
+  function initSpeculation() {
+    if (!isCatalog() || dataSaver() || !specRulesOn()) { return; }
+    if (document.getElementById("rchan-specrules")) { return; }
+    var s = document.createElement("script");
+    s.type = "speculationrules"; s.id = "rchan-specrules";
+    s.textContent = JSON.stringify({
+      prerender: [{ where: { href_matches: "/*/res/*" }, eagerness: "moderate" }]
+    });
+    document.head.appendChild(s);
+  }
+  function dropSpeculation() {                            // Data Saver flipped on mid-session
+    var s = document.getElementById("rchan-specrules");
+    if (s && s.parentNode) { s.parentNode.removeChild(s); }
+  }
+  // prefetch a thread page when hovering its catalog cell (snappier open) —
+  // fallback for browsers without Speculation Rules (Firefox/Safari)
   var prefetched = {};
   function onCatHover(e) {
     if (dataSaver()) { return; }                          // Data Saver: don't spend bytes on speculation
+    if (document.getElementById("rchan-specrules")) { return; }   // prerender already covers it
     var a = e.target && e.target.closest ? e.target.closest("a.linkThumb") : null;
     if (!a) { return; }
     var href = a.getAttribute("href");

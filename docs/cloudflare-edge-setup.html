@@ -1,0 +1,597 @@
+<title>Cloudflare edge setup · rchan</title>
+<style>
+  :root {
+    --ground: #FBF7F1;
+    --surface: #FFFFFF;
+    --surface-2: #F4EEE4;
+    --ink: #241E17;
+    --ink-soft: #6A6055;
+    --ink-faint: #9A8F80;
+    --hair: #E7DECF;
+    --hair-strong: #D8CCB8;
+    --accent: #B4650F;
+    --accent-bg: #E9843A;
+    --ok: #3F8A5E;
+    --ok-bg: #E4F0E8;
+    --warn: #9C7414;
+    --warn-bg: #F5EAD0;
+    --care: #B24A34;
+    --care-bg: #F6E2DA;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 50rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #151210;
+      --surface: #1E1A16;
+      --surface-2: #262019;
+      --ink: #ECE5DA;
+      --ink-soft: #AA9E8D;
+      --ink-faint: #7C7160;
+      --hair: #332C24;
+      --hair-strong: #423A2F;
+      --accent: #F0A155;
+      --accent-bg: #E9843A;
+      --ok: #6DBF8B;
+      --ok-bg: #1B2C22;
+      --warn: #E3B04A;
+      --warn-bg: #2E2716;
+      --care: #E48568;
+      --care-bg: #2F1E18;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #FBF7F1; --surface: #FFFFFF; --surface-2: #F4EEE4;
+    --ink: #241E17; --ink-soft: #6A6055; --ink-faint: #9A8F80;
+    --hair: #E7DECF; --hair-strong: #D8CCB8;
+    --accent: #B4650F; --accent-bg: #E9843A;
+    --ok: #3F8A5E; --ok-bg: #E4F0E8; --warn: #9C7414; --warn-bg: #F5EAD0;
+    --care: #B24A34; --care-bg: #F6E2DA;
+  }
+  :root[data-theme="dark"] {
+    --ground: #151210; --surface: #1E1A16; --surface-2: #262019;
+    --ink: #ECE5DA; --ink-soft: #AA9E8D; --ink-faint: #7C7160;
+    --hair: #332C24; --hair-strong: #423A2F;
+    --accent: #F0A155; --accent-bg: #E9843A;
+    --ok: #6DBF8B; --ok-bg: #1B2C22; --warn: #E3B04A; --warn-bg: #2E2716;
+    --care: #E48568; --care-bg: #2F1E18;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+  /* ---------- masthead ---------- */
+  header.mast { padding: 3.25rem 0 1.75rem; border-bottom: 1px solid var(--hair); }
+  .eyebrow {
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 .85rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .eyebrow::before {
+    content: ""; width: 1.6rem; height: 2px; background: var(--accent-bg); border-radius: 2px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 4.6vw, 2.7rem); line-height: 1.08; margin: 0 0 .7rem;
+    letter-spacing: -.02em; text-wrap: balance; font-weight: 680;
+  }
+  .lede { font-size: 1.06rem; color: var(--ink-soft); margin: 0; max-width: 42rem; text-wrap: pretty; }
+  .context {
+    margin-top: 1.5rem; padding: .9rem 1.05rem; background: var(--surface-2);
+    border: 1px solid var(--hair); border-radius: 10px; font-size: .9rem; color: var(--ink-soft);
+  }
+  .context b { color: var(--ink); font-weight: 640; }
+  .context code { font-family: var(--mono); font-size: .82em; color: var(--accent); }
+
+  /* ---------- at-a-glance ---------- */
+  section.glance { margin: 2.25rem 0 .5rem; }
+  .glance h2, .appendix h2 {
+    font-family: var(--mono); font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 1rem; font-weight: 600;
+  }
+  .steps { display: grid; gap: .5rem; }
+  .steprow {
+    display: grid; grid-template-columns: 1.9rem 1fr auto; align-items: center; gap: .85rem;
+    padding: .7rem .9rem; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 10px; text-decoration: none; color: inherit;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .steprow:hover { border-color: var(--hair-strong); transform: translateX(2px); }
+  .steprow:focus-visible { outline: 2px solid var(--accent-bg); outline-offset: 2px; }
+  .steprow .n { font-family: var(--mono); font-size: .95rem; color: var(--accent); font-weight: 600; }
+  .steprow .t { font-weight: 560; font-size: .96rem; }
+  .steprow .t small { display: block; font-weight: 400; color: var(--ink-faint); font-size: .8rem; margin-top: .1rem; }
+
+  /* ---------- task cards ---------- */
+  .task {
+    margin: 1.15rem 0; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 14px; overflow: hidden; scroll-margin-top: 1rem;
+  }
+  .task-head {
+    display: grid; grid-template-columns: auto 1fr; gap: 1rem 1.1rem;
+    align-items: start; padding: 1.35rem 1.4rem 1.1rem;
+  }
+  .task-num {
+    font-family: var(--mono); font-size: 1.15rem; font-weight: 680; color: var(--accent);
+    background: var(--surface-2); border: 1px solid var(--hair); border-radius: 9px;
+    width: 2.6rem; height: 2.6rem; display: grid; place-items: center; line-height: 1;
+  }
+  .task-title { margin: 0; font-size: 1.24rem; letter-spacing: -.01em; font-weight: 640; text-wrap: balance; }
+  .badges { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+  .badge {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; text-transform: uppercase;
+    padding: .2rem .5rem; border-radius: 6px; border: 1px solid transparent; font-weight: 600;
+    display: inline-flex; align-items: center; gap: .32rem; white-space: nowrap;
+  }
+  .badge::before { content: ""; width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; opacity: .85; }
+  .b-high { color: var(--accent); background: var(--warn-bg); }
+  .b-med  { color: var(--ink-soft); background: var(--surface-2); }
+  .b-none { color: var(--ok); background: var(--ok-bg); }
+  .b-low  { color: var(--ok); background: var(--ok-bg); }
+  .b-care { color: var(--care); background: var(--care-bg); }
+  .b-tog  { color: var(--ink-soft); background: var(--surface-2); }
+  .b-tog::before { border-radius: 1px; }
+  .b-rule { color: var(--ink-soft); background: var(--surface-2); }
+  .b-rule::before { border-radius: 1px; }
+  .b-off { color: var(--ink-faint); background: var(--surface-2); border: 1px dashed var(--hair-strong); }
+  .b-off::before { display: none; }
+
+  .task-body { padding: 0 1.4rem 1.4rem; }
+  .task-body > .field { border-top: 1px solid var(--hair); padding-top: 1rem; margin-top: 1rem; }
+  .task-body > .field:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+  .label {
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 .45rem; font-weight: 600;
+  }
+  .field p { margin: 0; color: var(--ink-soft); }
+  .field p + p { margin-top: .55rem; }
+  .field strong { color: var(--ink); font-weight: 620; }
+  .field em { color: var(--accent); font-style: normal; font-family: var(--mono); font-size: .88em; }
+
+  .path {
+    font-family: var(--mono); font-size: .84rem; color: var(--ink); background: var(--surface-2);
+    border: 1px solid var(--hair); border-radius: 8px; padding: .55rem .75rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .1rem;
+  }
+  .path span { opacity: .45; padding: 0 .15rem; }
+
+  /* code block */
+  .code {
+    position: relative; background: var(--surface-2); border: 1px solid var(--hair);
+    border-radius: 9px; margin: 0;
+  }
+  .code pre {
+    margin: 0; padding: .8rem 2.6rem .8rem .85rem; overflow-x: auto;
+    font-family: var(--mono); font-size: .8rem; line-height: 1.65; color: var(--ink);
+  }
+  .code pre .cm { color: var(--ink-faint); }
+  .code pre .ac { color: var(--accent); }
+  .code pre .ok { color: var(--ok); }
+  .copy {
+    position: absolute; top: .5rem; right: .5rem; border: 1px solid var(--hair-strong);
+    background: var(--surface); color: var(--ink-soft); border-radius: 6px; cursor: pointer;
+    font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase;
+    padding: .28rem .5rem; line-height: 1; transition: color .12s, border-color .12s;
+  }
+  .copy:hover { color: var(--accent); border-color: var(--accent-bg); }
+  .copy:focus-visible { outline: 2px solid var(--accent-bg); outline-offset: 1px; }
+  .copy.done { color: var(--ok); border-color: var(--ok); }
+
+  .settings { display: grid; gap: .5rem; }
+  .setrow {
+    display: grid; grid-template-columns: 8.5rem 1fr; gap: .3rem .9rem; align-items: baseline;
+    padding: .5rem .1rem; border-bottom: 1px dotted var(--hair); font-size: .9rem;
+  }
+  .setrow:last-child { border-bottom: 0; }
+  .setrow .k { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; }
+  .setrow .v { color: var(--ink); }
+  .setrow .v b { color: var(--accent); font-weight: 600; }
+
+  .note {
+    font-size: .86rem; color: var(--ink-soft); background: var(--care-bg);
+    border-left: 3px solid var(--care); border-radius: 0 8px 8px 0; padding: .65rem .85rem; margin: 0;
+  }
+  .note.ok { background: var(--ok-bg); border-left-color: var(--ok); }
+  .note strong { color: var(--ink); }
+  ol.checks { margin: 0; padding-left: 1.25rem; color: var(--ink-soft); font-size: .9rem; }
+  ol.checks li { margin: .35rem 0; }
+  ol.checks code, .field code, .note code, .context code { font-family: var(--mono); font-size: .82em; color: var(--accent); word-break: break-word; }
+
+  /* ---------- appendix ---------- */
+  .appendix { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--hair); }
+  .legend { display: grid; gap: .45rem; margin-bottom: 2rem; }
+  .legrow { display: grid; grid-template-columns: 7rem 1fr; gap: .9rem; align-items: baseline; font-size: .9rem; }
+  .legrow .st {
+    font-family: var(--mono); font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    padding: .2rem .45rem; border-radius: 5px; text-align: center; align-self: start;
+  }
+  .st.hit { color: var(--ok); background: var(--ok-bg); }
+  .st.miss { color: var(--warn); background: var(--warn-bg); }
+  .st.dyn { color: var(--care); background: var(--care-bg); }
+  .st.byp { color: var(--ink-soft); background: var(--surface-2); }
+  .legrow .ld { color: var(--ink-soft); }
+  .legrow .ld b { color: var(--ink); font-weight: 600; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--hair); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .86rem; min-width: 34rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); font-weight: 600; background: var(--surface-2); }
+  tr:last-child td { border-bottom: 0; }
+  td code { font-family: var(--mono); font-size: .78rem; color: var(--accent); }
+  td .cc { color: var(--ink); font-family: var(--mono); font-size: .76rem; }
+
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--hair); font-size: .82rem; color: var(--ink-faint); }
+  footer code { font-family: var(--mono); color: var(--accent); }
+
+  a.jump { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a.jump:hover { border-bottom-color: var(--accent-bg); }
+
+  @media (max-width: 34rem) {
+    .task-head { grid-template-columns: 1fr; }
+    .setrow { grid-template-columns: 1fr; gap: .1rem; }
+    .legrow { grid-template-columns: 1fr; gap: .15rem; }
+    .steprow { grid-template-columns: 1.5rem 1fr; }
+    .steprow .im { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Runbook · Cloudflare + rchan</p>
+    <h1>Six edge changes to finish the perf pass</h1>
+    <p class="lede">The code side is deployed — short-TTL headers, prerender hints, background-poll throttling and the offline page are live. These Cloudflare dashboard changes are what let the edge actually <em>act</em> on them. Work top to bottom: the toggles are zero-risk, the cache rules get more consequential as you go.</p>
+    <div class="context">
+      Run every <b>Verify</b> command from your laptop (not the NAS — it only reaches the origin on localhost). The signal you're always looking for is the <code>cf-cache-status</code> response header; its values are decoded in the <a class="jump" href="#legend">legend at the bottom</a>.
+    </div>
+    <div class="context" style="background:var(--ok-bg);border-color:var(--ok);margin-top:.7rem">
+      <b>Current status</b> — rules <b>01–05 are live</b>. Rule 06 (anonymous HTML caching) is <b>deliberately not enabled</b>: the staleness + staff-bypass risk isn't worth it here. It's kept documented below in case that calculus ever changes.
+    </div>
+  </header>
+
+  <section class="glance">
+    <h2>Order of operations</h2>
+    <div class="steps">
+      <a class="steprow" href="#t1"><span class="n">01</span><span class="t">Confirm Brotli is compressing statics<small>Verify-only · Speed → Optimization</small></span><span class="badge b-med im">Medium</span></a>
+      <a class="steprow" href="#t2"><span class="n">02</span><span class="t">Turn on Smart Tiered Cache<small>One toggle · Caching → Tiered Cache</small></span><span class="badge b-med im">Medium</span></a>
+      <a class="steprow" href="#t3"><span class="n">03</span><span class="t">Turn on Early Hints<small>One toggle · Speed → Optimization</small></span><span class="badge b-med im">Low–Med</span></a>
+      <a class="steprow" href="#t4"><span class="n">04</span><span class="t">Cache thumbnails &amp; media at the edge<small>Cache Rule · biggest bandwidth win</small></span><span class="badge b-high im">High</span></a>
+      <a class="steprow" href="#t5"><span class="n">05</span><span class="t">Cache catalog &amp; thread JSON for 15s<small>Cache Rule · makes poll-throttling pay off</small></span><span class="badge b-high im">High</span></a>
+      <a class="steprow" href="#t6"><span class="n">06</span><span class="t">Edge-cache anonymous page HTML<small>Cache Rule · not enabled — risk not worth it</small></span><span class="badge b-off im">Skipped</span></a>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <article class="task" id="t1">
+    <div class="task-head">
+      <div class="task-num">01</div>
+      <div>
+        <h3 class="task-title">Confirm Brotli is compressing your statics</h3>
+        <div class="badges">
+          <span class="badge b-med">Impact · Medium</span>
+          <span class="badge b-none">Risk · None</span>
+          <span class="badge b-tog">Verify only</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>Your origin only gzips (level 6, no Brotli module). Cloudflare can Brotli-recompress cacheable text at the edge, shaving ~15–20% off the <strong>145&nbsp;KB ux.css + 250&nbsp;KB ux.js</strong> first load for zero origin change. This is almost always already on — you're just confirming.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Speed<span>›</span>Optimization<span>›</span>Content Optimization<span>›</span>Brotli</div>
+        <p style="margin-top:.6rem">Ensure it's <strong>On</strong>. On newer dashboards compression is automatic or lives under <em>Rules › Compression Rules</em> — if you don't see the toggle, the Verify below is the real test.</p>
+      </div>
+      <div class="field">
+        <p class="label">Verify</p>
+        <div class="code"><pre><span class="cm"># from your laptop</span>
+curl -sI -H <span class="ac">'Accept-Encoding: br'</span> \
+  https://boards.rchan.xyz/.rchan/ux.css?v=c5f84671 \
+  | grep -i content-encoding
+<span class="cm"># expect →</span> <span class="ok">content-encoding: br</span></pre></div>
+        <p style="margin-top:.6rem">If it says <code>gzip</code>, flip Brotli on and re-run.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- 02 -->
+  <article class="task" id="t2">
+    <div class="task-head">
+      <div class="task-num">02</div>
+      <div>
+        <h3 class="task-title">Turn on Smart Tiered Cache</h3>
+        <div class="badges">
+          <span class="badge b-med">Impact · Medium</span>
+          <span class="badge b-none">Risk · None</span>
+          <span class="badge b-tog">One toggle</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>By default every Cloudflare data centre fills its cache straight from your origin — so a popular thumbnail can be pulled from the NAS once per region. Smart Tiered Cache funnels all POPs through a single upper tier first, so your <strong>residential-grade uplink</strong> answers each asset roughly once, not dozens of times.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Caching<span>›</span>Tiered Cache<span>›</span>Smart Tiered Cache Topology</div>
+        <p style="margin-top:.6rem">Set to <strong>On</strong>. Nothing else to configure.</p>
+      </div>
+      <div class="field">
+        <p class="label">Verify</p>
+        <p>No direct header for this one — its effect shows up as your origin's nginx access log thinning out for <code>/.media/</code> once Rule&nbsp;04 is also live. Safe to enable and move on.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- 03 -->
+  <article class="task" id="t3">
+    <div class="task-head">
+      <div class="task-num">03</div>
+      <div>
+        <h3 class="task-title">Turn on Early Hints</h3>
+        <div class="badges">
+          <span class="badge b-med">Impact · Low–Med</span>
+          <span class="badge b-none">Risk · None</span>
+          <span class="badge b-tog">One toggle</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>Your origin already emits a <em>Link: rel=preload</em> header for the two render-blocking injected assets (ux.css + predark.js). Early Hints replays that as an HTTP <strong>103</strong> before the origin even finishes responding, so the browser starts fetching them earlier — a real first-paint win that costs nothing because the header already exists.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Speed<span>›</span>Optimization<span>›</span>Content Optimization<span>›</span>Early Hints</div>
+        <p style="margin-top:.6rem">Set to <strong>On</strong>.</p>
+      </div>
+      <div class="field">
+        <p class="label">Verify</p>
+        <p>A 103 is hard to see in <code>curl -I</code>. Open a thread in Chrome DevTools → Network → click the document → the <strong>Timing</strong> tab shows an "Early Hints" phase once it's working. Optional and cosmetic — trust the toggle.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- 04 -->
+  <article class="task" id="t4">
+    <div class="task-head">
+      <div class="task-num">04</div>
+      <div>
+        <h3 class="task-title">Cache thumbnails &amp; media at the edge</h3>
+        <div class="badges">
+          <span class="badge b-high">Impact · High</span>
+          <span class="badge b-low">Risk · Low</span>
+          <span class="badge b-rule">Cache Rule</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>Your origin already says <em>max-age=2592000, immutable</em> (30 days) on <code>/.media/</code>, but Cloudflare caches by file extension by default — and your thumb URLs are extensionless (<code>/.media/t_&lt;hash&gt;</code>), so they're treated as <strong>dynamic and re-pulled from GridFS on every view</strong>. This one rule is your single biggest origin-bandwidth lever.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Caching<span>›</span>Cache Rules<span>›</span>Create rule</div>
+      </div>
+      <div class="field">
+        <p class="label">When incoming requests match</p>
+        <div class="code"><pre>starts_with(http.request.uri.path, <span class="ac">"/.media/"</span>)</pre></div>
+      </div>
+      <div class="field">
+        <p class="label">Then</p>
+        <div class="settings">
+          <div class="setrow"><span class="k">Cache status</span><span class="v"><b>Eligible for cache</b></span></div>
+          <div class="setrow"><span class="k">Edge TTL</span><span class="v">Use cache-control header if present <span style="color:var(--ink-faint)">— respects your 30-day immutable</span></span></div>
+          <div class="setrow"><span class="k">Browser TTL</span><span class="v">Respect origin</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <p class="label">Verify</p>
+        <div class="code"><pre><span class="cm"># grab a real thumb path from a catalog page's &lt;img src&gt;, then:</span>
+curl -sI https://boards.rchan.xyz/.media/t_&lt;hash&gt; \
+  | grep -i cf-cache-status
+<span class="cm"># 1st →</span> MISS   <span class="cm">2nd →</span> <span class="ok">HIT</span></pre></div>
+      </div>
+      <div class="field">
+        <p class="note">With a 30-day edge cache, a <strong>media takedown needs a manual purge</strong> — see Purge at the bottom. That 30-day window is the deliberate trade for the bandwidth saving.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- 05 -->
+  <article class="task" id="t5">
+    <div class="task-head">
+      <div class="task-num">05</div>
+      <div>
+        <h3 class="task-title">Cache catalog &amp; thread JSON for 15s</h3>
+        <div class="badges">
+          <span class="badge b-high">Impact · High</span>
+          <span class="badge b-low">Risk · Low</span>
+          <span class="badge b-rule">Cache Rule</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>Your origin sends <em>max-age=0, s-maxage=15</em> on <code>catalog.json</code> and <code>res/&lt;id&gt;.json</code> — an "edge may hold this 15s" instruction Cloudflare <strong>ignores unless a rule marks the path cacheable</strong>. Without it, every open tab's auto-refresh, the liveness pill and the watcher poll hit LynxChan directly. This is precisely what makes the new background-tab poll-throttling pay off.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Caching<span>›</span>Cache Rules<span>›</span>Create rule</div>
+      </div>
+      <div class="field">
+        <p class="label">When incoming requests match <span style="font-family:var(--sans);text-transform:none;letter-spacing:0;color:var(--ink-faint)">(plan-safe, no regex)</span></p>
+        <div class="code"><pre>(ends_with(http.request.uri.path, <span class="ac">"/catalog.json"</span>))
+or
+(http.request.uri.path contains <span class="ac">"/res/"</span>
+ and ends_with(http.request.uri.path, <span class="ac">".json"</span>))</pre></div>
+      </div>
+      <div class="field">
+        <p class="label">Then</p>
+        <div class="settings">
+          <div class="setrow"><span class="k">Cache status</span><span class="v"><b>Eligible for cache</b></span></div>
+          <div class="setrow"><span class="k">Edge TTL</span><span class="v">Use cache-control header if present <span style="color:var(--ink-faint)">— honors s-maxage=15</span></span></div>
+          <div class="setrow"><span class="k">Browser TTL</span><span class="v">Respect origin <span style="color:var(--ink-faint)">— stays 0, browsers still revalidate</span></span></div>
+        </div>
+      </div>
+      <div class="field">
+        <p class="label">Verify</p>
+        <div class="code"><pre>for i in 1 2; do
+  curl -sI https://boards.rchan.xyz/gen/catalog.json \
+    | grep -i cf-cache-status
+  sleep 1
+done
+<span class="cm"># 2nd (within 15s) →</span> <span class="ok">HIT</span>  <span class="cm">then cycles HIT→EXPIRED every 15s</span></pre></div>
+        <p style="margin-top:.6rem">If you see <code>DYNAMIC</code>, the rule isn't matching — recheck the expression.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- 06 -->
+  <article class="task" id="t6">
+    <div class="task-head">
+      <div class="task-num">06</div>
+      <div>
+        <h3 class="task-title">Edge-cache anonymous page HTML</h3>
+        <div class="badges">
+          <span class="badge b-off">Not enabled — by choice</span>
+          <span class="badge b-high">Impact · High · structural</span>
+          <span class="badge b-care">Risk · Handle with care</span>
+          <span class="badge b-rule">Cache Rule</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="field">
+        <p class="label">Why</p>
+        <p>Board, catalog and thread HTML is <strong>identical for every logged-out visitor</strong> — all personalization ((You), watched, unread, theme) is client-side localStorage. Caching it ~20s at the edge turns a burst of 50 readers on a hot thread into roughly one origin render, and makes the hover-prerender almost free at origin. Live updates still arrive over the WebSocket, so ≤20s-old initial HTML is invisible in practice.</p>
+      </div>
+      <div class="field">
+        <p class="label">Dashboard</p>
+        <div class="path">Caching<span>›</span>Cache Rules<span>›</span>Create rule</div>
+        <p style="margin-top:.6rem">Place this rule <strong>below</strong> Rules 04 and 05 — their matches are disjoint, but HTML should be the last word.</p>
+      </div>
+      <div class="field">
+        <p class="label">When incoming requests match</p>
+        <div class="code"><pre>(http.host eq <span class="ac">"boards.rchan.xyz"</span>)
+and (http.request.method eq <span class="ac">"GET"</span>)
+and (not http.cookie contains <span class="ac">"hash="</span>)
+and (not starts_with(http.request.uri.path, <span class="ac">"/."</span>))
+and (not ends_with(http.request.uri.path, <span class="ac">".json"</span>))
+and (not ends_with(http.request.uri.path, <span class="ac">".js"</span>))</pre></div>
+      </div>
+      <div class="field">
+        <p class="label">Then</p>
+        <div class="settings">
+          <div class="setrow"><span class="k">Cache status</span><span class="v"><b>Eligible for cache</b></span></div>
+          <div class="setrow"><span class="k">Edge TTL</span><span class="v"><b>Override to 20 seconds</b> <span style="color:var(--ink-faint)">— the engine marks HTML no-cache, so you must override to cache at all</span></span></div>
+          <div class="setrow"><span class="k">Browser TTL</span><span class="v"><b>Bypass / no cache</b> <span style="color:var(--ink-faint)">— browsers must never hold stale HTML</span></span></div>
+        </div>
+      </div>
+      <div class="field">
+        <p class="note ok"><strong>The safety hinges on one clause:</strong> <code>not http.cookie contains "hash="</code>. <code>hash</code> is LynxChan's login-session cookie, so logged-in staff always <strong>BYPASS</strong> — they see their mod tools, and their rendered pages never get cached for anonymous visitors. Anonymous users have no <code>hash</code> cookie, and the client-side <code>rchan_view</code> preference cookie is deliberately not matched.</p>
+      </div>
+      <div class="field">
+        <p class="label">Optional extra hardening</p>
+        <p>Append to also skip auth/mod surfaces outright:</p>
+        <div class="code"><pre>and (not starts_with(http.request.uri.path, <span class="ac">"/account"</span>))
+and (not starts_with(http.request.uri.path, <span class="ac">"/login"</span>))
+and (not starts_with(http.request.uri.path, <span class="ac">"/mod"</span>))</pre></div>
+      </div>
+      <div class="field">
+        <p class="label">Verify it works — and that it's safe</p>
+        <ol class="checks">
+          <li><b>Logged out</b> — <code>curl -sI https://boards.rchan.xyz/gen/catalog | grep -i cf-cache-status</code> twice → 2nd is <code>HIT</code>.</li>
+          <li><b>As a session</b> — <code>curl -sI --cookie "hash=x; login=you" https://boards.rchan.xyz/gen/catalog | grep -i cf-cache-status</code> → must be <code>BYPASS</code>. Any request carrying a hash cookie that ever returns HIT means the bypass clause is wrong — remove the rule immediately.</li>
+          <li><b>Real browser, logged in</b> — open a thread and confirm your delete / ban / IP controls still render.</li>
+        </ol>
+      </div>
+      <div class="field">
+        <p class="note"><strong>Trade-off to accept:</strong> a brand-new post can be up to 20s late for someone loading the page fresh (the poster sees it instantly; everyone already in the thread gets it over the WebSocket). Tune the Edge TTL down to 10s for snappier, up to 30s for more offload.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- appendix -->
+  <section class="appendix" id="legend">
+    <h2>Reading cf-cache-status</h2>
+    <div class="legend">
+      <div class="legrow"><span class="st hit">HIT</span><span class="ld"><b>Served from the edge, origin untouched.</b> The goal state for media, JSON and anon HTML.</span></div>
+      <div class="legrow"><span class="st miss">MISS</span><span class="ld">Not in cache; fetched from origin and stored (if eligible). The <b>second</b> request should HIT.</span></div>
+      <div class="legrow"><span class="st miss">EXPIRED</span><span class="ld">Was cached, TTL lapsed, just revalidated. Normal to see this cycle on the 15s JSON rule.</span></div>
+      <div class="legrow"><span class="st dyn">DYNAMIC</span><span class="ld">Cloudflare chose <b>not</b> to cache — no rule made it eligible. Seeing this on media or JSON means your rule isn't matching.</span></div>
+      <div class="legrow"><span class="st byp">BYPASS</span><span class="ld">A rule or cookie explicitly skipped cache. The <b>expected, correct</b> result for any logged-in <code>hash</code> request.</span></div>
+    </div>
+
+    <h2>What your origin already sends</h2>
+    <p style="color:var(--ink-soft); font-size:.9rem; margin:0 0 1rem">So you know exactly what each rule is respecting or overriding — no guessing.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Path</th><th>Cache-Control</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td><code>/.rchan/*</code>, fonts, ux.css/js</td><td class="cc">public, max-age=31536000, immutable</td><td>versioned — safe forever, no rule needed</td></tr>
+          <tr><td><code>/.media/*</code> thumbs + files</td><td class="cc">public, max-age=2592000, immutable</td><td>needs <a class="jump" href="#t4">Rule 04</a> to actually cache</td></tr>
+          <tr><td><code>/&lt;b&gt;/catalog.json</code>, <code>res/*.json</code></td><td class="cc">public, max-age=0, s-maxage=15</td><td>needs <a class="jump" href="#t5">Rule 05</a> for the edge 15s</td></tr>
+          <tr><td>board / thread HTML</td><td class="cc">engine no-cache</td><td>needs <a class="jump" href="#t6">Rule 06</a> to override</td></tr>
+          <tr><td><code>/account.js</code>, <code>/openReports.js</code></td><td class="cc">private, no-store</td><td>never cache — leave alone</td></tr>
+          <tr><td><code>/.rchan/sw.js</code></td><td class="cc">no-cache</td><td>must update promptly — leave alone</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:2rem">Purging</h2>
+    <div class="settings" style="gap:.7rem">
+      <div class="field" style="border:0;padding:0;margin:0">
+        <p><strong>Media takedown</strong> — <span style="color:var(--ink-soft)">Caching › Configuration › Purge Cache › Custom purge › by URL, and paste the full <code>https://</code> URL of the file and its <code>t_</code> thumb. Required because of the 30-day edge cache from Rule 04.</span></p>
+      </div>
+      <div class="field" style="border:0;padding:0;margin:0">
+        <p><strong>Front-end deploys</strong> — <span style="color:var(--ink-soft)">no purge ever needed. The <code>?v=</code> content hash changes the URL on every <code>deploy-fe.sh</code>, so a new bundle is a new cache key.</span></p>
+      </div>
+      <div class="field" style="border:0;padding:0;margin:0">
+        <p><strong>Emergency</strong> — <span style="color:var(--ink-soft)">Purge Everything forces a cold edge cache and a brief origin load spike. Reach for it only if something's serving stale that shouldn't be.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Pairs with the deployed code: <code>s-maxage</code> headers, <code>Link: preload</code>, Speculation-Rules prerender, hidden-tab poll throttling, and the service-worker offline page. Rules 04–06 are what let the edge act on all of it. Verify from a machine that reaches <code>boards.rchan.xyz</code> through Cloudflare — not the NAS.
+  </footer>
+
+</div>
+
+<script>
+  // copy-to-clipboard on every code block — a runbook is mostly commands
+  document.querySelectorAll('.code').forEach(function (box) {
+    var pre = box.querySelector('pre');
+    if (!pre) return;
+    var btn = document.createElement('button');
+    btn.className = 'copy'; btn.type = 'button'; btn.textContent = 'copy';
+    btn.setAttribute('aria-label', 'Copy to clipboard');
+    btn.addEventListener('click', function () {
+      // strip comment lines (start with #) so pasted commands run clean
+      var text = pre.innerText.split('\n').filter(function (l) {
+        return !/^\s*#/.test(l) && l.trim() !== '';
+      }).join('\n');
+      var done = function () { btn.textContent = 'copied'; btn.classList.add('done');
+        setTimeout(function () { btn.textContent = 'copy'; btn.classList.remove('done'); }, 1400); };
+      if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, done); }
+      else { done(); }
+    });
+    box.appendChild(btn);
+  });
+</script>

@@ -1751,5 +1751,36 @@
 			"height": 2048
 		}
 	]
+},
+{
+	"_id": {
+		"$oid": "6a54d430fd7c9cded32613cc"
+	},
+	"boardUri": "gen",
+	"postId": 109,
+	"threadId": 108,
+	"signedRole": null,
+	"creation": {
+		"$date": "2026-07-13T12:04:00.031Z"
+	},
+	"subject": null,
+	"name": "Anonymous",
+	"id": null,
+	"message": ">>108\r\nIndian Fascism or Chinese Communism. This is the final form of all ideology.",
+	"email": null,
+	"flagName": "United Kingdom",
+	"flag": "/.static/flags/gb.png",
+	"files": [
+		{
+			"originalName": "images.jpg",
+			"path": "/.media/ad6f8c1c87caed7e6503e2efb77bda6ab637b7d531ed533bfa7afe9f74cf9cb8.jpg",
+			"mime": "image/jpeg",
+			"thumb": "/.media/ad6f8c1c87caed7e6503e2efb77bda6ab637b7d531ed533bfa7afe9f74cf9cb8.jpg",
+			"size": 17324,
+			"sha256": "ad6f8c1c87caed7e6503e2efb77bda6ab637b7d531ed533bfa7afe9f74cf9cb8",
+			"width": 209,
+			"height": 241
+		}
+	]
 }]
 

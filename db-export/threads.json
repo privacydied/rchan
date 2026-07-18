@@ -1082,7 +1082,7 @@
 	"threadId": 75,
 	"id": null,
 	"lastBump": {
-		"$date": "2026-07-09T15:27:33.542Z"
+		"$date": "2026-07-17T03:46:24.781Z"
 	},
 	"creation": {
 		"$date": "2026-07-09T15:27:32.851Z"
@@ -1108,7 +1108,9 @@
 			"height": 2048
 		}
 	],
-	"page": 2
+	"page": 1,
+	"fileCount": 0,
+	"postCount": 1
 },
 {
 	"_id": {
@@ -1282,7 +1284,7 @@
 	"email": null,
 	"flagName": "United States",
 	"flag": "/.static/flags/us.png",
-	"page": 1,
+	"page": 2,
 	"fileCount": 1,
 	"postCount": 1
 },

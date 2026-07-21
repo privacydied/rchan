@@ -10,11 +10,11 @@
 		"disableIds",
 		"requireThreadFile"
 	],
-	"uniqueIps": 0,
-	"lastPostId": 112,
+	"uniqueIps": 2,
+	"lastPostId": 114,
 	"captchaMode": 0,
 	"postsPerHour": 0,
-	"threadCount": 35,
+	"threadCount": 36,
 	"anonymousName": "",
 	"tags": []
 }]

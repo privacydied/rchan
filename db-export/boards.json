@@ -10,7 +10,7 @@
 		"disableIds",
 		"requireThreadFile"
 	],
-	"uniqueIps": 1,
+	"uniqueIps": 0,
 	"lastPostId": 115,
 	"captchaMode": 0,
 	"postsPerHour": 0,
